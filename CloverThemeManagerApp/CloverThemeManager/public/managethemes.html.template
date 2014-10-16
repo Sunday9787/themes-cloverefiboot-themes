@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Clover Theme Manager</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+	<meta name="description" content="A user interface for Clover Theme Manager" />
+    <meta name="author" content="Blackosx" />
+    <meta name="copyright" content="Copyright 2014 org.black.CloverThemeManager. All rights reserved.">    
+    <link rel="stylesheet" type="text/css" href="styles/cloverthememanager.css"/>
+	<script src="scripts/jquery-2.1.1.min.js"></script>
+	<script src="scripts/cloverthememanager.js"></script>
+	<!-- Add simple accordion script -->
+	<script>
+	$(document).ready(function() {
+		$('.thumbnail').click(function() {
+			//$('div.accordionContent').slideUp('normal');
+			var hidden = $(this).closest("#ThemeBand").nextAll('[class="accordionContent"]').first().is(":hidden");
+			if (!hidden) {
+			    // Start with current
+			    $(this)
+			    // Traverse up the DOM to the ThemeBand div
+			    .closest("#ThemeBand")
+			    // find the next siblings with class .accordionContent
+			    .nextAll('[class="accordionContent"]')
+			    // just use first one
+			    .first()
+			    // Slide up
+			    .slideUp('normal');
+			} else {
+			    $(this)
+			    .closest("#ThemeBand")
+			    .nextAll('[class="accordionContent"]')
+			    .first()
+			    .slideToggle('normal');
+			}
+		});	
+		// Close all on load
+		//$("div.accordionContent").hide();
+		
+		$("#preview_Toggle_Button").click(function() {
+			var hidden = $('[class="accordionContent"]').is(":hidden");
+			if (!hidden) {
+			    $('[class="accordionContent"]').slideUp('normal');
+			} else {
+			    $('[class="accordionContent"]').slideToggle('normal');
+			}
+		});	
+	});
+	</script>
+
+</head>
+<body>
+<div id="Container">
+
+    <!-- overlay is used with the message box. -->
+    <div class="overlay" id="overlay" style="display:none;"></div>
+    
+    <!-- overlayTwo is used standalone to prevent the user from interacting -->
+    <!-- with the UI when checking for installed theme list and updates. -->
+    <div class="overlayTwo" id="overlayTwo" style="display:none;"></div>
+    
+    <!-- Message box which starts positioned off the page by css. -->
+    <!-- It's then animated in to view when required. -->
+    <div class="box" id="box">
+         <a class="boxclose" id="boxclose"></a>
+         <h1>Title</h1>
+         <p>Replace message here</p>
+         <div id="FeedbackButtons"></div>
+         <!-- Display a constantly animated progress bar. -->
+         <!-- Javascript will show or hide this when necessary. -->
+         <div id="AnimatedBar" class="meter"><span style="width: 100%"></span></div>
+    </div>
+
+    <div id="TopOfPage">
+        <div id="CheckingUpdatesMessage" class="textMessage">Checking for updates to your installed themes, and if your themes are under version control...</div>
+        <div id="PathSelector">
+            <select name="dropdown" id="partitionSelect">
+                <!--INSERT_MENU_OPTIONS_HERE-->
+            </select>
+        </div> <!-- End PathSelector -->
+        <div id="OpenButton">
+            <button type="button" id="OpenPathButton">Open</button>
+        </div> <!-- End OpenButton -->
+        
+        <div id="ThemeCount">
+            <span class="textThemeCount" id="NumInstalledThemes">Total themes installed: -</span>
+        </div> <!-- End ThemeCount -->
+        
+        <div id="FreeSpace">
+            <span class="textFreeSpace">Free Space:</span>
+        </div> <!-- End FreeSpace -->        
+        
+        <div id="HeaderBar">
+            <div class="textHeaderPreview"><p>Preview</p></div>
+            <div class="textHeaderDescription">Description</div>
+            <div class="textHeaderOptions">Options</div>
+            <div class="toggleButton" id="BandsHeightToggleButton">Show Thumbnails</div>   
+            <div class="toggleButton" id="preview_Toggle_Button">Toggle Previews</div>
+            <!--<div class="textHeaderInstalled">Installed</div>-->
+        </div>
+    </div> <!-- End TopOfPage -->  
+
+    <div id="ThemeList">
+    
+    <!--INSERT_THEMES_HERE-->
+    
+    </div> <!-- End ThemeList -->     
+     
+    <div id="AboveFooter">
+    
+        <div id="NvramInfo">
+            <span class="textBody" id="currentNVRAMvar">Clover.theme NVRAM variable:</span>
+        </div> <!-- End NvramInfo -->
+        
+        <div id="NvramThemeMatch">
+            <span class="textBody" id="currentNVRAMMessage"></span>
+        </div> <!-- End NvramThemeMatch -->
+
+        <!--<p class="textBody">Change to:</p>-->
+                    
+        <div id="NvramThemeSelector">
+            <select name="dropdown_config" id="installedThemeDropDown">
+                <!--Menu entres will be appended here by cloverthememanager.js -->
+            </select>
+        </div> <!-- End NvramThemeSelector -->
+    
+    </div> <!-- End Footer -->  
+    
+    <div id="Footer">
+        <p class="textFooter">Development preview. Check for <a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">latest updates</a>.</p>
+    </div> <!-- End Footer -->  
+                                                         
+</div> <!-- End Container -->
+</body>
+</html>

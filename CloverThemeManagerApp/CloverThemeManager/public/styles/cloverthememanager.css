@@ -1,0 +1,631 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    overflow: auto;
+    /* -webkit-user-select: none; */
+    background-color: #333;
+}
+
+p { font-family: Helvetica; }
+
+#Container {
+    /* min-height: 100%; */
+    /* position:relative; */
+}
+
+#TopOfPage {
+    position: fixed;
+    width: 100%;
+    top: 0px;
+    height:68px;
+    background-color: #333;
+    z-index:2;
+}
+
+#InitTopOfPage {
+    position: fixed;
+    width: 100%;
+    top: 0px;
+    height:74px;
+    border-bottom: 2px solid #333;
+    padding: 16px 0 8px 28px;
+    background-color: #737075;
+    background-image: -moz-linear-gradient(center top , #737075, #59565b);
+    background-image: -webkit-linear-gradient(top, #737075, #59565b);
+}
+
+#CheckingUpdatesMessage {
+    position: absolute;
+    float: left;
+    margin: 0;
+    background-color: #333;
+    width: 100%;
+    height:23px;
+    display:none;
+}
+
+#PathSelector {
+    width: 51%;
+    float: left;
+    margin: 5px 0px 5px 24px;
+}
+
+#PathSelector select {
+    width: 98%;
+    max-width: 98% !important;
+}
+
+#ThemeCount {
+    width: 21%;
+    margin: 5px 0px 0px 0px;
+    float: right;
+}
+
+#OpenButton {
+    width: 7%;
+    margin: 5px 0px 0px 0px;
+    float: left;
+}
+
+#FreeSpace {
+    width: 16%;
+    margin: 5px 0px 0px 8px;
+    text-align: center;
+    float: left;
+}
+
+.textMessage {
+    font-family: Helvetica;
+    font-size: 14px;
+    color: #FFF;
+    text-align:center;
+    padding-top:9px;
+    height: 100%;
+}
+
+#LogoHeader {
+    width:100%;
+    height:256px;
+    background: url(../assets/cloverthememanagericon_256px.png); background-repeat: no-repeat;
+    background-position:center;
+    margin-top:16px;
+}
+
+#homePageProgressBar {
+    width:80%;
+    margin:auto;
+}
+
+#InitLog {
+    margin:48px 10% 5% 10%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color:#222;
+    border: 1px solid #333;
+    top: 340px;
+    bottom: 48px;
+    width:80%;
+    position: fixed;
+}
+
+.initLogText {
+    font-family: Helvetica;
+    font-size: 11px;
+    line-height: 13px;
+    color: #FFF; /*#3ef14b;*/
+    text-align:left;
+    padding: 4px 0px 4px 16px;
+
+}
+
+#HeaderBar {
+    height: 24px;
+    background-color: #888888;
+    padding:5px 0 5px 20px;
+    font-family: Helvetica;
+    font-size: 12px;
+    line-height: 0px;
+    color: #FFF;
+    clear: both;
+}
+
+#ThemeList {
+    margin-top: 68px;
+    margin-bottom: 74px;
+}
+
+#OptionsBar {
+    height: 24px;
+    background-color: #888888;
+    padding:5px 0 5px 20px;
+}
+
+#WelcomeMessage {
+    /*margin:0px 0px 0px 10%;*/
+    /*padding:0px 8px 0px 8px;*/
+    line-height: 2px;
+}
+
+#OpenPathButton {
+    display: none;
+}
+
+.textHeading {
+    font-family: Helvetica;
+    font-size: 28px;
+    font-weight:bold;
+    color: #FFF;
+    text-align:center;
+}
+
+.textSubHeading {
+    font-family: Helvetica;
+    font-size: 24px;
+    color: #FFF;
+    text-align:center;
+}
+
+.textBody {
+    font-family: Helvetica;
+    font-size: 12px;
+    color: #FFF;
+    text-align:left;
+}
+
+.textFreeSpace {
+    font-family: Helvetica;
+    font-size: 12px;
+    color: #00CCFF;
+}
+
+.textThemeCount {
+    font-family: Helvetica;
+    font-size: 12px;
+    color: #FFF;
+    text-align: right;
+}
+
+.textFooter {
+    font-family: Helvetica;
+    font-size: 12px;
+    color: #DDD;
+    text-align:center;
+}
+
+.textHeaderPreview {
+    margin: 0px 0px 0px 40px;
+    float: left;
+}
+
+.textHeaderDescription {
+    margin: 13px 0px 0px 44px;
+    float: left;
+}
+
+.textHeaderInstalled {
+    margin: 13px 50px 0px 0px;
+    float: right;
+}
+
+.textHeaderOptions {
+    margin: 13px 60px 0px 80px;
+    float: right;
+}
+
+a:link {
+    color: #00CCFF;
+}
+
+a:visited {
+    color: #00CCFF;
+}
+
+a:hover {
+    color: #3ef14b;
+}
+
+a:active {
+    color: #00CCFF;
+}
+
+#ThemeBand {
+    height: 72px;
+    border-top: 1px solid #cbcbcb;
+    border-bottom: 1px solid #878787;
+    clear: both;
+    overflow: hidden; /* Added to not show gap at bottom in Safari */
+}
+
+#ThemeItems {
+    display: inline;
+}
+
+#ThemeText {
+    float: left;
+    width: 50%;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+    z-index:1;
+}
+
+#ThemeText p {
+    display: table-row;
+}
+
+.versionControl {
+    margin: 28px 12px 0px 0px;
+    float: right;
+    font-family: Helvetica;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 18px;
+    color:#666;
+}
+
+.thumbnail {
+    margin: 8px 16px 0px 30px;
+    float: left;
+    cursor:pointer;
+    width: 100px;
+    height: 56px;
+}
+
+.themeTitle {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.themeDescription {
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.themeAuthor {
+    font-size: 12px;
+    font-weight: normal;
+    font-style: italic;
+}
+
+.buttonInstall {
+    background-color: #49c0f0;
+    background-image: -moz-linear-gradient(center top , #49c0f0, #2cafe3);
+    background-image: -webkit-linear-gradient(top, #49c0f0, #2CAFE3);
+    border: 1px solid #15aeec;
+    border-radius: 4px;
+    color: #ffffff;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 24px 8px 0 0;
+    padding: 2px;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
+    width: 72px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.buttonInstall:hover {
+    background-color: #bbdbf5;
+    background-image: -moz-linear-gradient(center top , #bbdbf5, #b0d1ee);
+    background-image: -webkit-linear-gradient(top, #bbdbf5, #b0d1ee);
+    border: 1px solid #afd1f3;
+}
+
+.buttonUnInstall {
+    background-color: #a90329;
+    background-image: -moz-linear-gradient(center top , #a90329, #6d0019);
+    background-image: -webkit-linear-gradient(top, #a90329, #6d0019);
+    border: 1px solid #72021c;
+    border-radius: 4px;
+    color: #ffffff;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 24px 8px 0 0;
+    padding: 2px;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
+    width: 72px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.buttonUnInstall:hover {
+    background-color: #bf6e83;
+    background-image: -moz-linear-gradient(center top , #bf6e83, #a16976);
+    background-image: -webkit-linear-gradient(top, #bf6e83, #a16976);
+    border: 1px solid #a36978;
+}
+
+.buttonUpdate {
+    background-color: #a198e2;
+    background-image: -moz-linear-gradient(center top , #a198e2, #9488d6);
+    background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
+    border: 1px solid #9686dd;
+    border-radius: 4px;
+    color: #ffffff;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 24px 8px 0 0;
+    padding: 2px;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
+    width: 72px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.buttonUpdate:hover {
+    background-color: #c7c1ee;
+    background-image: -moz-linear-gradient(center top , #c7c1ee, #bfb8e6);
+    background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
+    border: 1px solid #c0b6eb;
+}
+
+.feedbackButton {
+    background-color: #a198e2;
+    background-image: -moz-linear-gradient(center top , #a198e2, #9488d6);
+    background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
+    border: 1px solid #9686dd;
+    border-radius: 4px;
+    color: #ffffff;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 24px 8px 0 0;
+    padding: 2px;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
+    width: 72px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.feedbackButton:hover {
+    background-color: #c7c1ee;
+    background-image: -moz-linear-gradient(center top , #c7c1ee, #bfb8e6);
+    background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
+    border: 1px solid #c0b6eb;
+}
+
+.toggleButton {
+    /*background-color: #b3b3b3;
+    background-image: -moz-linear-gradient(center top , #b3b3b3, #a4a4a4);
+    background-image: -webkit-linear-gradient(top, #b3b3b3, #a4a4a4);*/
+    border: 1px solid #a6a6a6;
+    border-radius: 4px;
+    color: #ccc;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 30px 0px 0px;
+    width: 120px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.toggleButton:hover{
+    background-color: #9a9a9a;
+    /*background-image: -moz-linear-gradient(center top , #d2d2d2, #cacaca);
+    background-image: -webkit-linear-gradient(top, #d2d2d2, #cacaca);*/
+    border: 1px solid #cacaca;
+}
+
+.accordion {
+    background-image: -webkit-linear-gradient(top, #ece9ec, #d8d5d8);
+}
+
+.accordionInstalled {
+    background-image: -webkit-linear-gradient(top, #e9f6e2, #d7e4d0);
+}
+
+.accordionUpdate {
+    background-image: -webkit-linear-gradient(top, #daf0ff, #bfedf5);
+}
+
+.accordionContent {	
+	width: 100%;
+	float: left;
+	background: #FFF;
+	display: none;
+	line-height: 0;
+}
+
+#ConfigureContent {
+    margin:5% 10% 0% 10%;
+}
+
+table {
+    border-collapse:collapse    /* Remove table borders */
+}
+
+#AboveFooter {
+    position: fixed;
+    width: 100%;
+    bottom: 36px;
+    height: 36px;
+    border-top: 2px solid #333;
+    background-color: #888888;
+    z-index:2;
+}
+
+#NvramInfo {
+    width: 38%;
+    margin: 5px 8px 5px 24px;
+    float: left;
+}
+
+#NvramThemeMatch {
+    width: 30%;
+    margin: 5px 0px 5px 0px;
+    float: left;
+    text-align: center;
+}
+
+#NvramThemeSelector {
+    width: 20%;
+    float: right;
+    margin: 5px 24px 5px 5px;
+}
+
+#NvramThemeSelector select {
+    width: 98%;
+    max-width: 98% !important;
+}
+
+#Footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0px;
+    height: 36px;
+    border-top: 2px solid #333;
+    background-color: #737075;
+    background-image: -moz-linear-gradient(center top , #737075, #59565b);
+    background-image: -webkit-linear-gradient(top, #737075, #59565b);
+    z-index:2;
+}
+
+#MessageBoxProgressBar {
+    width: 410px;
+    height: 22px;
+    border: 1px solid #CCC;
+}
+ 
+#MessageBoxProgressBar div {
+    height: 100%;
+    width: 0;
+}
+
+.jquery-ui-like {
+	border-radius: 4px;
+	background: #FFF;
+	border: 1px solid #AAA;
+	overflow: hidden;		
+}
+.jquery-ui-like div {
+	background-image: url(../assets/progressbar_stages.gif);
+	border-right: 1px solid #AAA;
+}
+
+/*
+The following overlay and box css is originally from a tutorial by Mary Lou
+http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slide-out-box/
+*/
+
+.overlay {
+    background:transparent url(../assets/overlay.png) repeat top left;
+    position:fixed;
+    top:0px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    z-index:100;
+}
+
+.overlayTwo {
+    background:transparent url(../assets/overlay.png) repeat top left;
+    position:fixed;
+    top:0px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    z-index:100;
+}
+
+.box {
+    position:fixed;
+    top:-200px;   /* Starting position = should match click function animate({'top':'300px'} in js */
+    left:20%;
+    right:20%;
+    background-color:#fff;
+    color:#7F7F7F;
+    padding:20px;
+    border:2px solid #ccc;
+    -moz-border-radius: 10px;
+    -webkit-border-radius:10px;
+    -moz-box-shadow: 0 1px 5px #333;
+    -webkit-box-shadow: 0 1px 5px #333;
+    z-index:101;
+}
+
+a.boxclose {
+    float:right;
+    width:26px;
+    height:26px;
+    background:transparent url(../assets/cancel.png) repeat top left;
+    margin-top:-30px;
+    margin-right:-30px;
+    cursor:pointer;
+}
+
+.box h1 {
+    margin:-20px -20px 0px -20px;
+    padding:10px 10px 10px 20px;
+    background-color:#1e8ec6;
+    font-family: Helvetica;
+    font-size: 24px;
+    color:#c4e0ee;
+    -moz-border-radius:10px 10px 0px 0px;
+    -webkit-border-top-left-radius: 10px;
+    -webkit-border-top-right-radius: 10px;
+}
+
+/* Using progress bars originally by Chris Coyier
+/* http://css-tricks.com/css3-progress-bars/ */
+
+.meter { 
+    height: 32px;
+    position: relative;
+}
+
+.meter > span {
+    display: block;
+    height: 100%;
+    background-color: #cbd1d6;
+    background-image: -webkit-linear-gradient(#cbd1d6, #6d8396);
+    position: relative;
+    overflow: hidden;
+}
+		
+.meter > span:after, .animate > span > span {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background-image: 
+        -webkit-gradient(linear, 0 0, 100% 100%, 
+            color-stop(.25, rgba(255, 255, 255, .2)), 
+            color-stop(.25, transparent), color-stop(.5, transparent), 
+            color-stop(.5, rgba(255, 255, 255, .2)), 
+            color-stop(.75, rgba(255, 255, 255, .2)), 
+            color-stop(.75, transparent), to(transparent)
+        );
+    z-index: 1;
+    -webkit-background-size: 50px 50px;
+    -webkit-animation: move 2s linear infinite;
+    overflow: hidden;
+}
+
+@-webkit-keyframes move {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 50px 50px;
+    }
+}
