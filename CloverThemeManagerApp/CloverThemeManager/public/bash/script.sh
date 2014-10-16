@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # A script for Clover Theme Manager
 # Copyright (C) 2014 Blackosx
@@ -19,7 +19,7 @@
 # Credits:
 # Thanks to SoThOr for helping with svn communications
 
-VERS="0.61"
+VERS="0.62"
 
 
 # =======================================================================================
@@ -1155,22 +1155,22 @@ SetThemeDirUnderVersionControl()
         local returnValueWriteable=$? # 1 = not writeable / 0 = writeable
         if [ ${returnValueWriteable} = 1 ]; then    
             
-        # not writeable.
-        WriteToLog "path is not writeable. Asking for password"
-        GetAndCheckUIPassword "Clover Theme Manager requires your password to enable updates for this theme directory."
-        local returnValueRoot=$? # 1 = not root / 0 = root
+            # not writeable.
+            WriteToLog "path is not writeable. Asking for password"
+            GetAndCheckUIPassword "Clover Theme Manager requires your password to enable updates for this theme directory."
+            local returnValueRoot=$? # 1 = not root / 0 = root
 
-        if [ ${returnValueRoot} = 0 ]; then 
+            if [ ${returnValueRoot} = 0 ]; then 
 
-            WriteToLog "Password gives elevated access"
+                WriteToLog "Password gives elevated access"
 
-            # RUN COMMAND WITH ROOT PRIVILEGES        
-            WriteToLog "Setting $1 under version control"
-            echo "$gPw" | sudo -S "$uiSudoChanges" "SetPathUnderVersionControl" "${remoteRepositoryUrl}/themes" "$1" && gPw=""
-            returnValue=$?
-            if [ ${returnValue} -eq 0 ]; then
-                successFlag=0
-            fi
+                # RUN COMMAND WITH ROOT PRIVILEGES        
+                WriteToLog "Setting $1 under version control"
+                echo "$gPw" | sudo -S "$uiSudoChanges" "SetPathUnderVersionControl" "${remoteRepositoryUrl}/themes" "$1" && gPw=""
+                returnValue=$?
+                if [ ${returnValue} -eq 0 ]; then
+                    successFlag=0
+                fi
             
             elif [ ${returnValueRoot} = 1 ]; then 
                 # password did not give elevated privileges. Run this routine again.
@@ -1197,7 +1197,7 @@ SetThemeDirUnderVersionControl()
             WriteToLog "$1 failed to be set under version control."
         fi
             
-     else
+    else
         WriteToLog "$1 is already version control"
     fi
 }
@@ -1280,6 +1280,7 @@ scriptPid=$( echo "$$" )
 # Get process ID of parent
 appPid=$( ps -p ${pid:-$$} -o ppid= )
 
+remoteRepositoryUrl="svn://svn.code.sf.net/p/cloverthemes/svn"
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1306,6 +1307,7 @@ if [ "${identityCallerCheck:1:1}" == "+" ]; then
     
     # Does theme path exist?
     if [ -d "$TARGET_THEME_DIR" ]; then
+        SetThemeDirUnderVersionControl "$TARGET_THEME_DIR"
         RunThemeAction "Install" "$themeToInstall"
         returnValue=$?
         if [ ${returnValue} -eq 0 ]; then
@@ -1350,7 +1352,6 @@ else
     logBashToJsNvramVar="${TMPDIR}/CloverThemeManager_BashToJsNvramVar.log"
     gUserPrefsFileName="org.black.CloverThemeManager"
     gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
-    remoteRepositoryUrl="svn://svn.code.sf.net/p/cloverthemes/svn"
     svnStatusXml="${TMPDIR}/status.xml"
     uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
     gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
