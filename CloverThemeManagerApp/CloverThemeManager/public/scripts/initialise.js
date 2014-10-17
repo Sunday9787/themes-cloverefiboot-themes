@@ -83,12 +83,16 @@ function printLogtoScreen()
                     // remove anything before the 'CTM_Version' text.
                     version = splitContent[i].substring(splitContent[i].indexOf("CTM_Version") + 11);
                     // append version to title.
-                    $("#textHeading").append("<span class=\"textSubHeading\"> v" + version + "</span>");
+                    $("#textHeading").append("<span class=\"textVersion\"> v" + version + "</span>");
                 } else if (/RepositoryError: /i.test(splitContent[i])) {
                     // This indicates the remote repository is not contactable.
                     // We should notify the user and exit
                     alert("Remote theme repository is not responding. This app cannot continue.");
                     terminate();
+                } else if (/First run identified/i.test(splitContent[i])) {
+                    // This indicates it's the first run and will take longer
+                    // Print message
+                    $("#firstRunMessage").text("First run may take a minute... Thanks for your patience.");
                 } else {      
                     // Write line to log
                     if (typeof splitContent[i] !== "undefined" && typeof splitContent[i] !== "null" && splitContent[i].length > 1) {

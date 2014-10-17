@@ -86,37 +86,39 @@ p { font-family: Helvetica; }
 
 #LogoHeader {
     width:100%;
-    height:256px;
-    background: url(../assets/cloverthememanagericon_256px.png); background-repeat: no-repeat;
+    height:440px;
+    background: url(../assets/init_page_image.png); background-repeat: no-repeat;
     background-position:center;
-    margin-top:16px;
+    margin-top: 0px;
 }
 
 #homePageProgressBar {
-    width:80%;
-    margin:auto;
+    height: 12px;
+    margin: 48px 200px 38px 200px;
 }
 
 #InitLog {
-    margin:48px 10% 5% 10%;
     overflow-y: auto;
     overflow-x: hidden;
     background-color:#222;
     border: 1px solid #333;
-    top: 340px;
-    bottom: 48px;
-    width:80%;
+    top: 183px;
+    bottom: 275px;
+    width:440px;
+    height: 292px;
+    /* margin: 48px 207px 48px 207px; */
+    margin: 48px 207px 48px 160px;    
     position: fixed;
+    opacity: 0.5;
 }
 
 .initLogText {
     font-family: Helvetica;
-    font-size: 11px;
-    line-height: 13px;
+    font-size: 8px;
+    line-height: 9px;
     color: #FFF; /*#3ef14b;*/
     text-align:left;
     padding: 4px 0px 4px 16px;
-
 }
 
 #HeaderBar {
@@ -142,7 +144,7 @@ p { font-family: Helvetica; }
 }
 
 #WelcomeMessage {
-    /*margin:0px 0px 0px 10%;*/
+    margin:48px 0px 0px 0px;
     /*padding:0px 8px 0px 8px;*/
     line-height: 2px;
 }
@@ -162,8 +164,25 @@ p { font-family: Helvetica; }
 .textSubHeading {
     font-family: Helvetica;
     font-size: 24px;
-    color: #FFF;
+    color: #33FF33;
     text-align:center;
+    margin-top: 32px;
+}
+
+.textSubSubHeading {
+    font-family: Helvetica;
+    font-size: 14px;
+    color: #CCC;
+    text-align:center;
+    margin-top: 28px;
+}
+
+.textVersion {
+    font-family: Helvetica;
+    font-size: 16px;
+    color: #ccc;
+    text-align:center;
+    margin-top: 32px;
 }
 
 .textBody {
@@ -271,6 +290,10 @@ a:active {
     cursor:pointer;
     width: 100px;
     height: 56px;
+}
+
+.thumbnail:hover {
+    opacity:0.5;
 }
 
 .themeTitle {

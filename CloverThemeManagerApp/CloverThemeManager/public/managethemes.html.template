@@ -95,7 +95,7 @@
             <div class="textHeaderPreview"><p>Preview</p></div>
             <div class="textHeaderDescription">Description</div>
             <div class="textHeaderOptions">Options</div>
-            <div class="toggleButton" id="BandsHeightToggleButton">Show Thumbnails</div>   
+            <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
             <div class="toggleButton" id="preview_Toggle_Button">Toggle Previews</div>
             <!--<div class="textHeaderInstalled">Installed</div>-->
         </div>

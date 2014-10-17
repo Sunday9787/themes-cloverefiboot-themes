@@ -1377,6 +1377,12 @@ else
     WriteToLog "CTM_Version${VERS}"
     WriteToLog "Started Clover Theme Manager script"
     WriteLinesToLog
+    
+    # Check for working directory as indicator for first run
+    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}" ]; then
+        WriteToLog "First run identified"
+    fi
+    
     WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
 
     RefreshHtmlTemplates "managethemes.html"
