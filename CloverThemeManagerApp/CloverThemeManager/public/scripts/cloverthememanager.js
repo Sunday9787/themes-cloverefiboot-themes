@@ -18,7 +18,6 @@ var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
 var gLogBashToJsUpdates = "CloverThemeManager_BashToJsUpdates.log";
 var gLogBashToJsVersionedThemes = "CloverThemeManager_BashToJsVersionedThemes.log";
-var gLogBashToJsVersionedDir = "CloverThemeManager_BashToJsVersionedDir.log";
 var gLogBashToJsSpace = "CloverThemeManager_BashToJsSpace.log";
 var gLogBashToJsResult="CloverThemeManager_BashToJsResult.log";
 var gLogBashToJsNvramVar="CloverThemeManager_BashToJsNvramVar.log";
@@ -33,7 +32,6 @@ $(document).ready(function() {
     readLastSettings();
     ResetButtonsAndBandsToDefault();
     CheckForRevisedInstallThemeList();
-    CheckForDirNotUnderVersionControl();
     CheckForUpdatesThemeList();
 });
 
@@ -138,16 +136,28 @@ $(function()
             macgap.app.launch("CTM_selectedPartition@" + selectedPartition);
         }
 
+
+        // TO DO - look at retaining the hidden uninstalled themes later.
+        // For now, reset view even if user chose to hide uninstalled themes.
+        $(".accordion").css("display","block");
+        $("[id='ShowHideToggleButton']").text("Hide UnInstalled");
+        // Then call ShowHideUnInstalledThemes at the end of CheckForUpdatesThemeList().
+        
+        
         // Reset current theme list, bands and buttons
         ResetButtonsAndBandsToDefault();
         hideButtons();
         
+        // show all themes, even if asked to hide uninstalled
+        $(".accordion").css("display","block");
+
         // Listen out for the install theme list from the bash script.
         CheckForRevisedInstallThemeList();
-        
+
         // As long as the user did not select the 'Please Choose' menu option.
+        // And only if there are themes installed on this volume
         if (selectedPartition != "-@-") {
-                    
+
             // Disable path drop down menu and open button until updates have been checked.
             // Will re-enable in CheckForUpdatesThemeList();
             $("#partitionSelect").prop("disabled", true);
@@ -165,15 +175,6 @@ $(function()
             // Show the Free Space text
             ShowFreeSpace();
             
-            // Listen out for if this theme path is under version control;
-            // Check after 1 second delay.
-            // This allows time for the CTM_selectedPartition message
-            // to reach the bash script and for the function
-            // CheckIfThemeDirIsUnderVersionControl() to be run and report back.
-            setTimeout(function() {
-                CheckForDirNotUnderVersionControl();
-            }, 1000);
-
             // Check for updates after 1 second delay.
             // This allows time for the CTM_selectedPartition message
             // to reach the bash script and for it to delete previous
@@ -192,6 +193,7 @@ $(function()
             // Set Nvram area to nothing.
             SetNvramFooterToNotSet();
         }
+            
     });
     
     //-----------------------------------------------------
@@ -215,11 +217,31 @@ $(function()
     });
     
     //-----------------------------------------------------
+    // On clicking a thumbnail image
+    $('.thumbnail').click(function() {
+        var hidden = $(this).closest("#ThemeBand").nextAll('[class="accordionContent"]').first().is(":hidden");
+        if (!hidden) {
+            $(this)                                  // Start with current
+            .closest("#ThemeBand")                   // Traverse up the DOM to the ThemeBand div
+            .nextAll('[class="accordionContent"]')   // find the next siblings with class .accordionContent
+            .first()                                 // just use first one
+            .slideUp('normal');                      // Slide up
+        } else {
+            $(this)
+            .closest("#ThemeBand")
+            .nextAll('[class="accordionContent"]')
+            .first()
+            .slideToggle('normal');
+        }
+    });
+    
+    //-----------------------------------------------------
     // On pressing Toggle Theme Height button
     $("#BandsHeightToggleButton").on('click', function() {
     
-        var state = $('.thumbnail').is(":hidden");
-        if (!state) {
+        var bandsHeightState=$("[id='BandsHeightToggleButton']").text();
+        if (bandsHeightState.indexOf("Hide") >= 0) {
+
             // Move theme titles up
             $("[id=ThemeText]").css("top","74%");
             // Hide all theme descriptions
@@ -241,7 +263,9 @@ $(function()
             $("[id=ThemeText]").css("margin-left","32px");
             // Change button text
             $(this).text("Show Thumbnails");
-        } else {
+            
+        } else if (bandsHeightState.indexOf("Show") >= 0) {
+
             // Revert theme titles margin top
             $("[id=ThemeText]").css("top","50%");
             // Show all theme descriptions
@@ -267,6 +291,82 @@ $(function()
     });
     
     //-----------------------------------------------------
+    // On clicking the Toggle Preview button
+    //$("#preview_Toggle_Button").click(function() {
+    //    var hidden = $('[class="accordionContent"]').is(":hidden");
+    //    if (!hidden) {
+    //        $('[class="accordionContent"]').slideUp('normal');
+    //    } else {
+    //        $('[class="accordionContent"]').slideToggle('normal');
+    //    }
+    //});	
+    
+    //-----------------------------------------------------
+    // On clicking the Toggle Preview button - change to Expand/Collapse All
+    $("#preview_Toggle_Button").click(function() {
+
+        var buttonText=$(this).text();
+        var accordionBandState=$('.accordion').is(":hidden");
+        if (buttonText.indexOf("Expand") >= 0) {
+            if (accordionBandState) {
+                $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            } else {
+                $(".accordion").next('[class="accordionContent"]').slideDown('normal');
+                $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            }
+            $(this).text("Collapse Previews");
+        }
+        
+        if (buttonText.indexOf("Collapse") >= 0) {
+            if (accordionBandState) {
+                $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            } else {
+                $(".accordion").next('[class="accordionContent"]').slideUp('normal');
+                $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            }
+            $(this).text("Expand Previews");
+        }
+
+    });	
+    
+    //-----------------------------------------------------
+    // On clicking the Hide UnInstalled / Show All button
+    $("#ShowHideToggleButton").on('click', function() {
+    
+        // Show or Hide the themes
+        var showHideState=$("[id='ShowHideToggleButton']").text();
+        var expandCollapseState=$("[id='preview_Toggle_Button']").text();
+        if (showHideState.indexOf("Hide") >= 0) {
+            showHideState="Hide";
+        } else if (showHideState.indexOf("Show") >= 0) {
+           showHideState="Show";
+        }
+        ShowHideUnInstalledThemes(showHideState,expandCollapseState);
+        
+        // Change text of button
+        var textState = $(this).text();
+        if (textState.indexOf("Hide") >= 0) {
+            $(this).text("Show All");
+        }
+        if (textState.indexOf("Show") >= 0) {           
+            $(this).text("Hide UnInstalled");
+        }
+    });
+    
+    
+    //-----------------------------------------------------
+    // On clicking a version X mark
+    $("[id^=indicator]").on('click', function() {
+        //var pressedButton=$(this).attr('id');
+        //alert(pressedButton);
+        // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue");                            
+        SetMessageBoxText("Untracked Theme","This theme has no bare git clone in the app support dir. This means you will not be notified of any updates for this theme unless you UnInstall and then re-install it.");
+        ShowMessageBoxClose();
+        ShowMessageBox();
+    });
+    
+    //-----------------------------------------------------
     // On changing the 'NVRAM theme' dropdown menu.
     $("#installedThemeDropDown").change(function() {
         var chosenNvramTheme=$("#installedThemeDropDown").val();
@@ -285,8 +385,6 @@ $(function()
             }, 1000);
         }
     });
-    
-    
 });
 
 //-------------------------------------------------------------------------------------
@@ -294,7 +392,7 @@ function CheckForRevisedInstallThemeList()
 {
     var receivedFile=0;
     var stringSplit="";
-    
+
     // Set timer at the beginning.
     // If the InstalledThemes message filters straight through on first
     // run then the timer will be cleared anyway.
@@ -305,10 +403,11 @@ function CheckForRevisedInstallThemeList()
         if ((fileContent).indexOf("InstalledThemes") >= 0) {
 
             var lineToRead = FindLineInString(fileContent,"InstalledThemes");
-            
+
             stringSplit = (lineToRead).split('@');
             if (stringSplit != "") {
                 localThemes = (stringSplit[1]).split(',');
+
                 if (localThemes != "-") {
 
                     showButtons();
@@ -317,8 +416,12 @@ function CheckForRevisedInstallThemeList()
                         ChangeButtonAndBandToUnInstall(localThemes[t]);
                     }
                     // Update number of installed themes
-                    $("#NumInstalledThemes").html("Total themes installed: " + localThemes.length);
-                    
+                    if (stringSplit != "InstalledThemes,,") {
+                        $("#NumInstalledThemes").html("Total themes installed: " + localThemes.length);
+                    } else {
+                        $("#NumInstalledThemes").html("Total themes installed: 0");
+                    }
+
                     // Populate the config plist key drop down menu
                     UpdateAndRefreshInstalledThemeDropDown(localThemes);
                 } else {
@@ -380,47 +483,6 @@ function CheckForThemesUnderVersionControl()
 	    // recursively call function providing we haven't completed.
         if(receivedFile==0)
             timerCheckVersionedThemeList = setTimeout(CheckForThemesUnderVersionControl, 500);
-	}
-}
-
-//-------------------------------------------------------------------------------------
-function CheckForDirNotUnderVersionControl()
-{
-    var receivedFile=0;
-    var stringSplit="";
-
-    // Set timer at the beginning.
-    // If the UnversionedThemeDir message filters straight through on first
-    // run then the timer will be cleared anyway.
-    timerCheckVersionedDir = setTimeout(CheckForDirNotUnderVersionControl, 250);
-    
-    fileContent=GetFileContents(gLogBashToJsVersionedDir);
-    if (fileContent != 0) {
-        if ((fileContent).indexOf("UnversionedThemeDir") >= 0) {
-            var lineToRead = FindLineInString(fileContent,"UnversionedThemeDir");
-
-            stringSplit = (lineToRead).split('@');
-            if (stringSplit != "") {
-                unVersionedDir = (stringSplit[1]);
-                if (unVersionedDir != "") {
-                    var currentPartition=$("#partitionSelect").val();
-                    currentPartition = (currentPartition).split('@');
-                    
-                    // Show a message to the user
-                    ChangeMessageBoxHeaderColour("blue");                            
-                    SetMessageBoxText("Version Control:","Do you wish to be informed of theme updates for this volume?");
-                    HideMessageBoxClose();
-                    AddYesNoButtons();
-                    ShowMessageBox();
-                }
-            }
-            receivedFile=1;
-            clearTimeout(timerCheckVersionedDir);            
-        }
-
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckVersionedDir = setTimeout(CheckForDirNotUnderVersionControl, 250);
 	}
 }
 
@@ -546,6 +608,10 @@ function CheckForUpdatesThemeList()
             // Check NVRAM theme against list on this volume.
             CheckForNvramTheme();
             
+            // Set view to show all themes.
+            //ShowHideUnInstalledThemes($("[id='ShowHideToggleButton']").text(),$("[id='preview_Toggle_Button']").text());
+            ShowHideUnInstalledThemes("Show",$("[id='preview_Toggle_Button']").text());
+            
         }
 	    // recursively call function providing we haven't completed.
         if(receivedFile==0)
@@ -576,15 +642,28 @@ function CheckForFreeSpace()
 
                 // Bash sends the size read from the result of df
                 // This will look like 168M 
-                // Remove last character of string
-                number = freeSpace.slice(0,-1);
-                // round down
-                number = Math.floor(number);
+                // Is the last character a G?
+                lastChar = freeSpace.slice(-1);
                 
-                if(parseInt(number, 10) < parseInt(10, 10)) {
+                
+                if (lastChar == "K") {
                     // change colour to red
                     $(".textFreeSpace").css("color","#C00000");
-                } else {
+                }
+                
+                if (lastChar == "M") {
+                    // Remove last character of string
+                    number = freeSpace.slice(0,-1);
+                    // round down
+                    number = Math.floor(number);
+                    
+                    if(parseInt(number, 10) < parseInt(10, 10)) {
+                        // change colour to red
+                        $(".textFreeSpace").css("color","#C00000");
+                    }
+                }
+                
+                if (lastChar == "G") {
                     // set to blue as defined in the .css file
                     $(".textFreeSpace").css("color","#00CCFF");
                 }
@@ -648,7 +727,7 @@ function CheckForThemeActionConfirmation()
                 ResetButtonsAndBandsToDefault();
                 hideButtons();
         
-                // Listen out for revised
+                // Listen out for revised theme list
                 CheckForRevisedInstallThemeList();
                 
                 // Disable path drop down menu and open button until updates have been checked.
@@ -664,7 +743,7 @@ function CheckForThemeActionConfirmation()
 
                 // Show open button beside device dropdown
                 $("#OpenPathButton").css("display","block");
-            
+
                 // Check for updates after 1 second delay.
                 // This allows time for the CTM_selectedPartition message
                 // to reach the bash script and for it to delete previous
@@ -719,7 +798,7 @@ function CheckForThemeActionConfirmation()
 function RespondToButtonPress(button,status)
 {
     // Update buttons have a class name 'button_Update_' and not 'button_'
-    // The bash matches against the string 'button_'
+    // The bash script matches against the string 'button_'
     // Remove 'Update_' from string.
     // Note: Could cause issues if a theme has 'Update_' in it's title.
 
@@ -956,7 +1035,7 @@ function SetUnVersionedControlIndicator(themeName)
     // themeName will be the name of an installed theme
 
     // Display indicator to show theme is unversioned
-    $("[id='indicator_" + themeName + "']").html("U");
+    $("[id='indicator_" + themeName + "']").html("\u2715");
 }
 
 //-------------------------------------------------------------------------------------
@@ -1035,4 +1114,28 @@ function SetNvramFooterToNotSet(){
     $("#currentNVRAMvar").text("NVRAM theme: Not set:"); 
     $("#currentNVRAMMessage").text(""); 
     $("#AboveFooter").css("background-color","#888888");
+}
+
+//-------------------------------------------------------------------------------------
+function ShowHideUnInstalledThemes(showHide,expandCollapse)
+{        
+    if (showHide.indexOf("Hide") >= 0) {
+
+        if (expandCollapse.indexOf("Expand") >= 0) {
+            $(".accordion").css("display","none");
+        }
+        if (expandCollapse.indexOf("Collapse") >= 0) {
+            $(".accordion").css("display","none");
+            $(".accordion").next('[class="accordionContent"]').css("display","none");
+        }
+    } else if (showHide.indexOf("Show") >= 0) {   
+
+        if (expandCollapse.indexOf("Expand") >= 0) {
+            $(".accordion").css("display","block");
+        }
+        if (expandCollapse.indexOf("Collapse") >= 0) {
+            $(".accordion").css("display","block");
+            $(".accordion").next('[class="accordionContent"]').css("display","block");
+        }   
+    }
 }

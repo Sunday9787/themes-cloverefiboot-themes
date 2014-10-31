@@ -84,6 +84,13 @@ p { font-family: Helvetica; }
     height: 100%;
 }
 
+#cornerBanner {
+    position: fixed;
+    z-index: 1000;
+    top: 0px;
+    left: 0px;
+}
+
 #LogoHeader {
     width:100%;
     height:440px;
@@ -94,7 +101,7 @@ p { font-family: Helvetica; }
 
 #homePageProgressBar {
     height: 12px;
-    margin: 48px 200px 38px 200px;
+    margin: 0px 330px 12px 330px;
 }
 
 #InitLog {
@@ -102,7 +109,7 @@ p { font-family: Helvetica; }
     overflow-x: hidden;
     background-color:#222;
     border: 1px solid #333;
-    top: 183px;
+    top: 132px;
     bottom: 275px;
     width:440px;
     height: 292px;
@@ -124,7 +131,7 @@ p { font-family: Helvetica; }
 #HeaderBar {
     height: 24px;
     background-color: #888888;
-    padding:5px 0 5px 20px;
+    padding:5px 130px 5px 20px;
     font-family: Helvetica;
     font-size: 12px;
     line-height: 0px;
@@ -144,7 +151,7 @@ p { font-family: Helvetica; }
 }
 
 #WelcomeMessage {
-    margin:48px 0px 0px 0px;
+    margin:74px 0px 0px 0px;
     /*padding:0px 8px 0px 8px;*/
     line-height: 2px;
 }
@@ -282,15 +289,20 @@ a:active {
     font-weight: bold;
     line-height: 18px;
     color:#666;
+    cursor: pointer;
 }
 
 .thumbnail {
     margin: 8px 16px 0px 30px;
     float: left;
     cursor:pointer;
+}
+
+.thumbnail img {
     width: 100px;
     height: 56px;
 }
+
 
 .thumbnail:hover {
     opacity:0.5;
@@ -340,6 +352,13 @@ a:active {
     border: 1px solid #afd1f3;
 }
 
+.buttonInstall:active {
+    background-color: #caecfa;
+    background-image: -moz-linear-gradient(center top , #caecfa, #c3e7f6);
+    background-image: -webkit-linear-gradient(top, #caecfa, #c3e7f6);
+    border: 1px solid #bee7f9;
+}
+
 .buttonUnInstall {
     background-color: #a90329;
     background-image: -moz-linear-gradient(center top , #a90329, #6d0019);
@@ -366,6 +385,13 @@ a:active {
     background-image: -moz-linear-gradient(center top , #bf6e83, #a16976);
     background-image: -webkit-linear-gradient(top, #bf6e83, #a16976);
     border: 1px solid #a36978;
+}
+
+.buttonUnInstall:active {
+    background-color: #dfb6c0;
+    background-image: -moz-linear-gradient(center top , #dfb6c0, #d0b4ba);
+    background-image: -webkit-linear-gradient(top, #dfb6c0, #d0b4ba);
+    border: 1px solid #d1b4bb;
 }
 
 .buttonUpdate {
@@ -445,9 +471,11 @@ a:active {
 
 .toggleButton:hover{
     background-color: #9a9a9a;
-    /*background-image: -moz-linear-gradient(center top , #d2d2d2, #cacaca);
-    background-image: -webkit-linear-gradient(top, #d2d2d2, #cacaca);*/
     border: 1px solid #cacaca;
+}
+
+.toggleButton:active{
+    background-color: #FFF;
 }
 
 .accordion {

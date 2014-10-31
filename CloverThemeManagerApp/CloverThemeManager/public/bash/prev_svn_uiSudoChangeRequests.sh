@@ -16,22 +16,17 @@ WriteToLog() {
 }
 
 # ---------------------------------------------------------------------------------------
-MoveThemeToTarget()
+InstallTheme()
 {
     local successFlag=1
     
-    # Create theme dir on target.
-    chckDir=0
-    mkdir "$targetThemeDir" && chckDir=1
-    if [ $chckDir -eq 1 ]; then
-
-        # Move unpacked files to target theme path.
-        cd "$unPackDir"/themes
-        if [ -d "$themeName" ]; then
-            mv "$themeName"/* "$targetThemeDir" && successFlag=0
-        fi
+    cd "${themeDir}"
+    if [ "$checkoutMethod" == "up" ]; then
+         svn up "$theme" && WriteToLog "Installation was successful." && successFlag=0
+    elif [ "$checkoutMethod" == "checkout" ]; then
+        svn checkout ${remoteRepositoryUrl}/themes/"$theme" && WriteToLog "Installation was successful." && successFlag=0
     fi
-        
+    
     if [ $successFlag -eq 0 ]; then
         exit 0
     else
@@ -44,9 +39,9 @@ UnInstallTheme()
 {
     local successFlag=1
 
-    cd "$targetThemeDir"
-    if [ -d "$themeName" ]; then
-        rm -rf "$themeName" && WriteToLog "Deletion was successful." && successFlag=0
+    cd "${themeDir}"
+    if [ -d "$theme" ]; then
+        rm -rf -- "$theme" && WriteToLog "Deletion was successful."  && successFlag=0
     fi
     
     if [ $successFlag -eq 0 ]; then
@@ -61,21 +56,11 @@ UpdateTheme()
 {
     local successFlag=1
     
-    # Remove existing theme dir on target.
-    if [ -d "$targetThemeDir" ]; then
-        chckDir=0
-        WriteToLog "Removing existing $targetThemeDir files"
-        rm -rf "$targetThemeDir"/* && chckDir=1
-        if [ $chckDir -eq 1 ]; then
-            # Move unpacked files to target theme path.
-            cd "$unPackDir"/themes
-            if [ -d "$themeName" ]; then
-                WriteToLog "Moving updated $themeName theme files to $targetThemeDir"
-                mv "$themeName"/* "$targetThemeDir" && successFlag=0
-            fi
-        fi
+    cd "${themeDir}"
+    if [ -d "${themeDir}"/"$theme" ]; then
+        svn update "${themeDir}"/"$theme" && WriteToLog "Update was successful." && successFlag=0
     fi
-        
+    
     if [ $successFlag -eq 0 ]; then
         exit 0
     else
@@ -115,18 +100,17 @@ whichFunction="$1"
 echo ""
 
 case "$whichFunction" in                             
-     "Move"                       ) themeName="$2"
-                                    targetThemeDir="$3"
-                                    unPackDir="$4"
-                                    MoveThemeToTarget
+     "Install"                    ) checkoutMethod="$2"
+                                    themeDir="$3"
+                                    theme="$4"
+                                    InstallTheme
                                     ;;
-     "UnInstall"                  ) themeName="$2"
-                                    targetThemeDir="$3"
+     "UnInstall"                  ) themeDir="$3"
+                                    theme="$4"
                                     UnInstallTheme
                                     ;;
-     "Update"                     ) themeName="$2"
-                                    targetThemeDir="$3"
-                                    unPackDir="$4"
+     "Update"                     ) themeDir="$3"
+                                    theme="$4"
                                     UpdateTheme
                                     ;;
      "SetPathUnderVersionControl" ) repositoryPath="$2"

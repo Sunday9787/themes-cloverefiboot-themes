@@ -18,9 +18,13 @@
 #
 # Credits:
 # Thanks to SoThOr for helping with svn communications
+# Thanks to apianti for setting up the Clover git theme repository.
+# Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.62"
+VERS="0.63"
 
+DEBUG=0
+#set -x
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -31,8 +35,8 @@ VERS="0.62"
 # ---------------------------------------------------------------------------------------
 CreateSymbolicLink() {
     # Create symbolic link to local images
-    WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/images"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/images "$ASSETS_DIR"
+    WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -71,10 +75,12 @@ SendToUIResult() {
 # ---------------------------------------------------------------------------------------
 SendToUIUpdates() {
     echo "${1}" >> "$logBashToJsUpdates"
+    # Reset updateAvailThemeStr var
+    updateAvailThemeStr=""
 }
 
 # ---------------------------------------------------------------------------------------
-SendToUIUVersionedThemes() {
+SendToUIUnVersionedThemes() {
     echo "${1}" >> "$logBashToJsVersionedThemes"
 }
 
@@ -93,7 +99,7 @@ FindStringInPlist() {
     # Check if file contains carriage returns (CR)
     checkForCR=$( tr -cd '\r' < "$2" | wc -c )
     if [ $checkForCR -gt 0 ]; then
-        WriteToLog "${2##*/} contains carriage returns (CR)"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${2##*/} contains carriage returns (CR)"
         local a=$( cat -v "$2" )
         local b="${a##*${1}</key>}"
         local c="${b%%</string>*}"
@@ -121,16 +127,209 @@ RemoveFile()
 }
 
 # ---------------------------------------------------------------------------------------
-WritePrefsToFile()
+CalculateMd5() {
+	local hash=$( md5 "$1" )
+    echo "${hash##*= }"
+}
+
+# ---------------------------------------------------------------------------------------
+ResetNewlyInstalledThemeVars()
 {
-    # Write prefs file
-    if [ -f "$gUserPrefsFile".plist ]; then
-        WriteToLog "Deleting existing preferences file."
-        defaults delete "$gUserPrefsFile"
+    # Reset vars for newly installed theme
+    gNewInstalledThemeName=""
+    gNewInstalledThemePath=""
+    gNewInstalledThemePathDevice=""
+    gNewInstalledThemeVolumeUUID=""
+}
+
+# ---------------------------------------------------------------------------------------
+ResetUnInstalledThemeVars()
+{
+    # Reset vars for newly installed theme
+    gUnInstalledThemeName=""
+    gUnInstalledThemePath=""
+    gUnInstalledThemePathDevice=""
+    gUnInstalledThemeVolumeUUID=""
+}
+
+# ---------------------------------------------------------------------------------------
+ResetInternalThemeArrays()
+{
+    # Reset arrays for newly installed theme
+    unset installedThemeName
+    unset installedThemePath
+    unset installedThemePathDevice
+    unset installedThemeVolumeUUID
+    unset installedThemeUpdateAvailable
+}
+
+# ---------------------------------------------------------------------------------------
+ClearUpdateFromPrefs()
+{
+    # After the user has chosen to update a theme, this is called
+    # to remove any 'Yes' strings from the UpdateAvailable key for
+    # this theme with current UUID from prefs.
+    
+    local passedThemeName="$1"
+    
+    for ((p=0; p<${#installedThemeName[@]}; p++));
+    do
+        if [ "${installedThemeName[$p]}" == "$passedThemeName" ] && [ "${installedThemeVolumeUUID[$p]}" == "$TARGET_THEME_VOLUMEUUID" ]  && [ "${installedThemeUpdateAvailable[$p]}" == "Yes" ] ; then
+            WriteToLog "Clearing available update prefs flag for theme $passedThemeName on $TARGET_THEME_VOLUMEUUID"
+            installedThemeUpdateAvailable[$p]=""
+            break
+        fi
+    done
+}
+
+# ---------------------------------------------------------------------------------------
+MaintainInstalledThemeListInPrefs()
+{
+    # This routine creates the InstalledThemes array which is
+    # then written to the user's preferences file.
+    
+    # The InstalledThemes array keeps track of the current state
+    # of all theme installations done by this application.
+    # It also records the update state of each installed theme.
+    
+    # When themes are UnInstalled/deleted by the user, the pref
+    # entry is also removed.
+    
+    openArray="<array>"
+    closeArray="</array>"
+    openDict="<dict>"
+    closeDict="</dict>"
+    
+    InsertDictionaryIntoArray()
+    {
+        local passedPath="$1"
+        local passedDevice="$2"
+        local passedUuid="$3"
+        local passedUpdate="$4"
+
+        # open dictionary
+        arrayString="${arrayString}$openDict"
+
+        # Add theme entries
+        arrayString="${arrayString}<key>ThemePath</key>"
+        arrayString="${arrayString}<string>$passedPath</string>"
+        arrayString="${arrayString}<key>ThemePathDevice</key>"
+        arrayString="${arrayString}<string>$passedDevice</string>"
+        arrayString="${arrayString}<key>VolumeUUID</key>"
+        arrayString="${arrayString}<string>$passedUuid</string>"
+        arrayString="${arrayString}<key>UpdateAvailable</key>"
+        arrayString="${arrayString}<string>$passedUpdate</string>"
+
+        # close dictionary
+        arrayString="${arrayString}$closeDict"
+    }
+        
+    # Is there a newly installed theme to add?
+    if [ "$gNewInstalledThemeName" != "" ]; then
+        WriteToLog "Newly installed theme to be appended: $gNewInstalledThemeName"
+        # Is this new theme already installed elsewhere?
+        local themeToAppend=0
+        for ((n=0; n<${#installedThemeName[@]}; n++ ));
+        do
+            if [ "$gNewInstalledThemeName" == "${installedThemeName[$n]}" ]; then
+                themeToAppend=1
+                break
+            fi
+        done
     fi
 
-    defaults write "$gUserPrefsFile" ThemePath "$TARGET_THEME_DIR"
-    defaults write "$gUserPrefsFile" ThemePathDevice "$TARGET_THEME_DIR_DEVICE"
+    # Is there an UnInstalled theme to remove?
+    local dontReAddThemeId=9999
+    if [ "$gUnInstalledThemeName" != "" ]; then
+        WriteToLog "UnInstalled theme to be removed: $gUnInstalledThemeName"
+        # Loop though array of installed themes to find ID of theme to remove.
+        for ((n=0; n<${#installedThemeName[@]}; n++ ));
+        do
+            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && /
+               [ "${installedThemePath[$n]}" == "$gUnInstalledThemePath" ] && /
+               [ "${installedThemeVolumeUUID[$n]}" == "$gUnInstalledThemeVolumeUUID" ]; then
+                WriteToLog "Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemeVolumeUUID[$n]}"
+                dontReAddThemeId=$n
+                ResetUnInstalledThemeVars
+                break
+            fi
+        done
+    fi
+
+    # Construct InstalledThemes array
+    arrayString=""
+    lastAddedThemeName=""
+    WriteToLog "Updating InstalledThemes prefs"
+    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+    do
+         # Don't write back a theme if marked to be removed
+         if [ $n -ne $dontReAddThemeId ]; then
+
+            # Add theme key
+            if [ "${installedThemeName[$n]}" != "-" ] && [ "${installedThemeName[$n]}" != "$lastAddedThemeName" ]; then
+
+                # Check if there's a newly installed theme to append to this current array
+                if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
+                    InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID" ""
+                    themeToAppend=0
+                    ResetNewlyInstalledThemeVars
+                fi
+
+                # close any previous arrays
+                if [ "$lastAddedThemeName" != "" ]; then
+                    arrayString="${arrayString}$closeArray"
+                fi
+
+                # Write new theme key
+                arrayString="${arrayString}<key>${installedThemeName[$n]}</key>"
+
+                # open array
+                arrayString="${arrayString}$openArray"
+                lastAddedThemeName="${installedThemeName[$n]}"
+            fi
+
+            InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemeVolumeUUID[$n]}" "${installedThemeUpdateAvailable[$n]}" 
+        fi
+    done
+    
+    # Did the loop finish before appending a newly installed theme to an existing them entry?
+    # Check if there's a newly installed theme to append to this current array
+    if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
+        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID"
+        themeToAppend=0
+        ResetNewlyInstalledThemeVars
+    fi
+    
+    # Was the above loop run?
+    if [ "$lastAddedThemeName" != "" ]; then
+        # close array
+        arrayString="${arrayString}$closeArray"
+    fi
+
+    # Did the newly installed theme get appended? If not then it needs adding at end.
+    if [ "$gNewInstalledThemeName" != "" ]; then
+        # Write new theme key
+        arrayString="${arrayString}<key>$gNewInstalledThemeName</key>"
+        # open array
+        arrayString="${arrayString}$openArray"
+        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID"
+        # close array
+        arrayString="${arrayString}$closeArray"
+        lastAddedThemeName="$gNewInstalledThemeName"
+        ResetNewlyInstalledThemeVars
+    fi
+    
+    # Delete existing and write new InstalledThemes prefs key
+    #WriteToLog "Removing previous InstalledThemes array from prefs file"
+    defaults delete "$gUserPrefsFile" "InstalledThemes"
+    
+    # Only add back if there's something to write.
+    if [ "$lastAddedThemeName" != "" ]; then
+        #WriteToLog "Inserting InstalledThemes array in to prefs file"
+        defaults write "$gUserPrefsFile" InstalledThemes -array "$openDict$arrayString$closeDict"
+    fi
+    
+    ReadPrefsFile
 }
 
 # ---------------------------------------------------------------------------------------
@@ -160,166 +359,213 @@ ClearMessageLog()
 RunThemeAction()
 {
     local passedAction="$1" # Will be either Install, UnInstall or Update
-    local themeToActOn="$2"
+    local themeTitleToActOn="$2"
     local successFlag=1
-    
-    # Check theme directory is writeable
-    WriteToLog "Checking if ${TARGET_THEME_DIR} is writeable."
-    CheckPathIsWriteable "${TARGET_THEME_DIR}"
-    returnValueWriteable=$? # 1 = not writeable / 0 = writeable
-    if [ ${returnValueWriteable} = 1 ]; then 
-    
-        # not writeable.
-        WriteToLog "path is not writeable. Asking for password"
-        GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeToActOn. Type your password to allow this."
-        returnValueRoot=$? # 1 = not root / 0 = root
-                
-        if [ ${returnValueRoot} = 0 ]; then 
-        
-        # NOT WRITABLE ------------------------------------------------------------------
-        # RUN COMMANDS WITH ROOT PRIVILEGES    
-        
-            WriteToLog "Password gives elevated access"
-            
-            case "$passedAction" in
-                "Install")  WriteToLog "Installing theme $themeToActOn to ${TARGET_THEME_DIR}/"
-                            cd "${TARGET_THEME_DIR}"
-                            ClearMessageLog "$logJsToBash"
-                            # Is theme directory under version control?
-                            if [ -d "${TARGET_THEME_DIR}"/.svn ]; then
-                                echo "$gPw" | sudo -S "$uiSudoChanges" "Install"   "up"       "${TARGET_THEME_DIR}" "$themeToActOn" && gPw=""
-                            else
-                                echo "$gPw" | sudo -S "$uiSudoChanges" "Install"   "checkout" "${TARGET_THEME_DIR}" "$themeToActOn" && gPw="" 
-                            fi
-                            ;;
-                            
-               "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeToActOn"
-                            echo "$gPw" | sudo -S "$uiSudoChanges"     "UnInstall" ""         "${TARGET_THEME_DIR}" "$themeToActOn" && gPw=""
-                            ;;
-                 
-                "Update")   local themeToUpdate="$1"
-                            # Is theme directory under version control?
-                            if [ -d "${TARGET_THEME_DIR}"/.svn ]; then
-                                WriteToLog "Updating ${TARGET_THEME_DIR}/$themeToActOn"
-                                echo "$gPw" | sudo -S "$uiSudoChanges" "Update"    ""         "${TARGET_THEME_DIR}" "$themeToActOn" && gPw=""
-                            fi
-                            ;;
-            esac
-            
-            returnValue=$?
-            if [ ${returnValue} -eq 0 ]; then
-                successFlag=0
-            fi
-            
-        elif [ ${returnValueRoot} = 1 ]; then 
-            # password did not give elevated privileges. Run this routine again.
-            WriteToLog "User entered incorrect password."
-            RunThemeAction "$passedAction" "$themeToActOn"
-        else
-            WriteToLog "User cancelled password entry."
-        fi
+    local localBareRepo="${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn"
 
-    else
-    
-        # WRITABLE ----------------------------------------------------------------------
-        # RUN COMMANDS WITHOUT ROOT PRIVILEGES
-        
-        WriteToLog "path is writeable."
-        WriteToLog "Installing theme $themeToActOn to ${TARGET_THEME_DIR}/"
-        cd "${TARGET_THEME_DIR}"
-        ClearMessageLog "$logJsToBash"
-        
-        case "$passedAction" in
-                "Install")  WriteToLog "Installing theme $themeToActOn to ${TARGET_THEME_DIR}/"
-                            cd "${TARGET_THEME_DIR}"
+    CheckPathIsWriteable "${TARGET_THEME_DIR}"
+    local isPathWriteable=$? # 1 = not writeable / 0 = writeable
+
+    case "$passedAction" in
+                "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}/"
                             ClearMessageLog "$logJsToBash"
-                            # Is theme directory under version control?
-                            if [ -d "${TARGET_THEME_DIR}"/.svn ]; then
-                                WriteToLog "${TARGET_THEME_DIR} is under version control"
-                                svn up "$themeToActOn" && WriteToLog "Installation was successful." && successFlag=0
+                            local successFlag=1
+    
+                            # Only clone the theme from the Clover repo if not already installed
+                            # in which case the bare repo will already be in the local support dir.
+                            if [ ! -d "${localBareRepo}.git" ]; then
+                                WriteToLog "Creating a bare git clone of $themeTitleToActOn"
+                                local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/'g )
+                                git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$localBareRepo".git
                             else
-                                WriteToLog "${TARGET_THEME_DIR} is not under version control"
-                                svn checkout ${remoteRepositoryUrl}/themes/"$themeToActOn" && WriteToLog "Installation was successful." && successFlag=0
+                                WriteToLog "Bare git clone of $themeTitleToActOn already exists. Will checkout from that."
+                            fi
+                            
+                            if [ "$localBareRepo".git ]; then
+                                WriteToLog "Checking out bare git clone of ${themeTitleToActOn}."
+                                
+                                # Theme currently gets checked out as /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
+                                # Desired path is                     /path/to/EFI/Clover/Themes/<theme>
+                                # So checkout to a directory for unpacking first.
+                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout .
+                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout HEAD -- && successFlag=0
+                                #git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout --force && successFlag=0
+                            fi
+
+                            if [ ${successFlag} -eq 0 ]; then 
+                                
+                                # Create theme dir on target and move unpacked theme files to the target dir.
+                                targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
+
+                                if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+                                    WriteToLog "path is not writeable. Asking for password"
+                                    GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
+                                    returnValueRoot=$? # 1 = not root / 0 = root
+                                    if [ ${returnValueRoot} = 0 ]; then 
+                                        echo "$gPw" | sudo -S "$uiSudoChanges" "Move" "$themeTitleToActOn" "$targetThemeDir" "$UNPACKDIR" && gPw=""     
+                                        returnValue=$?
+                                        if [ ${returnValue} -eq 0 ]; then
+                                            successFlag=0
+                                        fi
+                                    fi
+                                else
+                                    chckDir=0
+                                    mkdir "$targetThemeDir" && chckDir=1
+                                    if [ $chckDir -eq 1 ]; then
+                                        # Move unpacked files to target theme path.
+                                        cd "$UNPACKDIR"/themes
+                                        if [ -d "$themeTitleToActOn" ]; then
+                                            mv "$themeTitleToActOn"/* "$targetThemeDir" && successFlag=0
+                                        fi
+                                    fi
+                                fi
+                                
+                                # Remove the unpacked files.
+                                if [ -d "$UNPACKDIR"/themes ]; then
+                                    rm -rf "$UNPACKDIR"/themes 
+                                fi
                             fi
                             ;;
                             
-               "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeToActOn"
-                            cd "${TARGET_THEME_DIR}"
-                            if [ -d "$themeToActOn" ]; then
-                                rm -rf -- "$themeToActOn" && WriteToLog "Deletion was successful." && successFlag=0
+               "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
+                            if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+                                WriteToLog "path is not writeable. Asking for password"
+                                GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
+                                returnValueRoot=$? # 1 = not root / 0 = root
+                                if [ ${returnValueRoot} = 0 ]; then 
+                                    echo "$gPw" | sudo -S "$uiSudoChanges" "UnInstall" "$themeTitleToActOn" "${TARGET_THEME_DIR}" && gPw=""
+                                    returnValue=$?
+                                    if [ ${returnValue} -eq 0 ]; then
+                                        successFlag=0
+                                    fi
+                                fi
+                            else
+                                cd "${TARGET_THEME_DIR}"
+                                if [ -d "$themeTitleToActOn" ]; then
+                                    rm -rf "$themeTitleToActOn" && WriteToLog "Deletion was successful." && successFlag=0
+                                fi
                             fi
                             ;;
                  
-                "Update")   local themeToUpdate="$1"
-                            # Is theme directory under version control?
-                            if [ -d "${TARGET_THEME_DIR}"/.svn ]; then
-                                WriteToLog "Updating ${TARGET_THEME_DIR}/$themeToActOn"
-                                cd "${TARGET_THEME_DIR}"/"$themeToActOn"
-                                svn update "${TARGET_THEME_DIR}"/"$themeToActOn" && WriteToLog "Update was successful." && successFlag=0
+                "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
+                            # Note: The bare git repo will have already been updated when the fetch command was run
+                            # from CheckAndFetchUpdatesFromBareRepoAndBuidList() to discover the update.
+                            # All we need to do is checkout the bare repo to the unpack dir then replace on target dir.
+                            if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "$localBareRepo".git ]; then
+
+                                WriteToLog "Force checking out bare git clone of ${themeTitleToActOn}."
+                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout --force && successFlag=0
+
+                                if [ $successFlag -eq 0 ]; then 
+                                
+                                    targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
+                            
+                                    if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+                                        WriteToLog "path is not writeable. Asking for password"
+                                        GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
+                                        returnValueRoot=$? # 1 = not root / 0 = root
+                                        if [ ${returnValueRoot} = 0 ]; then 
+                                            echo "$gPw" | sudo -S "$uiSudoChanges" "Update" "$themeTitleToActOn" "$targetThemeDir" "$UNPACKDIR" && gPw=""     
+                                            returnValue=$?
+                                            if [ ${returnValue} -eq 0 ]; then
+                                                successFlag=0
+                                            fi
+                                        fi
+                                    else
+                                        if [ -d "$targetThemeDir" ]; then
+                                            chckDir=0
+                                            WriteToLog "Removing existing $targetThemeDir files"
+                                            rm -rf "$targetThemeDir"/* && chckDir=1
+                                            if [ $chckDir -eq 1 ]; then
+                                                # Move unpacked files to target theme path.
+                                                cd "$UNPACKDIR"/themes
+                                                if [ -d "$themeTitleToActOn" ]; then
+                                                    WriteToLog "Moving updated $themeTitleToActOn theme files to $targetThemeDir"
+                                                    mv "$themeTitleToActOn"/* "$targetThemeDir" && successFlag=0
+                                                fi
+                                            fi
+                                        fi
+                                    fi
+                                    # Remove the unpacked files.
+                                    if [ -d "$UNPACKDIR"/themes ]; then
+                                        rm -rf "$UNPACKDIR"/themes 
+                                    fi
+                                fi
                             fi
+                            ClearUpdateFromPrefs "$themeTitleToActOn"
                             ;;
-        esac
-        
-    fi
-    
+    esac
+
     # Was install operation a success?
     if [ $successFlag -eq 0 ]; then
         if [ $COMMANDLINE -eq 0 ]; then
-            SendToUIResult "Success@${passedAction}@$themeToActOn"
+            SendToUIResult "Success@${passedAction}@$themeTitleToActOn"
+            
+            if [ "$passedAction" == "Install" ]; then
+                WriteToLog "Saving settings for newly installed theme."
+                # Save new theme details for adding to prefs file
+                gNewInstalledThemeName="$themeTitleToActOn"
+                gNewInstalledThemePath="$TARGET_THEME_DIR"
+                gNewInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
+                gNewInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+            fi
+
+            if [ "$passedAction" == "UnInstall" ]; then
+                WriteToLog "Saving settings for UnInstalled theme."
+                # Save new theme details for adding to prefs file
+                gUnInstalledThemeName="$themeTitleToActOn"
+                gUnInstalledThemePath="$TARGET_THEME_DIR"
+                gUnInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
+                gUnInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+            fi     
+                 
+            # Record what theme was installed where.
+            MaintainInstalledThemeListInPrefs
+            
+            if [ "$passedAction" == "UnInstall" ]; then
+                # Delete <theme name>.git from local support directory if no longer needed
+                CheckIfThemeNoLongerInstalledThenDeleteLocalTheme "$themeTitleToActOn"
+            fi
         fi
         return 0
     else
         if [ $COMMANDLINE -eq 0 ]; then
-            SendToUIResult "Fail@${passedAction}@$themeToActOn"
+            SendToUIResult "Fail@${passedAction}@$themeTitleToActOn"
         fi
         return 1
     fi
 }
 
 # ---------------------------------------------------------------------------------------
-CreateHtmlAndInsertIntoManageThemes()
+CreateThemeListHtml()
 {
-    # Create HTML and insert in to managethemes.html
-    WriteToLog "themeTitle=${#themeTitle[@]}"
-    WriteToLog "themeDescription=${#themeDescription[@]}"
-    WriteToLog "themeAuthor=${#themeAuthor[@]}"
+    # Build html for each theme.    
+    WriteToLog "Creating html theme list."
+    [[ DEBUG -eq 1 ]] && WriteToLog "Number of theme titles=${#themeTitle[@]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "Number of theme description=${#themeDescription[@]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "Number of theme author=${#themeAuthor[@]}"
+    
+    local imageFormat="png"
     
     if [ ${#themeTitle[@]} -eq ${#themeDescription[@]} ] && [ ${#themeTitle[@]} -eq ${#themeAuthor[@]} ]; then
         WriteToLog "Found ${#themeTitle[@]} Titles, Descriptions and Authors"
         WriteLinesToLog
         for ((n=0; n<${#themeTitle[@]}; n++ ));
         do
-            WriteToLog "Creating html for ${themeTitle[$n]} theme"
-            #themeTitlelc=$( echo "${themeTitle[$n]}" | tr '[:upper:]' '[:lower:]' )
+            [[ DEBUG -eq 1 ]] && WriteToLog "Creating html for ${themeTitle[$n]} theme"
             themeHtml="${themeHtml}\
         <div id=\"ThemeBand\" class=\"accordion\">\
         <div id=\"ThemeItems\">\
-            <div class=\"thumbnail\"><img src=\"assets/images/thumbnails/thumb_${themeTitle[$n]}.jpg\" onerror=\"imgErrorThumb(this);\"></div>\
+            <div class=\"thumbnail\"><img src=\"assets/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorThumb(this);\"></div>\
             <div id=\"ThemeText\"><p class=\"themeTitle\">${themeTitle[$n]}<br><span class=\"themeDescription\">${themeDescription[$n]}</span><br><span class=\"themeAuthor\">${themeAuthor[$n]}</span></p></div>\
             <div class=\"versionControl\" id=\"indicator_${themeTitle[$n]}\"></div>\
             <div class=\"buttonInstall\" id=\"button_${themeTitle[$n]}\"></div>\
         </div> <!-- End ThemeItems -->\
     </div> <!-- End ThemeBand -->\
-    <div class=\"accordionContent\"><img src=\"assets/images/previews/preview_${themeTitle[$n]}.jpg\" onerror=\"imgErrorPreview(this);\" width=\"100%\"></div>\
+    <div class=\"accordionContent\"><img src=\"assets/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorPreview(this);\" width=\"100%\"></div>\
     \
     "
         done
-   
-        # Escape forward slashes
-        themeHtml=$( echo "$themeHtml" | sed 's/\//\\\//g' )
-
-        # Save html to file
-        echo "$themeHtml" > "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html
-
-        WriteLinesToLog
-        # Insert Html in to placeholder
-        WriteToLog "Inserting HTML in to managethemes.html"
-        LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html
-
-        # Clean up
-        if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-            rm "${PUBLIC_DIR}"/managethemes.htmle
-        fi
     else
         WriteToLog "Error: Title(${#themeTitle[@]}), Author(${#themeAuthor[@]}), Description(${#themeDescription[@]}) mismatch."
         for ((n=0; n<${#themeTitle[@]}; n++ ));
@@ -327,6 +573,36 @@ CreateHtmlAndInsertIntoManageThemes()
             WriteToLog "$n : ${themeTitle[$n]} | ${themeDescription[$n]} | ${themeAuthor[$n]}"
         done
     fi
+    WriteLinesToLog
+}
+
+# ---------------------------------------------------------------------------------------
+InsertThemeListHtmlInToManageThemes()
+{
+    local passedOptionalCommand="$1"
+        
+    if [ "$passedOptionalCommand" == "file" ]; then
+        # Read previously saved file
+        themeHtml=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html )
+        # Escape all ampersands
+        themeHtml=$( echo "$themeHtml" | sed 's/&/\\\&/g' );
+    else
+        # Use internal string var
+        # Escape forward slashes
+        themeHtml=$( echo "$themeHtml" | sed 's/\//\\\//g' )
+        # Save html to file
+        echo "$themeHtml" > "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html
+    fi
+
+    # Insert Html in to placeholder
+    WriteToLog "Inserting HTML in to managethemes.html"
+    LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html
+
+    # Clean up
+    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
+        rm "${PUBLIC_DIR}"/managethemes.htmle
+    fi
+
     WriteLinesToLog
 }
 
@@ -386,6 +662,26 @@ CheckPathIsWriteable()
 
 
 
+# ---------------------------------------------------------------------------------------
+ReadRepoUrlList()
+{
+    WriteToLog "Looking for URL list."
+    if [ -f "$gThemeRepoUrlFile" ]; then
+        WriteToLog "Reading URL list"
+        oIFS="$IFS"; IFS=$'\n'
+        while read -r line
+        do
+            if [ ! "${line:0:1}" == "#" ]; then
+                WriteToLog "Found URL $line"
+                repositoryUrls+=( "${line##*#}" )
+            fi
+        done < "$gThemeRepoUrlFile"
+        IFS="$oIFS"
+        WriteToLog "Number of repositories found: ${#repositoryUrls[@]}"
+    else
+        WriteToLog "$gThemeRepoUrlFile not found."
+    fi
+}
 
 # ---------------------------------------------------------------------------------------
 RefreshHtmlTemplates()
@@ -412,19 +708,22 @@ RefreshHtmlTemplates()
 # ---------------------------------------------------------------------------------------
 IsRepositoryLive()
 {
-    if [ -f /usr/bin/curl ]; then
-        httpRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/svn:/http:/' )
-        WriteToLog "Checking for response from $httpRepositoryUrl"
-        local testConnection=$( /usr/bin/curl --silent --head $httpRepositoryUrl | egrep "OK"  )
-        WriteToLog "Response: $testConnection"
-        if [ ! "$testConnection" ]; then
-            # Repository not alive.
-            WriteToLog "RepositoryError: No response from Repository ${remoteRepositoryUrl}/"
-            # The initialise.js should pick this up, notify the user, then quit.
-            exit 1
-        fi
-    fi
-    WriteLinesToLog
+    # This needs updating for the Clover themes git repo on Sourceforge.
+    
+    #if [ -f /usr/bin/curl ]; then
+    #    httpRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/svn:/http:/' )
+    #    WriteToLog "Checking for response from $httpRepositoryUrl"
+    #    local testConnection=$( /usr/bin/curl --silent --head $httpRepositoryUrl | egrep "OK"  )
+    #    WriteToLog "Response: $testConnection"
+    #    if [ ! "$testConnection" ]; then
+    #        # Repository not alive.
+    #        WriteToLog "RepositoryError: No response from Repository ${remoteRepositoryUrl}/"
+    #        # The initialise.js should pick this up, notify the user, then quit.
+    #        exit 1
+    #    fi
+    #fi
+    #WriteLinesToLog
+    echo "Nothing here"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -435,6 +734,13 @@ EnsureLocalSupportDir()
     if [ ! -d "$pathToCreate" ]; then
         WriteToLog "Creating $pathToCreate"
         mkdir -p "$pathToCreate"
+    fi
+    
+    # Create unpacking directory for checking out cloned bare theme repo's
+    # from clover repo. This is because the themes checkout as:
+    # /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
+    if [ ! -d "$UNPACKDIR" ]; then
+        mkdir "$UNPACKDIR"
     fi
 }
 
@@ -452,137 +758,121 @@ EnsureSymlink()
 # ---------------------------------------------------------------------------------------
 CheckoutImages()
 {
+    # This was used when getting themes from bitbucket.
+    # However, the index.git from clover repo now has pics too.
+    # This is no longer called.
+    
+    CheckoutGitPics()
+    {
+        local targetdir="${WORKING_PATH}/${APP_DIR_NAME}/images/previews"
+        if [ ! -d "$targetdir" ]; then
+            WriteToLog "Creating $targetdir"
+            mkdir -p "$targetdir"
+        fi
+        cd "${WORKING_PATH}/${APP_DIR_NAME}/images/previews"
+        for url in "${repositoryUrls[@]}"; do
+            theme=${url##*/}
+            curl --silent "$url/raw/HEAD/screenshot.png" -o "${WORKING_PATH}/${APP_DIR_NAME}/images"/previews/preview_"$theme".png &
+        done
+        wait
+    }
+    
     if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/images ]; then
         WriteToLog "${WORKING_PATH}/${APP_DIR_NAME}/images exists."
-        # Update local repository
         cd "${WORKING_PATH}/${APP_DIR_NAME}"/images
-        WriteToLog "Checking status of local images against remote images."
-        # Following command from http://stackoverflow.com/questions/6516214/how-do-i-know-if-my-working-copy-is-out-of-sync
-        statusCheck=$( svn status -u | grep -E -c "^\s+[^\?]" )
-        if [ $statusCheck -eq 0 ]; then
-            WriteToLog "No changes. Local images are up to date."
-        else
-            WriteToLog "There have been changes. Updating local images."
-            svn update "${WORKING_PATH}/${APP_DIR_NAME}"/images
-        fi
+        CheckoutGitPics
     else
-        WriteToLog "Creating ${WORKING_PATH}/${APP_DIR_NAME}/images"
-        mkdir "${WORKING_PATH}/${APP_DIR_NAME}"/images
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"
-        # Checkout images
         WriteToLog "Downloading thumbnail and preview images."
-        svn checkout ${remoteRepositoryUrl}/images
+        # Checkout images
+        CheckoutGitPics
     fi
 }
 
 # ---------------------------------------------------------------------------------------
-CheckOutThemePlistsAndEnsureThemeHtml()
+GetLatestIndexAndEnsureThemeHtml()
 {
     BuildThemeTextInformation()
     {
+        # Read local theme.plists and parse author and description info.
         # Create array of directory list alphabetically
         oIFS="$IFS"; IFS=$'\r\n'
         themeList=( $( ls -d "${WORKING_PATH}/${APP_DIR_NAME}"/themes/* | sort -f ))
+    
+        WriteToLog "Reading theme plists."
     
         # Read each themes' theme.plist from the repository to extract Author & Description.
         for ((n=0; n<${#themeList[@]}; n++ ));
         do
             tmpTitle="${themeList[$n]##*/}"
-            WriteToLog "Reading theme plists for $tmpTitle" 
+            [[ DEBUG -eq 1 ]] && WriteToLog "Reading theme plists for $tmpTitle" 
             themeTitle+=("$tmpTitle")
             themeAuthor+=( $(FindStringInPlist "Author" "${WORKING_PATH}/${APP_DIR_NAME}/themes/${tmpTitle}/theme.plist"))
             themeDescription+=( $(FindStringInPlist "Description" "${WORKING_PATH}/${APP_DIR_NAME}/themes/${tmpTitle}/theme.plist"))
-
-            # Truncate Description to set length of 74 chars.
-            #themeDescription[$n]="${themeDescription[$n]:0:73}"
         done
         IFS="$oIFS"
     }
     
-    CheckoutThemePlists()
+    CloneAndCheckoutIndex()
     {
-        WriteToLog "Checking out each themes' plist" 
-        for dirs in "${WORKING_PATH}/${APP_DIR_NAME}"/themes/*
-        do 
-            cd "$dirs"
-            if [ ! -f theme.plist ]; then
-                svn up --set-depth empty theme.plist
-                WriteToLog "${dirs##*/}/theme.plist"
-            fi
-        done
+        # Remove index.git from a previous run
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
+            WriteToLog "Removing previous index.git"
+            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
+        fi
+    
+        # Remove any images from a previous run
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/images ]; then
+            WriteToLog "Removing previous index images directory"
+            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/images
+        fi
+    
+        # Remove any theme.plists from a previous run
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/themes ]; then
+            WriteToLog "Removing previous index themes directory"
+            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/themes
+        fi
+    
+        # Get new index.git from CloverRepo
+        cd "${WORKING_PATH}/${APP_DIR_NAME}"
+        WriteToLog "Cloning bare repo index.git"
+        git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
+        WriteToLog "Checking out index.git"
+        #git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout .
+        #git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout HEAD --
+        git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force
     }
     
-    local themePlistsHaveChanged=0
-    
-    # Get up to date directory listing and theme.plists from repository
-    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}/themes" ]; then
-        # Check out immediate directories without each containing children.
-        WriteToLog "Checking out immediate theme directories" 
-        svn checkout --depth immediates ${remoteRepositoryUrl}/themes "${WORKING_PATH}/${APP_DIR_NAME}"/themes
-        
-        # Checkout just the theme.plist for each theme.
-        
-        # SoThOr - I couldn't get this to work. Results in skipped paths?
-        #oIFS="$IFS"; IFS=$'\r\n'
-        #svn up --set-depth empty $( ls "${WORKING_PATH}/${APP_DIR_NAME}"/themes | sed 's=$=/theme.plist=' )
-        #IFS="$oIFS"
-        
-        CheckoutThemePlists
-        themePlistsHaveChanged=1
-    else
-        # Check for updates to the theme plists.
-        WriteToLog "Checking for updates to the theme plists" 
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"/themes
-        local statusCheck=$( svn status -u | grep -E -c "^\s+[^\?]" )
-        if [ $statusCheck -eq 0 ]; then
-            WriteToLog "No changes. theme.plists are up to date."
-        else
-            WriteToLog "There have been changes. Updating local theme.plists."
-            svn update "${WORKING_PATH}/${APP_DIR_NAME}"/themes
-            CheckoutThemePlists
-            themePlistsHaveChanged=1
-            
-            # Remove previously created theme.html to force rebuild
-            WriteToLog "Deleting previously created theme.html file."
-            RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html
-        fi
-    fi
-    
-    if [ $themePlistsHaveChanged -eq 1 ] ; then
-
-        # Read local theme.plists and parse author and description info.
+    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
+        CloneAndCheckoutIndex
         BuildThemeTextInformation
-        
-        # Build html for each theme and insert in to the template.
-        CreateHtmlAndInsertIntoManageThemes
-        
+        CreateThemeListHtml
+        InsertThemeListHtmlInToManageThemes
     else
-    
-        # Use previously saved theme.html
-        if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
-            
-            WriteToLog "Inserting previous HTML in to managethemes.html"
-            # Read previously saved file
-            themeHtml=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html )
-            # Escape all forward slashes
-            themeHtmlClean=$( echo "$themeHtml" | sed 's/&/\\\&/g' );
-            # Insert Html in to placeholder
-            LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtmlClean}/g" "${PUBLIC_DIR}"/managethemes.html
-            # Clean up
-            if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-                rm "${PUBLIC_DIR}"/managethemes.htmle
-            fi
-        else
-            WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
-            
-            # Read local theme.plists and parse author and description info.
+        # Check for updates to index.git
+        WriteToLog "Checking for update to index.git"
+        cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
+        local updateCheck=$( git fetch --progress origin master:master 2>&1 )
+        if [[ "$updateCheck" == *done.*  ]]; then
+            WriteToLog "index.git has been updated. Re-downloading"
+            CloneAndCheckoutIndex
             BuildThemeTextInformation
+            CreateThemeListHtml
+            InsertThemeListHtmlInToManageThemes
+        else
+            WriteToLog "No updates to index.git"
             
-            # Build html for each theme and insert in to the template.
-            CreateHtmlAndInsertIntoManageThemes
+            # Use previously saved theme.html
+            if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
+                InsertThemeListHtmlInToManageThemes "file"
+            else
+                WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
+                BuildThemeTextInformation
+                CreateThemeListHtml
+                InsertThemeListHtmlInToManageThemes
+            fi 
         fi
-    
     fi
+        
     WriteLinesToLog
 }
 
@@ -603,16 +893,12 @@ GetListOfMountedDevices()
     for (( m=0; m<${#dfMounts[@]}; m++ ))
     do
         dfMounts[$m]="${dfMounts[$m]##*/}"
-        #WriteToLog "${dfMounts[$m]}"
     done
 }
 
 # ---------------------------------------------------------------------------------------
 BuildDiskUtilStringArrays()
 {
-    # Six global string arrays are used for holding the disk information.
-    # They are declared at the head of this file.
-
     # ---------------------------------------------------------------------------------------
     # Function to search for key in plist and return all associated strings in an array. 
     # Will only find a single match
@@ -641,8 +927,12 @@ BuildDiskUtilStringArrays()
     
     local recordAdded=0
     
+    # Declare local arrays (other global arrays are declared at the start of script).
+    declare -a diskUtilPlist
+    declare -a diskUtilSliceInfo
+    
     WriteToLog "Getting diskutil info for mounted devices"
-
+        
     # Read Diskutil command in to array rather than write to file.
 	diskUtilPlist=( $( diskutil list -plist ))
 
@@ -654,34 +944,32 @@ BuildDiskUtilStringArrays()
             unset diskUtilSliceInfo
             diskUtilSliceInfo=( $( diskutil info -plist /dev/${dfMounts[$s]} ))
             tmp=$( FindMatchInSlicePlist "VolumeName" "string" "diskUtilSliceInfo[@]" )
-        
+
             # Does this device contain /efi/clover/themes directory?
-            themeDir=$( find /Volumes/"$tmp"/EFI/Clover -type d -iname "Themes" 2>/dev/null )
+            themeDir=$( find /Volumes/"$tmp"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
             if [ "$themeDir" ]; then
-            
+     
                 WriteToLog "Volume $tmp contains $themeDir" 
                 # Save VolumeName
                 duVolumeName+=( "${tmp}" )
                 # Save device
                 duIdentifier+=("${dfMounts[$s]}")
-                # Read and save Content
+                # Read and save Volume UUID
                 unset diskUtilSliceInfo
-                diskUtilSliceInfo=( $( diskutil info -plist /dev/${duIdentifier[$S]} ))
-                tmp=$( FindMatchInSlicePlist "Content" "string" "diskUtilSliceInfo[@]" )
-                duContent+=("$tmp")
+                diskUtilSliceInfo=( $( diskutil info -plist /dev/"${dfMounts[$s]}" ))
+                tmp=$( FindMatchInSlicePlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" )
+                duVolumeUuid+=("$tmp")
                 # Save path to theme directory 
                 themeDirPaths+=("$themeDir")
-                # Check/Set theme directory is under version control
-                #SetThemeDirUnderVersionControl "$themeDir" <--- moved this elsewhere
                 (( recordAdded++ ))
             fi
         fi
     done
 
     # Before leaving, check all string array lengths are equal.
-    if [ ${#duVolumeName[@]} -ne $recordAdded ] || [ ${#duContent[@]} -ne $recordAdded ] || [ ${#duIdentifier[@]} -ne $recordAdded ]; then
+    if [ ${#duVolumeName[@]} -ne $recordAdded ] || [ ${#duVolumeUuid[@]} -ne $recordAdded ] || [ ${#duIdentifier[@]} -ne $recordAdded ]; then
         WriteToLog "Error- Disk Utility string arrays are not equal lengths!"
-        WriteToLog "records=$recordAdded V=${#duVolumeName[@]} C=${#duContent[@]} I=${#duIdentifier[@]}"
+        WriteToLog "records=$recordAdded V=${#duVolumeName[@]} C=${#duVolumeUuid[@]} I=${#duIdentifier[@]}"
         exit 1
     fi
 }
@@ -692,20 +980,15 @@ CreateDiskPartitionDropDownHtml()
     RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}/dropdown_html"
     
     # Create html for drop-down menu
-    htmlDropDown="\
-<option value=\"-@-\">Select your target theme directory:</option>\
-    "
+    htmlDropDown="<option value=\"-@-\">Select your target theme directory:</option>"
 
     for ((a=0; a<${#duVolumeName[@]}; a++))
     do
         if [ ! "${duVolumeName[$a]}" == "" ] && [[ ! "${duVolumeName[$a]}" =~ ^\ +$ ]]; then
-            WriteToLog "${duIdentifier[$a]} | ${duVolumeName[$a]} [${duContent[$a]}]"
-            
-            # Create html for drop-down menu
-            htmlDropDown="${htmlDropDown}\
-<option value=\"${duIdentifier[$a]}@${themeDirPaths[$a]}\">${themeDirPaths[$a]} [${duIdentifier[$a]}]</option>\
-            "
-            
+            WriteToLog "${duIdentifier[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
+
+            # Append paths to drop-down menu
+            htmlDropDown="${htmlDropDown}<option value=\"${duIdentifier[$a]}@${themeDirPaths[$a]}\">${themeDirPaths[$a]} [${duIdentifier[$a]}]</option>"
         else
             WriteLog "must be blank or empty"
         fi
@@ -731,69 +1014,111 @@ CreateDiskPartitionDropDownHtml()
 }
 
 # ---------------------------------------------------------------------------------------
-LoadPreviousSettingsFromUserPrefs()
+ReadPrefsFile()
 {
     WriteToLog "Read user preferences file"
     # Check for preferences file
     if [ -f "$gUserPrefsFile".plist ]; then
-
-        oIFS="$IFS"; IFS=$'\n'
-        local readVar=( $( defaults read "$gUserPrefsFile" 2>/dev/null ) )
-        IFS="$oIFS"
+    
+        gLastSelectedPath=$( defaults read "$gUserPrefsFile".plist LastSelectedPath )
+        [[ DEBUG -eq 1 ]] && WriteToLog "gLastSelectedPath=$gLastSelectedPath"
         
+        gLastSelectedPathDevice=$( defaults read "$gUserPrefsFile".plist LastSelectedPathDevice )
+        [[ DEBUG -eq 1 ]] && WriteToLog "gLastSelectedPathDevice=$gLastSelectedPathDevice"
+        
+        gLastSelectedVolumeUUID=$( defaults read "$gUserPrefsFile".plist LastSelectedVolumeUUID )
+        [[ DEBUG -eq 1 ]] && WriteToLog "gLastSelectedVolumeUUID=$gLastSelectedVolumeUUID"
+     
+        [[ DEBUG -eq 1 ]] && WriteToLog "Resetting internal theme arrays"
+        ResetInternalThemeArrays
+        
+        # Find installed themes
+        oIFS="$IFS"; IFS=$'\n'
+        local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
+        IFS="$oIFS"
+
         # get total count of lines, less one for zero based index.
         local count=(${#readVar[@]}-1)
-
-        # Check first line and last line of prefs file actually is an open and closing curly brace.
-        if [[ "${readVar[0]}" == "{" ]] && [[ "${readVar[$count]}" == "}" ]]; then
-            WriteToLog "Reading preferences from ${gUserPrefsFile}.plist"
-
-            # Ignore first and last elements as they will be an opening and closing brace. 
-            for (( x=1; x<$count; x++ ))
-            do
-                # separate items
+        foundThemeName=0
+        for (( x=0; x<=$count; x++ ))
+        do
+            if [ $foundThemeName -eq 1 ] || [[ "${readVar[$x]}" == *ThemePath* ]]; then
                 local tmpOption="${readVar[$x]%=*}"
+                tmpOption="${tmpOption//[[:space:]]}"        # Remove whitespace
                 local tmpValue="${readVar[$x]#*=}"
-                # Remove whitespace
-                tmpOption="${tmpOption//[[:space:]]}"
-                
-                # Check for theme path.
-                if [ "$tmpOption" == "ThemePath" ]; then
-                    # Remove quotes and semicolon from the returned string
-                    tmpValue=$( echo "$tmpValue" | tr -d '";' )
-                    # Remove any leading white space
-                    tmpValue=$( echo "${tmpValue#* }" )
-                    # Escape any spaces
-                    tmpValue=$( echo "$tmpValue" | sed 's/ /\\ /g' )
-                    gReportsFolderPath="$tmpValue"
-                else
-                    # Remove whitespace
-                    tmpValue="${tmpValue//[[:space:]]}"
-                    # Remove semicolon from the string
-                    tmpValue=$( echo "$tmpValue" | tr -d ';' )
-                fi
+                tmpValue="${tmpValue//[[:space:]]}"          # Remove whitespace
+                tmpValue=$( echo "$tmpValue" | tr -d '";' )  # Remove quotes and semicolon from the string
+                case "$tmpOption" in
+                           "ThemePath"       )   installedThemeName+=( "$themeName" )
+                                                 installedThemePath+=("$tmpValue") ;;
+                           "ThemePathDevice" )   installedThemePathDevice+=("$tmpValue") ;;
+                           "UpdateAvailable" )   installedThemeUpdateAvailable+=("$tmpValue") ;;
+                           "VolumeUUID"      )   installedThemeVolumeUUID+=("$tmpValue")
+                                                 #foundThemeName=0
+                                                 ;;
+                esac
+            fi
 
-                WriteToLog "Found previous option: ${tmpOption}=${tmpValue}"
-                
-                if [ "$tmpOption" == "ThemePath" ]; then
-                    TARGET_THEME_DIR="$tmpValue"
-                fi
-                if [ "$tmpOption" == "ThemePathDevice" ]; then
-                    TARGET_THEME_DIR_DEVICE="$tmpValue"
-                fi
-            done
-        else
-            WriteToLog "Error: Prefs file does not contain opening and closing curly braces."
+            # Look for an open parenthesis to indicate start of array entry
+            if [[ "${readVar[$x]}" == *\(* ]]; then
+                themeName="${readVar[$x]% =*}"                      # Remove all after ' ='    
+                themeName=$( echo "$themeName" | sed 's/^[ \t]*//') # Remove leading whitespace  
+                themeName=$( echo "$themeName" | sed 's/\"//g' )  # Remove any quotes
+                foundThemeName=1
+            fi
+        done
+        
+        if [ "$gLastSelectedPath" != "" ]; then
+            TARGET_THEME_DIR="$gLastSelectedPath"
         fi
+        if [ "$gLastSelectedPathDevice" != "" ]; then
+            TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
+        fi
+        if [ "$gLastSelectedVolumeUUID" != "" ]; then
+            TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
+        fi
+        
     else
         WriteToLog "Preferences file not found."
+        WriteLog "Creating initial prefs file: $gUserPrefsFile"
+        defaults write "$gUserPrefsFile" "LastSelectedPath" "-"
+        defaults write "$gUserPrefsFile" "LastSelectedPathDevice" "-"
+        defaults write "$gUserPrefsFile" "LastSelectedVolumeUUID" "-"
     fi
+    
+    [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
+}
+
+# ---------------------------------------------------------------------------------------
+SendInternalThemeArraysToLogFile()
+{
+    # This is only called if DEBUG is set to 1
+    # It will loop through the internal arrays for installed themes and
+    # print them to the log file.
+    # They arrays are saved to prefs in MaintainInstalledThemeListInPrefs()
+    
+    WriteLinesToLog
+    local totalPath="${#installedThemePath[@]}"
+    local totalPathDevice="${#installedThemePathDevice[@]}"
+    local totalVolUuid="${#installedThemeVolumeUUID[@]}"
+    if [ $totalPath -ne $totalPathDevice ] && [ $totalPath -ne $totalVolUuid ]; then
+        WriteToLog "Error. Preferences are corrupt"
+        exit 1
+    else
+        WriteToLog "Prefs shows total number of installed themes=${#installedThemeName[@]}"
+        for ((n=0; n<${#installedThemeName[@]}; n++ ));
+        do
+            WriteToLog "$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemeVolumeUUID[$n]}, Update=${installedThemeUpdateAvailable[$n]}"
+        done
+    fi  
+    WriteLinesToLog 
 }
 
 # ---------------------------------------------------------------------------------------
 SendUIThemePathThemeListAndFreeSpace()
 {
-
+    # This is called once when the app is loaded.
+    
     if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "" ] ; then
 
         CheckThemePathIsStillValid
@@ -804,13 +1129,13 @@ SendUIThemePathThemeListAndFreeSpace()
             SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
             
             GetListOfInstalledThemes
-            WriteToLog "Sending UI: $installedThemeStr"
+            WriteToLog "1) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
             SendToUI "InstalledThemes@${installedThemeStr}@"
             
             freeSpace=$( GetFreeSpaceOfTargetDevice )
             WriteToLog "Sending UI: FreeSpace:$freeSpace"
             SendToUIFreeSpace "FreeSpace@${freeSpace}@"
-        
+                        
         elif [ $retVal -eq 1 ]; then
             if [ ! "$TARGET_THEME_DIR" == "-" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "-" ] ; then
                 WriteToLog "Sending UI: NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
@@ -824,13 +1149,12 @@ SendUIThemePathThemeListAndFreeSpace()
         fi
         
         # Run this regardless of path chosen as JS is waiting to hear it. 
-        GetListOfUpdatedThemes
+        CheckAndFetchUpdatesFromBareRepoAndBuidList
+        CheckForPreviousUpdatesStoredInPrefs
+        WriteToLog "Sending to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
         SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-        WriteToLog "Sent to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
-
-        # GetListOfUpdatedThemes() also gathered list of any unversioned themes.
-        SendToUIUVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-        WriteToLog "Sent to UI: UnversionedThemes@${unversionedThemeStr}@"
+        WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+        SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
         
         # Set redirect from initial page
         WriteToLog "Redirect managethemes.html"
@@ -874,12 +1198,12 @@ RespondToUserDeviceSelection()
     # remove everything up until, and including, the first @
     messageFromUi="${messageFromUi#*@}"
     selectedDevice="${messageFromUi%%@*}"
-    selectedVolumeName="${messageFromUi##*@}"
+    selectedVolumePath="${messageFromUi##*@}"
     
     # Check user did actually change from default
-    if [ ! "$selectedDevice" == "-" ] && [ ! "$selectedVolumeName" == "-" ]; then
+    if [ ! "$selectedDevice" == "-" ] && [ ! "$selectedVolumePath" == "-" ]; then
 
-        WriteToLog "User selected device: $selectedDevice with Volume name: $selectedVolumeName" 
+        WriteToLog "User selected volume: $selectedDevice with theme path: $selectedVolumePath" 
 
         # Check against previously discovered file paths
         for (( s=0; s<${#duIdentifier[@]}; s++ ))
@@ -887,41 +1211,38 @@ RespondToUserDeviceSelection()
             if [[ "${duIdentifier[$s]}" == "$selectedDevice" ]]; then
                 TARGET_THEME_DIR="${themeDirPaths[$s]}"
                 TARGET_THEME_DIR_DEVICE="${duIdentifier[$s]}"
+                TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$s]}"
             fi
         done
 
-        WriteToLog "Theme path: $TARGET_THEME_DIR on device $TARGET_THEME_DIR_DEVICE"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Theme path: $TARGET_THEME_DIR on device $TARGET_THEME_DIR_DEVICE with UUID $TARGET_THEME_VOLUMEUUID"
         
-        UpdatePrefsKey "ThemePath" "$TARGET_THEME_DIR"
-        UpdatePrefsKey "ThemePathDevice" "$TARGET_THEME_DIR_DEVICE"      
-        
-        # Check theme directory is under version control
-        CheckIfThemeDirIsUnderVersionControl "$TARGET_THEME_DIR"
+        UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"
+        UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
+        UpdatePrefsKey "LastSelectedVolumeUUID" "$TARGET_THEME_VOLUMEUUID"
         
         # Scan this path for theme list and then send to UI
         GetListOfInstalledThemes
         SendToUI "InstalledThemes@${installedThemeStr}@"
-        WriteToLog "Sent to UI: $installedThemeStr"
+        WriteToLog "2) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
         
         freeSpace=$( GetFreeSpaceOfTargetDevice )
         WriteToLog "Sending UI: FreeSpace:$freeSpace"
         SendToUIFreeSpace "FreeSpace@${freeSpace}@"
         
         # Check for any updates
-        GetListOfUpdatedThemes
+        CheckAndFetchUpdatesFromBareRepoAndBuidList
+        CheckForPreviousUpdatesStoredInPrefs
+        WriteToLog "Sending to UI: $updateAvailThemeStr"
         SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-        WriteToLog "Sent to UI: $updateAvailThemeStr"
-        
-        # GetListOfUpdatedThemes() also gathered list of any unversioned themes.
-        SendToUIUVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-        WriteToLog "Sent to UI: UnversionedThemes@${unversionedThemeStr}@"
+        WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+        SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
 
     else
         WriteToLog "User de-selected device pointing to theme path"
-        UpdatePrefsKey "ThemePath" "-"
-        UpdatePrefsKey "ThemePathDevice" "-"
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
+        TARGET_THEME_VOLUMEUUID="-"
         WriteToLog "Sending UI: @@"
         SendToUI "InstalledThemes@-@"
     fi
@@ -967,239 +1288,99 @@ CheckThemePathIsStillValid()
 # ---------------------------------------------------------------------------------------
 GetListOfInstalledThemes()
 {
+    # Scan the selected EFI/Clover/Themes directory for a list of installed themes.
+    # The user could add themes without using the app so we need to keep to track of
+    # what's there.
+    
     installedThemeStr=""
-    WriteToLog "Looking for installed themes at $TARGET_THEME_DIR"
-    oIFS="$IFS"; IFS=$'\r\n'
-    installedThemesFound=( $( find "$TARGET_THEME_DIR"/* -type d -depth 0 ))
-    for ((i=0; i<${#installedThemesFound[@]}; i++))
-    do
-        installedThemes[$i]="${installedThemesFound[$i]##*/}"
-        # Create comma separated string for sending to the UI
-        installedThemeStr="${installedThemeStr},${installedThemes[$i]}"
-        WriteToLog "Found installed theme: ${installedThemes[$i]}"
-    done
-    IFS="$oIFS"
-    # Remove leading comma from string
-    installedThemeStr="${installedThemeStr#?}"   
-}
-
-# ---------------------------------------------------------------------------------------
-GetListOfUpdatedThemes()
-{
-    # Checks if the current themes directory is under version control.
-    # Then gets svn status on that themes directory, parsing the results.
-    # Any updated theme names are appended to the string: updateAvailThemeStr
-    # Multiple themes are separated by a comma.
-    
-    updateAvailThemeStr=""
-    unversionedThemeStr=""
-    local newEntry=0
-    local filePath=""
-    local themeName=""
-    local lastThemeName=""
-    local wcStatusFound=0
-    local reposStatusFound=0
-    local repoStatusItem=""
-     
-    # Only check for updates if themes dir is under version control
-    if [ -d "$TARGET_THEME_DIR"/.svn ]; then
-    
-        RemoveFile "$svnStatusXml"
-    
-        WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
-        cd "$TARGET_THEME_DIR"
-        svn status -u --xml > "$svnStatusXml"
-        
-        WriteToLog "Reading $svnStatusXml"
+    unset installedThemesFoundAfterSearch
+    unset installedThemesOnCurrentVolume
+    if [ "$TARGET_THEME_DIR" != "" ] && [ "$TARGET_THEME_DIR" != "-" ]; then
+        WriteToLog "Looking for installed themes at $TARGET_THEME_DIR"
         oIFS="$IFS"; IFS=$'\r\n'
-        while read line
+        installedThemesFoundAfterSearch=( $( find "$TARGET_THEME_DIR"/* -type d -depth 0 ))
+        for ((i=0; i<${#installedThemesFoundAfterSearch[@]}; i++))
         do
-
-            # 6 - Read the status entries checking for modified entries
-            if [[ "$line" == *modified* ]] && [ $reposStatusFound -eq 1 ]; then
-                repoStatusItem="${line##*=\"}"
-                repoStatusItem="${repoStatusItem%%\">*}"
-                if [ ! "$themeName" == "$lastThemeName" ]; then
-                    updateAvailThemeStr="${updateAvailThemeStr},${themeName}"
-                    WriteToLog "Update is available for $themeName"
-                    lastThemeName="$themeName"
-                fi
-            fi
-
-            # 5 - Read the status start
-            if [ "$line" == "<repos-status" ] && [ ! "$themeName" == "" ]; then
-                reposStatusFound=1
-            fi
-    
-            # 4 - Read wc-status entries for deleted and unversioned entries
-            if [[ "$line" == *item* ]] && [ $wcStatusFound -eq 1  ] && [ ! "$themeName" == "" ]; then
-                # Check for deleted items buy may also want to check for other states?
-                if [[ "$line" == *deleted* ]] || [[ "$line" == *missing* ]]; then
-                    themeName=""
-                fi
-                # Check for deleted items but may also want to check for other states?
-                if [[ "$line" == *unversioned* ]]; then
-                    #tmp="${line##*=\"}"
-                    #tmp="${tmp%%\">*}"
-                    unversionedThemeStr="${unversionedThemeStr},${themeName}"
-                    WriteToLog "Theme $themeName is not under version control."
-                fi
-            fi
-    
-            # 3 - Check for <wc-status
-            if [ "$line" == "<wc-status" ] && [ ! "$themeName" == "" ]; then
-                wcStatusFound=1
-            fi
-
-            # 2 - Read the path of the file
-            if [ $newEntry -eq 1 ] && [[ "$line" == *path* ]]; then
-                filePath="${line##*=\"}"
-                if [[ "$filePath" == */* ]]; then
-                    themeName="${filePath%%/*}"
-                else
-                    themeName="${filePath%%\">*}"
-                fi
-                newEntry=0
-            fi
-    
-            # 1 - Begin by finding starting point of entry
-            if [ "$line" == "<entry" ]; then
-                newEntry=1
-                filePath=""
-                reposStatusFound=0
-                wcStatusFound=0
-            fi
-    
-        done < "$svnStatusXml"
-
+            installedThemesOnCurrentVolume[$i]="${installedThemesFoundAfterSearch[$i]##*/}"
+            # Create comma separated string for sending to the UI
+            installedThemeStr="${installedThemeStr},${installedThemesOnCurrentVolume[$i]}"
+            WriteToLog "Found installed theme: ${installedThemesOnCurrentVolume[$i]}"
+        done
         IFS="$oIFS"
-
-        if [ "$updateAvailThemeStr" == "" ]; then
-            WriteToLog "No updates found."
-        else
-            # Remove leading comma from string
-            updateAvailThemeStr="${updateAvailThemeStr#?}"
-        fi
-        
-        if [ ! "$unversionedThemeStr" == "" ]; then
-            # Remove leading comma from string
-            unversionedThemeStr="${unversionedThemeStr#?}"
-        fi
+        # Remove leading comma from string
+        installedThemeStr="${installedThemeStr#?}"
     else
-        WriteToLog "$TARGET_THEME_DIR is not under version control. Update check skipped."
+        WriteToLog "Can't check for installed themes at $TARGET_THEME_DIR"
     fi
 }
 
 # ---------------------------------------------------------------------------------------
-CheckForAppUpdate()
+CheckForPreviousUpdatesStoredInPrefs()
 {
-    # Simple check to compare version number of this version number against the
-    # newest download file on bitbucket. If there's a difference then the version number
-    # from bitbucket is written to tmp/dd_update for reading by cloverthememanager.js 
-    if [ -f /usr/bin/curl ]; then
-        local testConnection=$( /usr/bin/curl --silent --head https://bitbucket.org/blackosx/cloverthememanager/downloads | egrep "OK"  )
-        if [ "$testConnection" ]; then
-            WriteToLog "Checking for update"
-            local checkVer=""
-            checkVer=$( /usr/bin/curl --silent https://bitbucket.org/blackosx/cloverthememanager/downloads | grep CloverThemeManager_v*.*.*.zip | head -n 1 )
-            if [ "$checkVer" == "" ]; then
-                WriteToLog "No update available"
-            else
-                # Strip version from returned line
-                checkVer="${checkVer##*DarwinDumper_v}"
-                checkVer="${checkVer%.zip*}"
+    # If an update to a theme was fetched in CheckAndFetchUpdatesFromBareRepoAndBuidList()
+    # An update notification would have been written to the prefs file under each instance
+    # of this installed theme.
+    # Here we loop through the installedThemeUpdateAvailable[] array, checking for 'Yes',
+    # but only for the currently selected volume.
 
-                # Remove any non-numeric chars from version numbers
-                local checkNewVerNumber=$( echo "$checkVer" | sed 's/\([0-9][0-9]*\)[^0-9]*/\1/g' )
-                local checkCurrentVerNumber=$( echo "$VERS" | sed 's/\([0-9][0-9]*\)[^0-9]*/\1/g' )
-
-                if [ $checkNewVerNumber -gt $checkCurrentVerNumber ]; then
-                    WriteToLog "Version check: Newer v${checkVer} is available."
-                    #echo "$checkVer" > "$gDDTmpFolder"/dd_update
-                else
-                    WriteToLog "Version check: This is the latest version."
-                fi
-            fi
+    updateAvailThemeStr=""
+    for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
+    do
+        if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
+            updateAvailThemeStr="${updateAvailThemeStr},${installedThemeName[$n]}"
         fi
+    done
+    
+    if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
+        # Remove leading comma from string
+        updateAvailThemeStr="${updateAvailThemeStr#?}"
     fi
 }
 
 # ---------------------------------------------------------------------------------------
-CheckIfThemeDirIsUnderVersionControl()
+CheckAndFetchUpdatesFromBareRepoAndBuidList()
 {
-    WriteToLog "Checking if $1 is under version control."
-    directoylc=$( echo "${1##*/}" | tr '[:upper:]' '[:lower:]' )
-    if [ "$directoylc" == "themes" ]; then
-        if [ ! -d "$1"/.svn ]; then
-            WriteToLog "$1 is not under version control."
-            SendToUIUVersionedDir "UnversionedThemeDir@${1}@"
-            WriteToLog "Sent to UI: UnversionedThemeDir@${1}@"
-        else
-            WriteToLog "$1 is already under version control."
-            SendToUIUVersionedDir "UnversionedThemeDir@@"
-            WriteToLog "Sent to UI: UnversionedThemeDir@$@"
-        fi
-    fi
-    # The UI will receive this, notify the user and ask for permissions.
-}
+    # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
+    # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
+    #       If parent-repo theme.git is found then cd in to it and run a git fetch. 
+    # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
+    # Also append list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
 
-# ---------------------------------------------------------------------------------------
-SetThemeDirUnderVersionControl()
-{
-    # this function recieves a full path to a themes directory.
-    if [ ! -d "$1"/.svn ]; then
-        
-        WriteToLog "Checking if $1 is writeable."
-            
-        CheckPathIsWriteable "$1"
-        local returnValueWriteable=$? # 1 = not writeable / 0 = writeable
-        if [ ${returnValueWriteable} = 1 ]; then    
-            
-            # not writeable.
-            WriteToLog "path is not writeable. Asking for password"
-            GetAndCheckUIPassword "Clover Theme Manager requires your password to enable updates for this theme directory."
-            local returnValueRoot=$? # 1 = not root / 0 = root
-
-            if [ ${returnValueRoot} = 0 ]; then 
-
-                WriteToLog "Password gives elevated access"
-
-                # RUN COMMAND WITH ROOT PRIVILEGES        
-                WriteToLog "Setting $1 under version control"
-                echo "$gPw" | sudo -S "$uiSudoChanges" "SetPathUnderVersionControl" "${remoteRepositoryUrl}/themes" "$1" && gPw=""
-                returnValue=$?
-                if [ ${returnValue} -eq 0 ]; then
-                    successFlag=0
-                fi
-            
-            elif [ ${returnValueRoot} = 1 ]; then 
-                # password did not give elevated privileges. Run this routine again.
-                WriteToLog "User entered incorrect password."
-                SetThemeDirUnderVersionControl "$1"
-            else
-                WriteToLog "User cancelled password entry."
-                WriteToLog "Leaving $1 not under version control."
-            fi
-            
-        else
-            # writeable.
-            WriteToLog "path is writeable."
+    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    unversionedThemeStr=""
+    for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+    do
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
+            WriteToLog "Checking for update to ${installedThemesOnCurrentVolume[$t]}"
+            cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
+            local updateCheck=$( git fetch --progress origin master:master 2>&1 )
+            if [[ "$updateCheck" == *done.* ]]; then
+                # Theme was updated.
+                WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
                 
-            # RUN COMMAND WITHOUT ROOT PRIVILEGES  
-            WriteToLog "Setting $1 under version control"
-            svn checkout "${remoteRepositoryUrl}"/themes --depth empty "$1" && successFlag=0
-        fi
-            
-        # Was install operation a success?
-        if [ $successFlag -eq 0 ]; then
-            WriteToLog "$1 was successfully set under version control."
+                # Mark update as available for all instances of this theme.
+                # This will get written to prefs.
+                for ((n=0; n<${#installedThemeName[@]}; n++ ));
+                do
+                    if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+                        WriteToLog "Setting installedThemeUpdateAvailable[$n] to Yes"
+                        installedThemeUpdateAvailable[$n]="Yes" 
+                    fi
+                done
+            fi
         else
-            WriteToLog "$1 failed to be set under version control."
-        fi
+            WriteToLog "*Mismatch* : ${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing from support dir!"
             
-    else
-        WriteToLog "$1 is already version control"
-    fi
+            # Append to list of themes that will cannot be checked for updates
+            unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
+        fi
+    done
+    
+    # Remove leading comma from string
+    unversionedThemeStr="${unversionedThemeStr#?}"
+    
+    # Run routine to update prefs file.
+    MaintainInstalledThemeListInPrefs    
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1251,10 +1432,8 @@ SetNvramTheme()
     elif [ ${returnValueRoot} = 1 ]; then 
         # password did not give elevated privileges. Run this routine again.
         WriteToLog "User entered incorrect password."
-        SetThemeDirUnderVersionControl "$1"
     else
         WriteToLog "User cancelled password entry."
-        WriteToLog "Leaving $1 not under version control."
     fi
     
     # Was install operation a success?
@@ -1268,6 +1447,31 @@ SetNvramTheme()
     ReadAndSendCurrentNvramTheme
 }
 
+# ---------------------------------------------------------------------------------------
+CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
+{
+    # If all instances of a local bare repo theme.git have been uninstalled
+    # then delete the local bare repo.
+    
+    local passedThemeName="$1"
+    local foundTheme=0
+    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+    do
+        if [ "${installedThemeName[$n]}" == "$passedThemeName" ]; then
+            WriteToLog "Keeping ${passedThemeName}.git local bare repo as it's still in use."
+            foundTheme=1
+            break
+        fi
+    done
+    if [ $foundTheme -eq 0 ]; then
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git ]; then
+            WriteToLog "Local bare repo ${passedThemeName}.git is no longer in use. Deleting."
+            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git
+        fi
+    fi
+}
+
+
 
 #===============================================================
 # Main
@@ -1280,7 +1484,55 @@ scriptPid=$( echo "$$" )
 # Get process ID of parent
 appPid=$( ps -p ${pid:-$$} -o ppid= )
 
-remoteRepositoryUrl="svn://svn.code.sf.net/p/cloverthemes/svn"
+# Resolve path
+SELF_PATH=$(cd -P -- "$(dirname -- "$0")" && pwd -P) && SELF_PATH=$SELF_PATH/$(basename -- "$0")
+
+# Set out other directory paths based on SELF_PATH
+PUBLIC_DIR="${SELF_PATH%/*}"
+PUBLIC_DIR="${PUBLIC_DIR%/*}"
+ASSETS_DIR="$PUBLIC_DIR"/assets
+SCRIPTS_DIR="$PUBLIC_DIR"/bash
+WORKING_PATH="${HOME}/Library/Application Support"
+APP_DIR_NAME="CloverThemeManager"
+TARGET_THEME_DIR=""
+TARGET_THEME_DIR_DEVICE=""
+TARGET_THEME_VOLUMEUUID=""
+TMPDIR="/tmp/CloverThemeManager"
+UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
+COMMANDLINE=0
+
+logFile="${TMPDIR}/CloverThemeManagerLog.txt"
+logJsToBash="${TMPDIR}/CloverThemeManager_JsToBash.log"   # Note - this is set AppDelegate.m
+logBashToJs="${TMPDIR}/CloverThemeManager_BashToJs.log"
+logBashToJsUpdates="${TMPDIR}/CloverThemeManager_BashToJsUpdates.log"
+logBashToJsVersionedThemes="${TMPDIR}/CloverThemeManager_BashToJsVersionedThemes.log"
+#logBashToJsVersionedDir="${TMPDIR}/CloverThemeManager_BashToJsVersionedDir.log"
+logBashToJsSpace="${TMPDIR}/CloverThemeManager_BashToJsSpace.log"
+logBashToJsResult="${TMPDIR}/CloverThemeManager_BashToJsResult.log"
+logBashToJsNvramVar="${TMPDIR}/CloverThemeManager_BashToJsNvramVar.log"
+gUserPrefsFileName="org.black.CloverThemeManager"
+gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
+gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
+uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
+gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
+remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
+
+# Globals for newly installed theme before adding to prefs
+ResetNewlyInstalledThemeVars
+ResetUnInstalledThemeVars
+
+# Begin log file
+RemoveFile "$logFile"
+WriteToLog "CTM_Version${VERS}"
+WriteToLog "Started Clover Theme Manager script"
+WriteLinesToLog
+WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
+
+# For using additional theme repositories.
+# Not working in this version
+declare -a repositoryUrls
+declare -a repositoryThemes
+ReadRepoUrlList
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1296,6 +1548,7 @@ if [ "${identityCallerCheck:1:1}" == "+" ]; then
 	    themeToInstall="$2"
     else
 	    echo "Error - wrong number of arguments passed."
+	    echo "Expects 1st as full target path. 2nd Theme name"
 	    exit 1
     fi
 
@@ -1307,7 +1560,6 @@ if [ "${identityCallerCheck:1:1}" == "+" ]; then
     
     # Does theme path exist?
     if [ -d "$TARGET_THEME_DIR" ]; then
-        SetThemeDirUnderVersionControl "$TARGET_THEME_DIR"
         RunThemeAction "Install" "$themeToInstall"
         returnValue=$?
         if [ ${returnValue} -eq 0 ]; then
@@ -1326,81 +1578,45 @@ if [ "${identityCallerCheck:1:1}" == "+" ]; then
 else
     # Called from Clover Theme Manager.app
 
-    # Resolve path
-    SELF_PATH=$(cd -P -- "$(dirname -- "$0")" && pwd -P) && SELF_PATH=$SELF_PATH/$(basename -- "$0")
-
-    # Set out other directory paths based on SELF_PATH
-    PUBLIC_DIR="${SELF_PATH%/*}"
-    PUBLIC_DIR="${PUBLIC_DIR%/*}"
-    ASSETS_DIR="$PUBLIC_DIR"/assets
-    SCRIPTS_DIR="$PUBLIC_DIR"/bash
-    WORKING_PATH="${HOME}/Library/Application Support"
-    APP_DIR_NAME="CloverThemeManager"
-    TARGET_THEME_DIR=""
-    TARGET_THEME_DIR_DEVICE=""
-    TMPDIR="/tmp/CloverThemeManager"
-    COMMANDLINE=0
-
-    logFile="${TMPDIR}/CloverThemeManagerLog.txt"
-    logJsToBash="${TMPDIR}/CloverThemeManager_JsToBash.log"   # Note - this is set AppDelegate.m
-    logBashToJs="${TMPDIR}/CloverThemeManager_BashToJs.log"
-    logBashToJsUpdates="${TMPDIR}/CloverThemeManager_BashToJsUpdates.log"
-    logBashToJsVersionedThemes="${TMPDIR}/CloverThemeManager_BashToJsVersionedThemes.log"
-    logBashToJsVersionedDir="${TMPDIR}/CloverThemeManager_BashToJsVersionedDir.log"
-    logBashToJsSpace="${TMPDIR}/CloverThemeManager_BashToJsSpace.log"
-    logBashToJsResult="${TMPDIR}/CloverThemeManager_BashToJsResult.log"
-    logBashToJsNvramVar="${TMPDIR}/CloverThemeManager_BashToJsNvramVar.log"
-    gUserPrefsFileName="org.black.CloverThemeManager"
-    gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
-    svnStatusXml="${TMPDIR}/status.xml"
-    uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
-    gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
-
     declare -a themeList
     declare -a themeTitle
     declare -a themeAuthor
     declare -a themeDescription
     declare -a dfMounts
     declare -a tmpArray
-    declare -a diskUtilPlist
-    declare -a allDisks
-    declare -a diskUtilSliceInfo
+    
+    # Arrays for saving volume info
     declare -a duVolumeName
     declare -a duIdentifier
-    declare -a duContent
+    declare -a duVolumeUuid
+    
+    # Arrays for theme
     declare -a themeDirPaths
-    declare -a installedThemes
-    declare -a installedThemesFound
+    declare -a installedThemesOnCurrentVolume
+    declare -a installedThemesFoundAfterSearch
+    
+    # Arrays for list of what themes are installed where.
+    declare -a installedThemeName
+    declare -a installedThemePath
+    declare -a installedThemePathDevice
+    declare -a installedThemeVolumeUUID
+    declare -a installedThemeUpdateAvailable
+    
+    tmp_dir=$(mktemp -d -t theme_manager)
 
     # Begin
-    RemoveFile "$logFile"
-    WriteToLog "CTM_Version${VERS}"
-    WriteToLog "Started Clover Theme Manager script"
-    WriteLinesToLog
-    
-    # Check for working directory as indicator for first run
-    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}" ]; then
-        WriteToLog "First run identified"
-    fi
-    
-    WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
-
     RefreshHtmlTemplates "managethemes.html"
-    IsRepositoryLive
+    #IsRepositoryLive
     EnsureLocalSupportDir
     EnsureSymlink
-
-    CheckOutThemePlistsAndEnsureThemeHtml &
-    CheckoutImages &
-
+    GetLatestIndexAndEnsureThemeHtml
     GetListOfMountedDevices
     BuildDiskUtilStringArrays
     CreateDiskPartitionDropDownHtml
-    LoadPreviousSettingsFromUserPrefs
+    ReadPrefsFile
+    #wait
 
-    wait
-
-    SendUIThemePathThemeListAndFreeSpace
+    SendUIThemePathThemeListAndFreeSpace # Includes checking for updates also
 
     # Write string to mark the end of init file.
     # The Javascript looks for this to signify initialisation is complete.
@@ -1409,10 +1625,7 @@ else
     ClearMessageLog "$logJsToBash"
 
     # Check for any updates to this app
-    # CheckForAppUpdate
-
-    # Check/Set theme directory is under version control
-    CheckIfThemeDirIsUnderVersionControl "$TARGET_THEME_DIR"
+    # Not function set for this yet
 
     # Read current Clover.Theme Nvram variable and send to UI.
     ReadAndSendCurrentNvramTheme
@@ -1441,7 +1654,7 @@ else
             # Clear update, unversioned and free space message logs
             ClearMessageLog "$logBashToJsUpdates"
             ClearMessageLog "$logBashToJsVersionedThemes"
-            ClearMessageLog "$logBashToJsVersionedDir"
+            #ClearMessageLog "$logBashToJsVersionedDir"
             ClearMessageLog "$logBashToJsSpace"
             ClearMessageLog "$logBashToJsResult"
             WriteToLog "Cleared update and versions message log."
@@ -1498,20 +1711,19 @@ else
                 # Scan for theme list and then send to UI
                 GetListOfInstalledThemes
                 SendToUI "InstalledThemes@${installedThemeStr}@"
-                WriteToLog "Sent to UI: $installedThemeStr"
+                WriteToLog "3) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
         
                 freeSpace=$( GetFreeSpaceOfTargetDevice )
                 WriteToLog "Sending UI: FreeSpace:$freeSpace"
                 SendToUIFreeSpace "FreeSpace@${freeSpace}@"
         
                 # Check for any updates
-                GetListOfUpdatedThemes
+                CheckAndFetchUpdatesFromBareRepoAndBuidList
+                CheckForPreviousUpdatesStoredInPrefs
+                WriteToLog "Sending to UI updateAvailThemeStr: $updateAvailThemeStr"
                 SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-                WriteToLog "Sent to UI: $updateAvailThemeStr"
-     
-                # GetListOfUpdatedThemes() also gathered list of any unversioned themes.
-                SendToUIUVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-                WriteToLog "Sent to UI: UnversionedThemes@${unversionedThemeStr}@"
+                WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+                SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
             fi
 
         # A request by the UI to refresh the UI's theme list. This is
@@ -1520,23 +1732,8 @@ else
         elif grep "CTM_refreshThemeList" "$logJsToBash" ; then
             ClearMessageLog "$logJsToBash"
             GetListOfInstalledThemes       
-            WriteToLog "Sending UI: $installedThemeStr"
+            WriteToLog "4) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
             SendToUI "InstalledThemes@${installedThemeStr}@"
-        
-        # Has the UI passed message to say user has agreed to version control of theme dir?
-        elif grep "CTM_versionAgree" "$logJsToBash" ; then
-            answer=$( grep "CTM_versionAgree" "$logJsToBash" )
-            ClearMessageLog "$logJsToBash"
-            ClearMessageLog "$logBashToJsVersionedDir"
-        
-            # parse message
-            answer="${answer##*:}"
-            if [ $answer == "Yes" ]; then
-                WriteToLog "User agreed to setting $TARGET_THEME_DIR under version control."
-                SetThemeDirUnderVersionControl "$TARGET_THEME_DIR"
-            elif [ $answer == "No" ]; then
-                WriteToLog "User denied to setting $TARGET_THEME_DIR under version control."
-            fi
            
         # Has user selected a theme for NVRAM variable?
         elif grep "CTM_chosenNvramTheme@" "$logJsToBash" ; then
@@ -1553,19 +1750,20 @@ else
         appPid=$( ps -p ${pid:-$$} -o ppid= )
     done
 
-    WritePrefsToFile
-
     # Clean up
     RemoveFile "$logJsToBash"
     RemoveFile "$logFile"
     RemoveFile "$logBashToJs"
     RemoveFile "$logBashToJsUpdates"
     RemoveFile "$logBashToJsVersionedThemes"
-    RemoveFile "$logBashToJsVersionedDir"
+    #RemoveFile "$logBashToJsVersionedDir"
     RemoveFile "$logBashToJsSpace"
     RemoveFile "$logBashToJsResult"
     RemoveFile "$logBashToJsNvramVar"
-    RemoveFile "$svnStatusXml"
+    
+    if [ -d "$tmp_dir" ]; then
+        rm -rf "$tmp_dir"
+    fi
     if [ -d "/tmp/CloverThemeManager" ]; then
         rmdir "/tmp/CloverThemeManager"
     fi

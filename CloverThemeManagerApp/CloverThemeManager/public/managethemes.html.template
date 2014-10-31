@@ -11,44 +11,6 @@
 	<script src="scripts/jquery-2.1.1.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
 	<!-- Add simple accordion script -->
-	<script>
-	$(document).ready(function() {
-		$('.thumbnail').click(function() {
-			//$('div.accordionContent').slideUp('normal');
-			var hidden = $(this).closest("#ThemeBand").nextAll('[class="accordionContent"]').first().is(":hidden");
-			if (!hidden) {
-			    // Start with current
-			    $(this)
-			    // Traverse up the DOM to the ThemeBand div
-			    .closest("#ThemeBand")
-			    // find the next siblings with class .accordionContent
-			    .nextAll('[class="accordionContent"]')
-			    // just use first one
-			    .first()
-			    // Slide up
-			    .slideUp('normal');
-			} else {
-			    $(this)
-			    .closest("#ThemeBand")
-			    .nextAll('[class="accordionContent"]')
-			    .first()
-			    .slideToggle('normal');
-			}
-		});	
-		// Close all on load
-		//$("div.accordionContent").hide();
-		
-		$("#preview_Toggle_Button").click(function() {
-			var hidden = $('[class="accordionContent"]').is(":hidden");
-			if (!hidden) {
-			    $('[class="accordionContent"]').slideUp('normal');
-			} else {
-			    $('[class="accordionContent"]').slideToggle('normal');
-			}
-		});	
-	});
-	</script>
-
 </head>
 <body>
 <div id="Container">
@@ -92,11 +54,12 @@
         </div> <!-- End FreeSpace -->        
         
         <div id="HeaderBar">
-            <div class="textHeaderPreview"><p>Preview</p></div>
-            <div class="textHeaderDescription">Description</div>
-            <div class="textHeaderOptions">Options</div>
+            <!--<div class="textHeaderPreview"><p>Preview</p></div>-->
+            <!--<div class="textHeaderDescription">Description</div>-->
+            <!--<div class="textHeaderOptions">Options</div>-->
+            <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
             <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
-            <div class="toggleButton" id="preview_Toggle_Button">Toggle Previews</div>
+            <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
             <!--<div class="textHeaderInstalled">Installed</div>-->
         </div>
     </div> <!-- End TopOfPage -->  

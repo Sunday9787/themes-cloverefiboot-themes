@@ -89,10 +89,6 @@ function printLogtoScreen()
                     // We should notify the user and exit
                     alert("Remote theme repository is not responding. This app cannot continue.");
                     terminate();
-                } else if (/First run identified/i.test(splitContent[i])) {
-                    // This indicates it's the first run and will take longer
-                    // Print message
-                    $("#firstRunMessage").text("First run may take a minute... Thanks for your patience.");
                 } else {      
                     // Write line to log
                     if (typeof splitContent[i] !== "undefined" && typeof splitContent[i] !== "null" && splitContent[i].length > 1) {
