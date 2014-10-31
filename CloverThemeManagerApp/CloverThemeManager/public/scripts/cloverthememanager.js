@@ -941,7 +941,7 @@ function ShowMessageBox()
 //-------------------------------------------------------------------------------------
 function CloseMessageBox()
 {
-    $('#box').animate({'top':'-200px'},500,function(){  // starting position = should match .box top in css
+    $('#box').animate({'top':'-300px'},500,function(){  // starting position = should match .box top in css
         $('#overlay').fadeOut('fast');
     });
 }

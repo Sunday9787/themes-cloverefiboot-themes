@@ -601,7 +601,7 @@ http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slid
 
 .box {
     position:fixed;
-    top:-200px;   /* Starting position = should match click function animate({'top':'300px'} in js */
+    top:-300px;   /* Starting position = should match click function animate({'top':'300px'} in js */
     left:20%;
     right:20%;
     background-color:#fff;
