@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Kyndder</string>
 	<key>Description</key>
-	<string>OS BOX</string>
+	<string>OS Box Theme</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -41,10 +41,10 @@
 			<string>Selection_big.png</string>
 			<key>Color</key>
 			<string>0x9D9FA240</string>
-			<key>Small</key>
-			<string>Selection_small.png</string>
 			<key>OnTop</key>
 			<false/>
+			<key>Small</key>
+			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Year</key>
