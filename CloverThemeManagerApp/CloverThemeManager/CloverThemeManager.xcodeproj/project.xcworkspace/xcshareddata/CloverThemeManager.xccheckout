@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>468EFF13-CBA9-4838-930C-182C7149FCE6</string>
+	<key>IDESourceControlProjectName</key>
+	<string>CloverThemeManager</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>6A540B3101A9D4A06E123D6704E71380091111F8</key>
+		<string>ssh://git.code.sf.net/p/cloverefiboot/themes</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>CloverThemeManagerApp/CloverThemeManager/CloverThemeManager.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>6A540B3101A9D4A06E123D6704E71380091111F8</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://git.code.sf.net/p/cloverefiboot/themes</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>6A540B3101A9D4A06E123D6704E71380091111F8</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>6A540B3101A9D4A06E123D6704E71380091111F8</string>
+			<key>IDESourceControlWCCName</key>
+			<string>cloverefiboot-themes</string>
+		</dict>
+	</array>
+</dict>
+</plist>

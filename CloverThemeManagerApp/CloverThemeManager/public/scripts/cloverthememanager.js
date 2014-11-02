@@ -417,9 +417,9 @@ function CheckForRevisedInstallThemeList()
                     }
                     // Update number of installed themes
                     if (stringSplit != "InstalledThemes,,") {
-                        $("#NumInstalledThemes").html("Total themes installed: " + localThemes.length);
+                        $("#NumInstalledThemes").html("Installed themes: " + localThemes.length + "/" + $('div[id^=ThemeBand]').length);
                     } else {
-                        $("#NumInstalledThemes").html("Total themes installed: 0");
+                        $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
                     }
 
                     // Populate the config plist key drop down menu
@@ -428,7 +428,7 @@ function CheckForRevisedInstallThemeList()
                     UpdateAndRefreshInstalledThemeDropDown("-");
                     
                     // Update number of installed themes
-                    $("#NumInstalledThemes").html("Total themes installed: -");
+                    $("#NumInstalledThemes").html("Installed themes: -/" + $('div[id^=ThemeBand]').length);
                 }
             }
             receivedFile=1;
