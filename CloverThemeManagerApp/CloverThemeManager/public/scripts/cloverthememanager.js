@@ -660,6 +660,12 @@ function CheckForFreeSpace()
                     if(parseInt(number, 10) < parseInt(10, 10)) {
                         // change colour to red
                         $(".textFreeSpace").css("color","#C00000");
+                        
+                        // Show user a low space warning message
+                        ChangeMessageBoxHeaderColour("red");                            
+                        SetMessageBoxText("Warning: Low Space","You only have " + number +"MB remaining on this volume. Installing another theme may fail!");
+                        ShowMessageBoxClose();
+                        ShowMessageBox();
                     }
                 }
                 
