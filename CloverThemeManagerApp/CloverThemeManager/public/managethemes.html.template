@@ -65,9 +65,11 @@
     </div> <!-- End TopOfPage -->  
 
     <div id="ThemeList">
-    
+        <div id="ThemeListSpacerTop">&nbsp;</div>
+        
     <!--INSERT_THEMES_HERE-->
     
+        <div id="ThemeListSpacerBottom">&nbsp;</div>
     </div> <!-- End ThemeList -->     
      
     <div id="AboveFooter">

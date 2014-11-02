@@ -21,6 +21,7 @@ p { font-family: Helvetica; }
     height:68px;
     background-color: #333;
     z-index:2;
+    opacity: 0.95;
 }
 
 #InitTopOfPage {
@@ -137,11 +138,12 @@ p { font-family: Helvetica; }
     line-height: 0px;
     color: #FFF;
     clear: both;
+    opacity: 0.55;
 }
 
 #ThemeList {
-    margin-top: 68px;
-    margin-bottom: 74px;
+    /*margin-top: 68px;
+    margin-bottom: 74px;*/
 }
 
 #OptionsBar {
@@ -253,6 +255,16 @@ a:hover {
 
 a:active {
     color: #00CCFF;
+}
+
+#ThemeListSpacerTop {
+    height: 68px;
+    clear: both;
+}
+
+#ThemeListSpacerBottom {
+    height: 74px;
+    clear: both;
 }
 
 #ThemeBand {
@@ -514,6 +526,7 @@ table {
     border-top: 2px solid #333;
     background-color: #888888;
     z-index:2;
+    opacity: 0.95;
 }
 
 #NvramInfo {
@@ -550,6 +563,7 @@ table {
     background-image: -moz-linear-gradient(center top , #737075, #59565b);
     background-image: -webkit-linear-gradient(top, #737075, #59565b);
     z-index:2;
+    opacity: 0.95;
 }
 
 #MessageBoxProgressBar {
