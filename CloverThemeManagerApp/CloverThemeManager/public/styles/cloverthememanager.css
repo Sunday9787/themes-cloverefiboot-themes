@@ -7,7 +7,21 @@ html, body {
     background-color: #333;
 }
 
-p { font-family: Helvetica; }
+p {
+    font-family: Helvetica;
+}
+
+p a:link {
+    color: #CCC;
+}
+
+p a:visited {
+    color: #CCC;
+}
+
+p a:hover {
+    color: #FFF;
+}
 
 #Container {
     /* min-height: 100%; */
@@ -42,7 +56,7 @@ p { font-family: Helvetica; }
     margin: 0;
     background-color: #333;
     width: 100%;
-    height:23px;
+    height:32px;
     display:none;
 }
 
@@ -59,7 +73,7 @@ p { font-family: Helvetica; }
 
 #ThemeCount {
     width: 21%;
-    margin: 5px 0px 0px 0px;
+    margin: 6px 0px 0px 0px;
     float: right;
 }
 
@@ -71,7 +85,7 @@ p { font-family: Helvetica; }
 
 #FreeSpace {
     width: 16%;
-    margin: 5px 0px 0px 8px;
+    margin: 6px 0px 0px 8px;
     text-align: center;
     float: left;
 }
@@ -131,14 +145,15 @@ p { font-family: Helvetica; }
 
 #HeaderBar {
     height: 24px;
-    background-color: #888888;
+    /*background-color: #888888;*/
+    background-image: -webkit-linear-gradient(top, rgba(224,224,224,1) 0%,rgba(114,114,114,1) 100%); 
     padding:5px 130px 5px 20px;
     font-family: Helvetica;
     font-size: 12px;
     line-height: 0px;
     color: #FFF;
     clear: both;
-    opacity: 0.55;
+    opacity: 0.85;
 }
 
 #ThemeList {
@@ -217,8 +232,9 @@ p { font-family: Helvetica; }
 .textFooter {
     font-family: Helvetica;
     font-size: 12px;
-    color: #DDD;
-    text-align:center;
+    color: #FFF;
+    text-align: center;
+    margin-top:10px;
 }
 
 .textHeaderPreview {
@@ -468,7 +484,7 @@ a:active {
     background-image: -webkit-linear-gradient(top, #b3b3b3, #a4a4a4);*/
     border: 1px solid #a6a6a6;
     border-radius: 4px;
-    color: #ccc;
+    color: #EEE;
     float: right;
     font-family: helvetica;
     font-size: 12px;
@@ -524,28 +540,30 @@ table {
     bottom: 36px;
     height: 36px;
     border-top: 2px solid #333;
-    background-color: #888888;
+    background-image: -webkit-linear-gradient(top, rgba(247,247,247,1) 0%,rgba(142,142,142,1) 100%); 
     z-index:2;
     opacity: 0.95;
 }
 
 #NvramInfo {
     width: 38%;
-    margin: 5px 8px 5px 24px;
+    margin: 7px 8px 5px 24px;
     float: left;
+    font-weight: bold;
 }
 
 #NvramThemeMatch {
     width: 30%;
-    margin: 5px 0px 5px 0px;
+    margin: 7px 0px 5px 0px;
     float: left;
     text-align: center;
+    font-weight: bold;
 }
 
 #NvramThemeSelector {
     width: 20%;
     float: right;
-    margin: 5px 24px 5px 5px;
+    margin: 6px 24px 5px 5px;
 }
 
 #NvramThemeSelector select {
@@ -560,10 +578,10 @@ table {
     height: 36px;
     border-top: 2px solid #333;
     background-color: #737075;
-    background-image: -moz-linear-gradient(center top , #737075, #59565b);
-    background-image: -webkit-linear-gradient(top, #737075, #59565b);
+    /*background-image: -moz-linear-gradient(center top , #737075, #59565b);
+    background-image: -webkit-linear-gradient(top, #737075, #59565b);*/
+    background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%);
     z-index:2;
-    opacity: 0.95;
 }
 
 #MessageBoxProgressBar {
@@ -606,7 +624,7 @@ http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slid
 .overlayTwo {
     background:transparent url(../assets/overlay.png) repeat top left;
     position:fixed;
-    top:0px;
+    top:32px;   /* same height as .meterTwo */
     bottom:0px;
     left:0px;
     right:0px;
@@ -670,6 +688,46 @@ a.boxclose {
 		
 .meter > span:after, .animate > span > span {
     content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background-image: 
+        -webkit-gradient(linear, 0 0, 100% 100%, 
+            color-stop(.25, rgba(255, 255, 255, .2)), 
+            color-stop(.25, transparent), color-stop(.5, transparent), 
+            color-stop(.5, rgba(255, 255, 255, .2)), 
+            color-stop(.75, rgba(255, 255, 255, .2)), 
+            color-stop(.75, transparent), to(transparent)
+        );
+    z-index: 1;
+    -webkit-background-size: 50px 50px;
+    -webkit-animation: move 2s linear infinite;
+    overflow: hidden;
+}
+
+.meterTwo { 
+    height: 32px; /* Same height as .overlayTwo */
+    position: relative;
+}
+
+.meterTwo > span {
+    display: block;
+    height: 100%;
+    background-color: #cbd1d6;
+    /* Use http://www.colorzilla.com/gradient-editor/ for gradient */
+    background-image: -webkit-linear-gradient(top, #4c4c4c 0%,#595959 12%,#666666 25%,#474747 39%,#2c2c2c 50%,#000000 51%,#111111 60%,#2b2b2b 76%,#1c1c1c 91%,#131313 100%);
+    position: relative;
+    overflow: hidden;
+}
+		
+.meterTwo > span:after, .animate > span > span {
+
+    font-family: helvetica;
+    font-weight: bold;
+    font-size: 12px;
+    color: #FFF;
+    padding: 8px 0px 0px 20px;
+    content: "Checking for updates to your installed themes on selected volume...";
+    
     position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;
     background-image: 

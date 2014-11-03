@@ -527,14 +527,18 @@ function CheckForNvramTheme()
                     // Print message
                     $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
                     // Change background colour to green
-                    $("#AboveFooter").css("background-color","#629848");
+                    //$("#AboveFooter").css("background-color","#629848");
+                    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(88,249,24,1) 0%,rgba(2,145,26,1) 100%)");
+                    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(81,199,56,1) 0%,rgba(28,127,42,1) 100%)");
                     // Change nvram dropdown option to match nvram var
                     $("#installedThemeDropDown").val(currentNvramVar);
                 } else {
                     // Print message
                     $("#currentNVRAMMessage").text("Not Installed on this volume"); 
                     // Change background colour to red
-                    $("#AboveFooter").css("background-color","#a13e41");
+                    //$("#AboveFooter").css("background-color","#a13e41");
+                    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(255,48,25,1) 0%,rgba(145,2,2,1) 100%)");
+                    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(193,34,20,1) 0%,rgba(117,2,4,1) 100%)");
                     // Change nvram dropdown option to "-"
                     $("#installedThemeDropDown").val("-");
                 }
@@ -939,17 +943,25 @@ function HideOverlayTwoBox()
 // http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slide-out-box/
 function ShowMessageBox()
 {
-    $('#overlay').fadeIn('fast',function(){
-        $('#box').animate({'top':'150px'},500); // move box from current position so top=300px
-    });
+    // Read position of box and only fade in if at default off screen position.
+    var position = $('#box').position();
+    if (position.top = -300) {   // starting position = should match .box top in css
+        $('#overlay').fadeIn('fast',function(){
+             $('#box').animate({'top':'150px'},500); // move box from current position so top=150px
+        });
+    }
 }
 
 //-------------------------------------------------------------------------------------
 function CloseMessageBox()
 {
-    $('#box').animate({'top':'-300px'},500,function(){  // starting position = should match .box top in css
-        $('#overlay').fadeOut('fast');
-    });
+    // Read position of box and only fade out if at calculated top position is 150px which is set in ShowMessageBox()
+    var position = $('#box').position();
+    if (position.top = 150) {
+        $('#box').animate({'top':'-300px'},500,function(){  // starting position = should match .box top in css
+            $('#overlay').fadeOut('fast');
+        });
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -1119,7 +1131,9 @@ function RemoveYesNoButtons(){
 function SetNvramFooterToNotSet(){
     $("#currentNVRAMvar").text("NVRAM theme: Not set:"); 
     $("#currentNVRAMMessage").text(""); 
-    $("#AboveFooter").css("background-color","#888888");
+    //$("#AboveFooter").css("background-color","#888888");
+    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(247,247,247,1) 0%,rgba(142,142,142,1) 100%)");
+    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(195,195,195,1) 0%,rgba(123,123,123,1) 100%)");
 }
 
 //-------------------------------------------------------------------------------------

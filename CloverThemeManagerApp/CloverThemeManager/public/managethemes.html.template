@@ -10,7 +10,6 @@
     <link rel="stylesheet" type="text/css" href="styles/cloverthememanager.css"/>
 	<script src="scripts/jquery-2.1.1.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
-	<!-- Add simple accordion script -->
 </head>
 <body>
 <div id="Container">
@@ -35,7 +34,8 @@
     </div>
 
     <div id="TopOfPage">
-        <div id="CheckingUpdatesMessage" class="textMessage">Checking for updates to your installed themes, and if your themes are under version control...</div>
+        <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
+        <!--<div id="CheckingUpdatesMessage" class="textMessage">Checking for updates to your installed themes, and if your themes are under version control...</div>-->
         <div id="PathSelector">
             <select name="dropdown" id="partitionSelect">
                 <!--INSERT_MENU_OPTIONS_HERE-->
@@ -75,7 +75,7 @@
     <div id="AboveFooter">
     
         <div id="NvramInfo">
-            <span class="textBody" id="currentNVRAMvar">Clover.theme NVRAM variable:</span>
+            <span class="textBody" id="currentNVRAMvar">NVRAM theme:</span>
         </div> <!-- End NvramInfo -->
         
         <div id="NvramThemeMatch">
@@ -93,7 +93,7 @@
     </div> <!-- End Footer -->  
     
     <div id="Footer">
-        <p class="textFooter">Development preview. Check for <a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">latest updates</a>.</p>
+        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a> | <a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a> | <a href="#">How to add my theme</a></p>
     </div> <!-- End Footer -->  
                                                          
 </div> <!-- End Container -->
