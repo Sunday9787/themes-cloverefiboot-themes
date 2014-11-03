@@ -21,7 +21,7 @@
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.63"
+VERS="0.64"
 
 DEBUG=0
 #set -x
@@ -449,7 +449,7 @@ RunThemeAction()
                  
                 "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
                             # Note: The bare git repo will have already been updated when the fetch command was run
-                            # from CheckAndFetchUpdatesFromBareRepoAndBuidList() to discover the update.
+                            # from CheckForUpdatesInTheBackground() to discover the update.
                             # All we need to do is checkout the bare repo to the unpack dir then replace on target dir.
                             if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "$localBareRepo".git ]; then
 
@@ -1054,7 +1054,6 @@ ReadPrefsFile()
                            "ThemePathDevice" )   installedThemePathDevice+=("$tmpValue") ;;
                            "UpdateAvailable" )   installedThemeUpdateAvailable+=("$tmpValue") ;;
                            "VolumeUUID"      )   installedThemeVolumeUUID+=("$tmpValue")
-                                                 #foundThemeName=0
                                                  ;;
                 esac
             fi
@@ -1063,7 +1062,7 @@ ReadPrefsFile()
             if [[ "${readVar[$x]}" == *\(* ]]; then
                 themeName="${readVar[$x]% =*}"                      # Remove all after ' ='    
                 themeName=$( echo "$themeName" | sed 's/^[ \t]*//') # Remove leading whitespace  
-                themeName=$( echo "$themeName" | sed 's/\"//g' )  # Remove any quotes
+                themeName=$( echo "$themeName" | sed 's/\"//g' )    # Remove any quotes
                 foundThemeName=1
             fi
         done
@@ -1149,8 +1148,8 @@ SendUIThemePathThemeListAndFreeSpace()
         fi
         
         # Run this regardless of path chosen as JS is waiting to hear it. 
-        CheckAndFetchUpdatesFromBareRepoAndBuidList
-        CheckForPreviousUpdatesStoredInPrefs
+        CheckAndRecordOrphanedThemes
+        CheckForAnyUpdatesStoredInPrefs
         WriteToLog "Sending to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
         SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
         WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
@@ -1231,13 +1230,14 @@ RespondToUserDeviceSelection()
         SendToUIFreeSpace "FreeSpace@${freeSpace}@"
         
         # Check for any updates
-        CheckAndFetchUpdatesFromBareRepoAndBuidList
-        CheckForPreviousUpdatesStoredInPrefs
+        CheckAndRecordOrphanedThemes
+        CheckForAnyUpdatesStoredInPrefs
         WriteToLog "Sending to UI: $updateAvailThemeStr"
         SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
         WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
         SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
 
+        CheckForUpdatesInTheBackground &
     else
         WriteToLog "User de-selected device pointing to theme path"
         TARGET_THEME_DIR="-"
@@ -1315,14 +1315,15 @@ GetListOfInstalledThemes()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckForPreviousUpdatesStoredInPrefs()
+CheckForAnyUpdatesStoredInPrefs()
 {
-    # If an update to a theme was fetched in CheckAndFetchUpdatesFromBareRepoAndBuidList()
-    # An update notification would have been written to the prefs file under each instance
-    # of this installed theme.
-    # Here we loop through the installedThemeUpdateAvailable[] array, checking for 'Yes',
-    # but only for the currently selected volume.
+    # If an update to a theme has been found by CheckForUpdatesInTheBackground()
+    # An update notification would have been written to the prefs file under each
+    # instance of this installed theme.
+    # Here we read prefs, loop through the installedThemeUpdateAvailable[] array,
+    # checking for 'Yes', but only for the currently selected volume.
 
+    ReadPrefsFile
     updateAvailThemeStr=""
     for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
     do
@@ -1338,49 +1339,63 @@ CheckForPreviousUpdatesStoredInPrefs()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckAndFetchUpdatesFromBareRepoAndBuidList()
+CheckThemeIsInPrefs()
+{
+    # Check for any inconsistency where a theme entry in user prefs may be missing when
+    # it's clearly installed in the users EFI/Clover/Themes directory AND has a parent
+    # bare clone in the support directory.
+    # If found - Add this theme in to prefs.
+    
+    local themeToFind="$1"
+    local inPrefs=0
+    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+    do
+        if [ "${installedThemeName[$n]}" == "$themeToFind" ]; then
+            inPrefs=1
+        fi
+    done
+    
+    if [ $inPrefs -eq 0 ]; then
+        # Should add in to prefs
+        WriteToLog "* $themeToFind is in ${TARGET_THEME_DIR} and bare clone exists but not in prefs! Adding now."
+
+        # Add the details for this theme for adding to prefs file
+        gNewInstalledThemeName="$themeToFind"
+        gNewInstalledThemePath="$TARGET_THEME_DIR"
+        gNewInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
+        gNewInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+        
+        # Run routine to update prefs file.
+        MaintainInstalledThemeListInPrefs  
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+CheckAndRecordOrphanedThemes()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
-    #       If parent-repo theme.git is found then cd in to it and run a git fetch. 
-    # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
-    # Also append list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
+    #       Create list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
+    #       This list gets sent to the UI and a cross is drawn to the right of the 'UnInstall' button.
 
-    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    WriteToLog "Checking $TARGET_THEME_DIR for any orphaned themes (without a bare clone)."
     unversionedThemeStr=""
     for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
     do
-        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-            WriteToLog "Checking for update to ${installedThemesOnCurrentVolume[$t]}"
-            cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
-            local updateCheck=$( git fetch --progress origin master:master 2>&1 )
-            if [[ "$updateCheck" == *done.* ]]; then
-                # Theme was updated.
-                WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
-                
-                # Mark update as available for all instances of this theme.
-                # This will get written to prefs.
-                for ((n=0; n<${#installedThemeName[@]}; n++ ));
-                do
-                    if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
-                        WriteToLog "Setting installedThemeUpdateAvailable[$n] to Yes"
-                        installedThemeUpdateAvailable[$n]="Yes" 
-                    fi
-                done
-            fi
-        else
+        if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
             WriteToLog "*Mismatch* : ${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing from support dir!"
-            
             # Append to list of themes that will cannot be checked for updates
             unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone is support dir"
+            # Match - theme dir in users theme path also has a parent bare clone in app support dir.
+            # Double check this is also in user prefs file.
+            CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
         fi
     done
     
     # Remove leading comma from string
     unversionedThemeStr="${unversionedThemeStr#?}"
-    
-    # Run routine to update prefs file.
-    MaintainInstalledThemeListInPrefs    
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1471,6 +1486,47 @@ CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+CheckForUpdatesInTheBackground()
+{
+    # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
+    # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
+    #       If parent-repo theme.git is found then cd in to it and run a git fetch. 
+    # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
+    # Also append list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
+
+    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    unversionedThemeStr=""
+    for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+    do
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
+            WriteToLog "Checking for update to ${installedThemesOnCurrentVolume[$t]}"
+            cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
+            local updateCheck=$( git fetch --progress origin master:master 2>&1 )
+            if [[ "$updateCheck" == *done.* ]]; then
+                # Theme was updated.
+                WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
+                
+                # Mark update as available for all instances of this theme.
+                # This will get written to prefs.
+                for ((n=0; n<${#installedThemeName[@]}; n++ ));
+                do
+                    if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+                        WriteToLog "Setting installedThemeUpdateAvailable[$n] to Yes"
+                        installedThemeUpdateAvailable[$n]="Yes" 
+                    fi
+                done
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "No update found for ${installedThemesOnCurrentVolume[$t]}"
+            fi
+        fi
+    done
+    
+    # Run routine to update prefs file.
+    if [ $t -gt 0 ]; then
+        MaintainInstalledThemeListInPrefs  
+    fi
+}
 
 
 #===============================================================
@@ -1636,6 +1692,7 @@ else
     # Remember parent process id
     parentId=$appPid
 
+    CheckForUpdatesInTheBackground & #pidUpdateProcess=$!
 
     # The messaging system is event driven and quite simple.
     # Run a loop for as long as the parent process ID still exists
@@ -1718,8 +1775,8 @@ else
                 SendToUIFreeSpace "FreeSpace@${freeSpace}@"
         
                 # Check for any updates
-                CheckAndFetchUpdatesFromBareRepoAndBuidList
-                CheckForPreviousUpdatesStoredInPrefs
+                CheckAndRecordOrphanedThemes
+                CheckForAnyUpdatesStoredInPrefs
                 WriteToLog "Sending to UI updateAvailThemeStr: $updateAvailThemeStr"
                 SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
                 WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
