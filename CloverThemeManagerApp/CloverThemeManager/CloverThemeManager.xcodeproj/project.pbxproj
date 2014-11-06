@@ -445,7 +445,7 @@
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -466,7 +466,7 @@
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
