@@ -84,6 +84,8 @@ function readBashToJsMessageFile()
                 // where $installedThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
                 updateBandsWithInstalledThemes(firstLineSplit[1]);
+                // Honour users choice of which themes to view (All or just Installed)
+                GetShowHideButtonStateAndUpdateUI();
                 break;
             case "FreeSpace":
                 // Bash sends: "FreeSpace@${freeSpace}@"
@@ -432,11 +434,8 @@ $(function()
             HideFreeSpace();
         }
         
-        // TO DO - look at retaining the hidden uninstalled themes later.
-        // For now, reset view even if user chose to hide uninstalled themes.
-        $(".accordion").css("display","block");
-        $("[id='ShowHideToggleButton']").text("Hide UnInstalled");
-        // Then call ShowHideUnInstalledThemes at the end of CheckForUpdatesThemeList().
+        // Honour users choice of which themes to view (All or just Installed)
+        GetShowHideButtonStateAndUpdateUI();
         
         // Reset current theme list, bands and buttons
         ResetButtonsAndBandsToDefault();
@@ -572,16 +571,6 @@ $(function()
     // On clicking the Hide UnInstalled / Show All button
     $("#ShowHideToggleButton").on('click', function() {
     
-        // Show or Hide the themes
-        var showHideState=$("[id='ShowHideToggleButton']").text();
-        var expandCollapseState=$("[id='preview_Toggle_Button']").text();
-        if (showHideState.indexOf("Hide") >= 0) {
-            showHideState="Hide";
-        } else if (showHideState.indexOf("Show") >= 0) {
-           showHideState="Show";
-        }
-        ShowHideUnInstalledThemes(showHideState,expandCollapseState);
-        
         // Change text of button
         var textState = $(this).text();
         if (textState.indexOf("Hide") >= 0) {
@@ -590,6 +579,8 @@ $(function()
         if (textState.indexOf("Show") >= 0) {           
             $(this).text("Hide UnInstalled");
         }
+        
+        GetShowHideButtonStateAndUpdateUI();
     });
     
     //-----------------------------------------------------
@@ -612,6 +603,20 @@ $(function()
         }
     });
 });
+
+//-------------------------------------------------------------------------------------
+function GetShowHideButtonStateAndUpdateUI()
+{
+    var showHideState=$("[id='ShowHideToggleButton']").text();
+    var expandCollapseState=$("[id='preview_Toggle_Button']").text();
+    if (showHideState.indexOf("Hide") >= 0) {
+        showHideState="Hide";
+    } else if (showHideState.indexOf("Show") >= 0) {
+        showHideState="Show";
+    }
+    ShowHideUnInstalledThemes(showHideState,expandCollapseState);
+}
+
 
 //-------------------------------------------------------------------------------------
 function FindLineInString(CompleteString,SearchString)
@@ -949,7 +954,7 @@ function SetNvramFooterToNotSet(){
 //-------------------------------------------------------------------------------------
 function ShowHideUnInstalledThemes(showHide,expandCollapse)
 {        
-    if (showHide.indexOf("Hide") >= 0) {
+    if (showHide.indexOf("Show") >= 0) {
 
         if (expandCollapse.indexOf("Expand") >= 0) {
             $(".accordion").css("display","none");
@@ -958,7 +963,7 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
             $(".accordion").css("display","none");
             $(".accordion").next('[class="accordionContent"]').css("display","none");
         }
-    } else if (showHide.indexOf("Show") >= 0) {   
+    } else if (showHide.indexOf("Hide") >= 0) {   
 
         if (expandCollapse.indexOf("Expand") >= 0) {
             $(".accordion").css("display","block");
