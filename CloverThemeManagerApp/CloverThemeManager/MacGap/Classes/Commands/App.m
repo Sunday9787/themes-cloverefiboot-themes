@@ -2,6 +2,12 @@
 
 #import "JSEventHelper.h"
 
+// blackosx - add for writing file
+#include <stdio.h>
+FILE *newMesageFile;
+#define BASH_TO_JS_LOG "/tmp/CloverThemeManager/bashToJs"
+
+
 @implementation App
 
 @synthesize webView;
@@ -11,17 +17,17 @@
     
     if (self) {
         self.webView = view;
-        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
-                                                               selector: @selector(receiveSleepNotification:) 
+        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
+                                                               selector: @selector(receiveSleepNotification:)
                                                                    name: NSWorkspaceWillSleepNotification object: NULL];
-        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
-                                                               selector: @selector(receiveWakeNotification:) 
+        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
+                                                               selector: @selector(receiveWakeNotification:)
                                                                    name: NSWorkspaceDidWakeNotification object: NULL];
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
                                                                selector: @selector(receiveActivateNotification:)
                                                                    name: NSWorkspaceDidActivateApplicationNotification object: NULL];
     }
-
+    
     return self;
 }
 
@@ -63,93 +69,42 @@
     NSLog(@"%@",name);
 }
 
-
-
-// Method by Carlos P from:
-// http://stackoverflow.com/questions/6841937/authorizationexecutewithprivileges-is-deprecated
-
-- (BOOL) runProcessAsAdministrator:(NSString*)scriptPath
-                     withArguments:(NSArray *)arguments
-                            output:(NSString **)output
-                  errorDescription:(NSString **)errorDescription {
-NSLog(@"runProcessAsAdministrator()\"%@\"",scriptPath);
-    NSString * allArgs = [arguments componentsJoinedByString:@" "];
-    NSString * fullScript = [NSString stringWithFormat:@"'%@' %@", scriptPath, allArgs];
-NSLog(@"runProcessAsAdministrator()b");
-    NSDictionary *errorInfo = [NSDictionary new];
-    NSString *script =  [NSString stringWithFormat:@"do shell script \"%@\" with administrator privileges", fullScript];
-NSLog(@"runProcessAsAdministrator()c");
-    NSAppleScript *appleScript = [[NSAppleScript new] initWithSource:script];
-NSLog(@"runProcessAsAdministrator()c1");
-    NSAppleEventDescriptor * eventResult = [appleScript executeAndReturnError:&errorInfo];
-NSLog(@"runProcessAsAdministrator()d");
-    // Check errorInfo
-    if (! eventResult)
-    {
-NSLog(@"runProcessAsAdministrator()error");
-        // Describe common errors
-        *errorDescription = nil;
-        if ([errorInfo valueForKey:NSAppleScriptErrorNumber])
-        {
-            NSNumber * errorNumber = (NSNumber *)[errorInfo valueForKey:NSAppleScriptErrorNumber];
-            if ([errorNumber intValue] == -128)
-                *errorDescription = @"The administrator password is required to do this.";
-        }
-        
-        // Set error message from provided message
-        if (*errorDescription == nil)
-        {
-            if ([errorInfo valueForKey:NSAppleScriptErrorMessage])
-                *errorDescription =  (NSString *)[errorInfo valueForKey:NSAppleScriptErrorMessage];
-        }
-        
-        return NO;
-    }
-    else
-    {
-NSLog(@"runProcessAsAdministrator()success");
-        // Set output to the AppleScript's output
-        *output = [eventResult stringValue];
-        
-        return YES;
-    }
+// blackosx - add function to print to file
+void WriteStringtoFile(const char *str, FILE *outfile)
+{
+    fprintf(outfile,"%s\n",str);
 }
 
-// blackosx - add launchWithPrivilges to run bash script with admin privileges
-- (void) launchWithPrivilges:(NSString *)name {
-    NSString * output = nil;
-    NSString * processErrorDescription = nil;
-    BOOL success = [self runProcessAsAdministrator:@"/usr/bin/id"
-                                     withArguments:[NSArray arrayWithObjects:@"-un", nil]
-                                            output:&output
-                                  errorDescription:&processErrorDescription];
+- (void) removeMessage:(NSString *)messageToRemove {
+    // blackosx - add method for javascript to remove line from message log.
 
-    if (!success) // Process failed to run
-    {
-        // ...look at errorDescription
-        NSLog(@"Gone wrong");
-        
-    }
-    else
-    {
-        // ...process output
-        NSLog(@"Worked");
-        // blackosx added to run bash script on launch
-        NSTask *task = [[NSTask alloc] init];
-        NSString *taskPath =
-        [NSString stringWithFormat:@"%@/%@",[[NSBundle mainBundle] resourcePath], @"public/bash/scriptAdmin.sh"];
-        [task setLaunchPath: taskPath];
-        [task launch];
-        [task waitUntilExit];
-
-    }
+    // Read in existing file
+    NSError* error = nil;
+    NSString* contents = [NSString stringWithContentsOfFile:@BASH_TO_JS_LOG encoding:NSUTF8StringEncoding error:&error];
+    if(error) { // If error object was instantiated, handle it.
+        NSLog(@"ERROR while loading from file: %@", error);
+    } else {
     
-    NSLog(@"%@",name);
+        // Open file for writing out
+        newMesageFile = fopen(BASH_TO_JS_LOG,"w");
+    
+        // split by newlines into an array
+        NSArray *splitFile = [contents componentsSeparatedByString:@"\n"];
+
+        // Fast enumeration through original list
+        for (NSString *item in splitFile) {
+       
+            // If item is not the one to remove && item is not empty, then write to file
+            if (![messageToRemove isEqualToString:item] && (![item length] == 0) ) {
+                const char *itemToWrite = [item UTF8String];
+                WriteStringtoFile(itemToWrite,newMesageFile);
+            }
+        }
+    
+        // close file
+        fclose(newMesageFile);
+    }
 }
-
-
-
-
 
 
 - (void)receiveSleepNotification:(NSNotification*)note{
@@ -175,8 +130,6 @@ NSLog(@"runProcessAsAdministrator()success");
 }
 
 
-
-
 /*
  To get the elapsed time since the previous input event—keyboard, mouse, or tablet—specify kCGAnyInputEventType.
  */
@@ -187,27 +140,22 @@ NSLog(@"runProcessAsAdministrator()success");
 }
 
 
-
-
 + (NSString*) webScriptNameForSelector:(SEL)selector
 {
-	id	result = nil;
-	
-	if (selector == @selector(open:)) {
-		result = @"open";
-	} else if (selector == @selector(launch:)) {
+    id	result = nil;
+    
+    if (selector == @selector(open:)) {
+        result = @"open";
+    } else if (selector == @selector(launch:)) {
         result = @"launch";
-        
-      // blackosx add launchWithPrivilges
-    } else if (selector == @selector(launchWithPrivilges:)) {
-        result = @"launchWithPrivilges";
-        
+    } else if (selector == @selector(removeMessage:)) {
+        result = @"removeMessage";
     } else if (selector == @selector(setCustomUserAgent:)) {
         result = @"setCustomUserAgent";
     } else if (selector == @selector(systemIdleTime)) {
         result = @"systemIdleTime";
     }
-
+    
     return result;
 }
 
@@ -218,7 +166,7 @@ NSLog(@"runProcessAsAdministrator()success");
 
 + (BOOL) isKeyExcludedFromWebScript:(const char*)name
 {
-	return YES;
+    return YES;
 }
 
 @end

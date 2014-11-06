@@ -21,7 +21,7 @@
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.64"
+VERS="0.65"
 
 DEBUG=0
 #set -x
@@ -62,36 +62,10 @@ SendToUI() {
     echo "${1}" >> "$logBashToJs"
 }
 
-# ---------------------------------------------------------------------------------------
-SendToUINvramVar() {
-    echo "${1}" >> "$logBashToJsNvramVar"
-}
-
-# ---------------------------------------------------------------------------------------
-SendToUIResult() {
-    echo "${1}" >> "$logBashToJsResult"
-}
-
-# ---------------------------------------------------------------------------------------
-SendToUIUpdates() {
-    echo "${1}" >> "$logBashToJsUpdates"
-    # Reset updateAvailThemeStr var
-    updateAvailThemeStr=""
-}
-
-# ---------------------------------------------------------------------------------------
-SendToUIUnVersionedThemes() {
-    echo "${1}" >> "$logBashToJsVersionedThemes"
-}
 
 # ---------------------------------------------------------------------------------------
 SendToUIUVersionedDir() {
     echo "${1}" >> "$logBashToJsVersionedDir"
-}
-
-# ---------------------------------------------------------------------------------------
-SendToUIFreeSpace() {
-    echo "${1}" >> "$logBashToJsSpace"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -361,35 +335,40 @@ RunThemeAction()
     local passedAction="$1" # Will be either Install, UnInstall or Update
     local themeTitleToActOn="$2"
     local successFlag=1
-    local localBareRepo="${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn"
 
     CheckPathIsWriteable "${TARGET_THEME_DIR}"
     local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
     case "$passedAction" in
                 "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}/"
-                            ClearMessageLog "$logJsToBash"
                             local successFlag=1
     
                             # Only clone the theme from the Clover repo if not already installed
                             # in which case the bare repo will already be in the local support dir.
-                            if [ ! -d "${localBareRepo}.git" ]; then
+                            if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
                                 WriteToLog "Creating a bare git clone of $themeTitleToActOn"
-                                local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/'g )
-                                git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$localBareRepo".git
+                                local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/g' )
+
+                                cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                                feedbackCheck=$(git clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
+                                [[ DEBUG -eq 1 ]] && WriteToLog "Install git clone: $feedbackCheck"
+                                
                             else
                                 WriteToLog "Bare git clone of $themeTitleToActOn already exists. Will checkout from that."
                             fi
                             
-                            if [ "$localBareRepo".git ]; then
+                            if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
                                 WriteToLog "Checking out bare git clone of ${themeTitleToActOn}."
                                 
                                 # Theme currently gets checked out as /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
                                 # Desired path is                     /path/to/EFI/Clover/Themes/<theme>
                                 # So checkout to a directory for unpacking first.
-                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout .
-                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout HEAD -- && successFlag=0
-                                #git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout --force && successFlag=0
+                                if [ -d "$UNPACKDIR" ]; then
+                                    git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout . && tickle=0
+                                    git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout HEAD -- && successFlag=0
+                                else
+                                    WriteToLog "Error. UnPack dir does not exist."
+                                fi
                             fi
 
                             if [ ${successFlag} -eq 0 ]; then 
@@ -451,11 +430,13 @@ RunThemeAction()
                             # Note: The bare git repo will have already been updated when the fetch command was run
                             # from CheckForUpdatesInTheBackground() to discover the update.
                             # All we need to do is checkout the bare repo to the unpack dir then replace on target dir.
-                            if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "$localBareRepo".git ]; then
+                            if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
 
                                 WriteToLog "Force checking out bare git clone of ${themeTitleToActOn}."
-                                git --git-dir="$localBareRepo".git --work-tree="$UNPACKDIR" checkout --force && successFlag=0
-
+                                cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                                feedbackCheck=$(git --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout --force 2>&1) && successFlag=0
+                                [[ DEBUG -eq 1 ]] && WriteToLog "checkout git clone: $feedbackCheck"
+                                
                                 if [ $successFlag -eq 0 ]; then 
                                 
                                     targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
@@ -499,7 +480,8 @@ RunThemeAction()
     # Was install operation a success?
     if [ $successFlag -eq 0 ]; then
         if [ $COMMANDLINE -eq 0 ]; then
-            SendToUIResult "Success@${passedAction}@$themeTitleToActOn"
+            WriteToLog "Success@${passedAction}@$themeTitleToActOn"
+            SendToUI "Success@${passedAction}@$themeTitleToActOn"
             
             if [ "$passedAction" == "Install" ]; then
                 WriteToLog "Saving settings for newly installed theme."
@@ -530,7 +512,8 @@ RunThemeAction()
         return 0
     else
         if [ $COMMANDLINE -eq 0 ]; then
-            SendToUIResult "Fail@${passedAction}@$themeTitleToActOn"
+            WriteToLog "Fail@${passedAction}@$themeTitleToActOn"
+            SendToUI "Fail@${passedAction}@$themeTitleToActOn"
         fi
         return 1
     fi
@@ -877,10 +860,13 @@ GetLatestIndexAndEnsureThemeHtml()
 }
 
 # ---------------------------------------------------------------------------------------
-GetFreeSpaceOfTargetDevice()
+GetFreeSpaceOfTargetDeviceAndSendToUI()
 {
+    # Read available space on volume and send to the UI.
     WriteToLog "Getting free space on target device $TARGET_THEME_DIR_DEVICE"
-    echo $(df -laH | grep $TARGET_THEME_DIR_DEVICE | awk '{print $4}')
+    local freeSpace=$(df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $4}')
+    [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: FreeSpace:$freeSpace"
+    SendToUI "FreeSpace@${freeSpace}@"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1124,37 +1110,28 @@ SendUIThemePathThemeListAndFreeSpace()
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
 
-            WriteToLog "Sending UI: Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
             SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
-            
-            GetListOfInstalledThemes
-            WriteToLog "1) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
-            SendToUI "InstalledThemes@${installedThemeStr}@"
-            
-            freeSpace=$( GetFreeSpaceOfTargetDevice )
-            WriteToLog "Sending UI: FreeSpace:$freeSpace"
-            SendToUIFreeSpace "FreeSpace@${freeSpace}@"
+
+            GetListOfInstalledThemesAndSendToUI
+            GetFreeSpaceOfTargetDeviceAndSendToUI
                         
         elif [ $retVal -eq 1 ]; then
             if [ ! "$TARGET_THEME_DIR" == "-" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "-" ] ; then
-                WriteToLog "Sending UI: NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
                 SendToUI "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
             else
-                WriteToLog "Sending UI: NoPathSelected@@"
+                [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: NoPathSelected@@"
                 SendToUI "NoPathSelected@@"
             fi
             TARGET_THEME_DIR="-"
             TARGET_THEME_DIR_DEVICE="-"
         fi
         
-        # Run this regardless of path chosen as JS is waiting to hear it. 
-        CheckAndRecordOrphanedThemes
-        CheckForAnyUpdatesStoredInPrefs
-        WriteToLog "Sending to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
-        SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-        WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
-        SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-        
+        # Run these regardless of path chosen as JS is waiting to hear it. 
+        CheckAndRecordOrphanedThemesAndSendToUI
+        CheckForAnyUpdatesStoredInPrefsAndSendToUI
+
         # Set redirect from initial page
         WriteToLog "Redirect managethemes.html"
     else
@@ -1177,7 +1154,7 @@ SendUIThemePathThemeListAndFreeSpace()
 RespondToUserDeviceSelection()
 {
     # Called from the Main Message Loop when a user has changed the
-    # theme files path from the drop down menu in the UI.
+    # themes file path from the drop down menu in the UI.
     #
     # This routine takes the message, and splits it to find the device
     # and volume name. Then providing the user has not chosen 'Please Choose'
@@ -1189,8 +1166,7 @@ RespondToUserDeviceSelection()
     # 2 - to check for any updates to those theme directories.
         
     local messageFromUi="$1"
-    ClearMessageLog "$logJsToBash"
-    
+        
     WriteLinesToLog
 
     # parse message
@@ -1220,30 +1196,18 @@ RespondToUserDeviceSelection()
         UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
         UpdatePrefsKey "LastSelectedVolumeUUID" "$TARGET_THEME_VOLUMEUUID"
         
-        # Scan this path for theme list and then send to UI
-        GetListOfInstalledThemes
-        SendToUI "InstalledThemes@${installedThemeStr}@"
-        WriteToLog "2) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
+        GetListOfInstalledThemesAndSendToUI
+        GetFreeSpaceOfTargetDeviceAndSendToUI
+        CheckAndRecordOrphanedThemesAndSendToUI
+        CheckForAnyUpdatesStoredInPrefsAndSendToUI
         
-        freeSpace=$( GetFreeSpaceOfTargetDevice )
-        WriteToLog "Sending UI: FreeSpace:$freeSpace"
-        SendToUIFreeSpace "FreeSpace@${freeSpace}@"
-        
-        # Check for any updates
-        CheckAndRecordOrphanedThemes
-        CheckForAnyUpdatesStoredInPrefs
-        WriteToLog "Sending to UI: $updateAvailThemeStr"
-        SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-        WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
-        SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-
         CheckForUpdatesInTheBackground &
     else
         WriteToLog "User de-selected device pointing to theme path"
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_VOLUMEUUID="-"
-        WriteToLog "Sending UI: @@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: @@"
         SendToUI "InstalledThemes@-@"
     fi
 }
@@ -1252,7 +1216,6 @@ RespondToUserDeviceSelection()
 RespondToUserThemeAction()
 {
     local messageFromUi="$1"
-    ClearMessageLog "$logJsToBash"
 
     # remove everything up until, and including, the first @
     messageFromUi="${messageFromUi#*@}"
@@ -1286,11 +1249,12 @@ CheckThemePathIsStillValid()
 }
 
 # ---------------------------------------------------------------------------------------
-GetListOfInstalledThemes()
+GetListOfInstalledThemesAndSendToUI()
 {
     # Scan the selected EFI/Clover/Themes directory for a list of installed themes.
     # The user could add themes without using the app so we need to keep to track of
     # what's there.
+    # Send the list of installed themes to the UI.
     
     installedThemeStr=""
     unset installedThemesFoundAfterSearch
@@ -1312,16 +1276,20 @@ GetListOfInstalledThemes()
     else
         WriteToLog "Can't check for installed themes at $TARGET_THEME_DIR"
     fi
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
+    SendToUI "InstalledThemes@${installedThemeStr}@"
 }
 
 # ---------------------------------------------------------------------------------------
-CheckForAnyUpdatesStoredInPrefs()
+CheckForAnyUpdatesStoredInPrefsAndSendToUI()
 {
     # If an update to a theme has been found by CheckForUpdatesInTheBackground()
     # An update notification would have been written to the prefs file under each
-    # instance of this installed theme.
+    # instance of installed theme.
     # Here we read prefs, loop through the installedThemeUpdateAvailable[] array,
     # checking for 'Yes', but only for the currently selected volume.
+    # Send the list of available updates to the UI.
 
     ReadPrefsFile
     updateAvailThemeStr=""
@@ -1336,6 +1304,9 @@ CheckForAnyUpdatesStoredInPrefs()
         # Remove leading comma from string
         updateAvailThemeStr="${updateAvailThemeStr#?}"
     fi
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "Sending to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
+    SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1371,13 +1342,13 @@ CheckThemeIsInPrefs()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckAndRecordOrphanedThemes()
+CheckAndRecordOrphanedThemesAndSendToUI()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
     #       Create list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
-    #       This list gets sent to the UI and a cross is drawn to the right of the 'UnInstall' button.
-
+    # Send the list to the UI so a cross is drawn to the right of the 'UnInstall' button.
+    
     WriteToLog "Checking $TARGET_THEME_DIR for any orphaned themes (without a bare clone)."
     unversionedThemeStr=""
     for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
@@ -1396,12 +1367,14 @@ CheckAndRecordOrphanedThemes()
     
     # Remove leading comma from string
     unversionedThemeStr="${unversionedThemeStr#?}"
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+    SendToUI "UnversionedThemes@${unversionedThemeStr}@"
 }
 
 # ---------------------------------------------------------------------------------------
 ReadAndSendCurrentNvramTheme()
 {
-    #ClearMessageLog "$logBashToJsNvramVar"
     readNvramVar=$( nvram -p | grep Clover.Theme | tr -d '\011' )
 
     # Extract theme name
@@ -1409,12 +1382,12 @@ ReadAndSendCurrentNvramTheme()
 
     if [ ! -z "$readNvramVar" ]; then
         WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
-        WriteToLog "Sending UI: $themeName"
-        SendToUINvramVar "$themeName"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: Nvram@${themeName}@"
+        SendToUI "Nvram@${themeName}@"
     else
         WriteToLog "Clover.Theme NVRAM variable is not set"
-        WriteToLog "Sending UI: -"
-        SendToUINvramVar "-"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Sending UI: Nvram@-@"
+        SendToUI "Nvram@-@"
     fi
 }
 
@@ -1495,24 +1468,27 @@ CheckForUpdatesInTheBackground()
     # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
     # Also append list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
 
-    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
     unversionedThemeStr=""
+    local updateWasFound=0
+    
+    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    
     for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
     do
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-            WriteToLog "Checking for update to ${installedThemesOnCurrentVolume[$t]}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "Checking for update to ${installedThemesOnCurrentVolume[$t]}"
             cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
             local updateCheck=$( git fetch --progress origin master:master 2>&1 )
             if [[ "$updateCheck" == *done.* ]]; then
                 # Theme was updated.
                 WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
-                
+                updateWasFound=1
                 # Mark update as available for all instances of this theme.
                 # This will get written to prefs.
                 for ((n=0; n<${#installedThemeName[@]}; n++ ));
                 do
                     if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
-                        WriteToLog "Setting installedThemeUpdateAvailable[$n] to Yes"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "Setting installedThemeUpdateAvailable[$n] to Yes"
                         installedThemeUpdateAvailable[$n]="Yes" 
                     fi
                 done
@@ -1523,7 +1499,7 @@ CheckForUpdatesInTheBackground()
     done
     
     # Run routine to update prefs file.
-    if [ $t -gt 0 ]; then
+    if [ $updateWasFound -eq 1 ]; then
         MaintainInstalledThemeListInPrefs  
     fi
 }
@@ -1558,14 +1534,12 @@ UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
 COMMANDLINE=0
 
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
-logJsToBash="${TMPDIR}/CloverThemeManager_JsToBash.log"   # Note - this is set AppDelegate.m
-logBashToJs="${TMPDIR}/CloverThemeManager_BashToJs.log"
-logBashToJsUpdates="${TMPDIR}/CloverThemeManager_BashToJsUpdates.log"
-logBashToJsVersionedThemes="${TMPDIR}/CloverThemeManager_BashToJsVersionedThemes.log"
+
+logJsToBash="${TMPDIR}/jsToBash" # Note - this is created in AppDelegate.m
+logBashToJs="${TMPDIR}/bashToJs" # Note - this is created in AppDelegate.m
+
+#logBashToJs="${TMPDIR}/CloverThemeManager_BashToJs.log"
 #logBashToJsVersionedDir="${TMPDIR}/CloverThemeManager_BashToJsVersionedDir.log"
-logBashToJsSpace="${TMPDIR}/CloverThemeManager_BashToJsSpace.log"
-logBashToJsResult="${TMPDIR}/CloverThemeManager_BashToJsResult.log"
-logBashToJsNvramVar="${TMPDIR}/CloverThemeManager_BashToJsNvramVar.log"
 gUserPrefsFileName="org.black.CloverThemeManager"
 gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
 gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
@@ -1706,16 +1680,9 @@ else
 
         # Has user selected partition for an /EFI/Clover/themes directory?
         if grep "CTM_selectedPartition@" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-        
-            # Clear update, unversioned and free space message logs
-            ClearMessageLog "$logBashToJsUpdates"
-            ClearMessageLog "$logBashToJsVersionedThemes"
-            #ClearMessageLog "$logBashToJsVersionedDir"
-            ClearMessageLog "$logBashToJsSpace"
-            ClearMessageLog "$logBashToJsResult"
-            WriteToLog "Cleared update and versions message log."
-        
+            uiReturn=$(cat "$logJsToBash")  
+            ClearMessageLog "$logJsToBash"
+            
             # Check path,
             # find and send list of installed themes,
             # then check for any updates to those themes.
@@ -1729,13 +1696,6 @@ else
             ClearMessageLog "$logJsToBash"
             WriteToLog "User selected to open $TARGET_THEME_DIR"
     
-        # Has the UI finished reading inital launch massages?
-        # if yes, clear the log
-        elif grep "CTM_setupCompleted" "$logJsToBash" ; then
-            ClearMessageLog "$logJsToBash"
-            ClearMessageLog "$logBashToJs"
-            WriteToLog "UI setupCompleted message. Cleared logs."
-
         # Has the UI read the last message sent to it?
         # if yes, clear the log
         elif grep "CTM_received" "$logJsToBash" ; then
@@ -1745,64 +1705,29 @@ else
 
         # Has the user pressed a theme button to install, uninstall or update?
         elif grep "CTM_ThemeAction" "$logJsToBash" ; then
-
-            # Read message from javascript
             uiReturn=$(cat "$logJsToBash")
             ClearMessageLog "$logJsToBash"
-        
-            # Clear previous success/result
-            ClearMessageLog "$logBashToJsResult"  
-        
-            # Clear update, unversioned and free space message logs
-            ClearMessageLog "$logBashToJsUpdates"
-            ClearMessageLog "$logBashToJsVersionedThemes"
-            ClearMessageLog "$logBashToJsSpace"
-            WriteToLog "Cleared update and versions message log."
 
             # Perform the requested user action.
             RespondToUserThemeAction "$uiReturn"
             returnValue=$?
             if [ ${returnValue} -eq 0 ]; then
                 # Operation was successful
+                GetListOfInstalledThemesAndSendToUI
+                GetFreeSpaceOfTargetDeviceAndSendToUI
+                CheckAndRecordOrphanedThemesAndSendToUI
+                CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                ReadAndSendCurrentNvramTheme
+            fi 
 
-                # Scan for theme list and then send to UI
-                GetListOfInstalledThemes
-                SendToUI "InstalledThemes@${installedThemeStr}@"
-                WriteToLog "3) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
-        
-                freeSpace=$( GetFreeSpaceOfTargetDevice )
-                WriteToLog "Sending UI: FreeSpace:$freeSpace"
-                SendToUIFreeSpace "FreeSpace@${freeSpace}@"
-        
-                # Check for any updates
-                CheckAndRecordOrphanedThemes
-                CheckForAnyUpdatesStoredInPrefs
-                WriteToLog "Sending to UI updateAvailThemeStr: $updateAvailThemeStr"
-                SendToUIUpdates "UpdateAvailThemes@${updateAvailThemeStr}@"
-                WriteToLog "Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
-                SendToUIUnVersionedThemes "UnversionedThemes@${unversionedThemeStr}@"
-            fi
-
-        # A request by the UI to refresh the UI's theme list. This is
-        # called automatically by the js after a user chooses to install,
-        # update or delete a theme.
-        elif grep "CTM_refreshThemeList" "$logJsToBash" ; then
-            ClearMessageLog "$logJsToBash"
-            GetListOfInstalledThemes       
-            WriteToLog "4) Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
-            SendToUI "InstalledThemes@${installedThemeStr}@"
-           
         # Has user selected a theme for NVRAM variable?
         elif grep "CTM_chosenNvramTheme@" "$logJsToBash" ; then
             uiReturn=$(cat "$logJsToBash")
-            WriteToLog "User chose to set nvram theme."
-            # Clear log
             ClearMessageLog "$logJsToBash"
-            ClearMessageLog "$logBashToJsNvramVar"
-            WriteToLog "Cleared Nvram and JsToBash logs."
+            WriteToLog "User chose to set nvram theme."
             SetNvramTheme "$uiReturn"
         fi
-    
+
         # Get process ID of parent
         appPid=$( ps -p ${pid:-$$} -o ppid= )
     done
@@ -1811,12 +1736,6 @@ else
     RemoveFile "$logJsToBash"
     RemoveFile "$logFile"
     RemoveFile "$logBashToJs"
-    RemoveFile "$logBashToJsUpdates"
-    RemoveFile "$logBashToJsVersionedThemes"
-    #RemoveFile "$logBashToJsVersionedDir"
-    RemoveFile "$logBashToJsSpace"
-    RemoveFile "$logBashToJsResult"
-    RemoveFile "$logBashToJsNvramVar"
     
     if [ -d "$tmp_dir" ]; then
         rm -rf "$tmp_dir"
@@ -1827,6 +1746,6 @@ else
     if [ -f "${PUBLIC_DIR}"/managethemes.html ]; then
         rm "${PUBLIC_DIR}"/managethemes.html
     fi
-
+    
     exit 0
 fi

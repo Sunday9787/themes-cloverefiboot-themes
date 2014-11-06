@@ -15,13 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 var gTmpDir = "/tmp/CloverThemeManager";
-var gLogBashToJs = "CloverThemeManager_BashToJs.log";
-var gLogBashToJsUpdates = "CloverThemeManager_BashToJsUpdates.log";
-var gLogBashToJsVersionedThemes = "CloverThemeManager_BashToJsVersionedThemes.log";
-var gLogBashToJsSpace = "CloverThemeManager_BashToJsSpace.log";
-var gLogBashToJsResult="CloverThemeManager_BashToJsResult.log";
-var gLogBashToJsNvramVar="CloverThemeManager_BashToJsNvramVar.log";
-var justLoaded=1;
+var gLogBashToJs = "bashToJs";
 
 //-------------------------------------------------------------------------------------
 // On initial load
@@ -29,21 +23,14 @@ $(document).ready(function() {
     macgap.app.launch("started");
     hideButtons();
     HideProgressBar();
-    readLastSettings();
+    readBashToJsMessageFile();
     ResetButtonsAndBandsToDefault();
-    CheckForRevisedInstallThemeList();
-    CheckForUpdatesThemeList();
 });
 
 //-------------------------------------------------------------------------------------
 // Called when the process is to close.
 function terminate() {
-    clearTimeout(timerCheckReplySelectedPartition);
-    clearTimeout(timerCheckForThemeActionConfirmation);
-    clearTimeout(timerCheckReplyUpdatedThemes);
-    clearTimeout(timerCheckRevisedThemeList);
-    clearTimeout(timerCheckVersionedThemeList);
-    clearTimeout(timerCheckFreeSpace);
+    clearTimeout(timerReadMessageFile);
     macgap.app.terminate();    
 }
 
@@ -65,59 +52,350 @@ function GetFileContents(filename)
 
 //-------------------------------------------------------------------------------------
 // Check for incoming messages from bash script
-function readLastSettings()
+function readBashToJsMessageFile()
 {
-    prevSettings=GetFileContents(gLogBashToJs);
-    if (prevSettings != 0) {
+    incoming=GetFileContents(gLogBashToJs);
+    if (incoming != 0) {
     
         // Split settings by newline
-        prevSettings = prevSettings.split('\n');
-        // if array is not blank
-        if (prevSettings != "") {
-            // step through each element
-            for (var i = 0; i < prevSettings.length; i++) {
-                        
-                // Does this line contain "Target"? if yes then it's saved partition.
-                if ((prevSettings[i]).indexOf("Target") >= 0) {
-                    // Split settings by @
-                    stringSplit = (prevSettings[i]).split('@');
-                    // if array is not blank
-                    if (stringSplit != "") {
-                        // Structure will be: Target@diskXsX@/Volumes/XXXX/EFI/Clover/Themes
-                        // Set drop-down menu
-                        $('#partitionSelect').val(stringSplit[1] + "@" + stringSplit[2]);
-                        if (stringSplit[1] != "-" && stringSplit[2] != "-") {
-                            showButtons();
-                            // Show open button beside device dropdown
-                            $("#OpenPathButton").css("display","block");
-                        }
-                    }
+        var incoming = incoming.split('\n');
+        
+        // Take first line
+        var firstLine = (incoming[0]);
+    
+        // Split firstLine by @
+        var firstLineSplit = (firstLine).split('@');
+        var firstLineCommand = (firstLineSplit[0]);
+        
+        // match command against known ones.
+        switch(firstLineCommand) {
+            case "Target":
+                // Bash sends: "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+                macgap.app.removeMessage(firstLine);
+                setTargetThemePath(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "NotExist":
+                // Bash Sends: "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+                macgap.app.removeMessage(firstLine);
+                presentNotExistsDialog(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "InstalledThemes":
+                // Bash sends: "InstalledThemes@${installedThemeStr}@"
+                // where $installedThemeStr is a comma separated string.
+                macgap.app.removeMessage(firstLine);
+                updateBandsWithInstalledThemes(firstLineSplit[1]);
+                break;
+            case "FreeSpace":
+                // Bash sends: "FreeSpace@${freeSpace}@"
+                macgap.app.removeMessage(firstLine);
+                actOnFreeSpace(firstLineSplit[1]);
+                break;
+            case "UpdateAvailThemes":
+                // Bash sends: "UpdateAvailThemes@${updateAvailThemeStr}@"
+                // where $updateAvailThemeStr is a comma separated string.
+                macgap.app.removeMessage(firstLine);
+                actOnUpdates(firstLineSplit[1]);
+                break;
+            case "UnversionedThemes":
+                // Bash sends: "UnversionedThemes@${unversionedThemeStr}@"
+                macgap.app.removeMessage(firstLine);
+                displayUnversionedThemes(firstLineSplit[1]);
+                break;
+            case "Nvram":
+                // Bash sends: "Nvram@${themeName}@"
+                macgap.app.removeMessage(firstLine);
+                actOnNvramThemeVar(firstLineSplit[1]);
+                break;
+            case "Success":
+                // Bash sends: "Success@${passedAction}@$themeTitleToActOn"
+                macgap.app.removeMessage(firstLine);
+                themeActionSuccess(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "Fail":
+                // Bash sends: "Fail@${passedAction}@$themeTitleToActOn"
+                macgap.app.removeMessage(firstLine);
+                themeActionFail(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            default:
+                alert("Found else:"  + firstLine);
+                if(firstLine == "") {
+                    macgap.app.removeMessage("");
                 }
-                
-                // Does this line contain "NotExist"? if yes then path is not mounted.
-                if ((prevSettings[i]).indexOf("NotExist") >= 0) {
-                    // Split settings by @
-                    stringSplit = (prevSettings[i]).split('@');
-                    // if array is not blank
-                    if (stringSplit != "") {
-                        // Structure will be: NotExist@diskXsX@/Volumes/XXXX/EFI/Clover/Themes
-                        // Show message
-                        ChangeMessageBoxHeaderColour("red");
-                        SetMessageBoxText("Attention:" , "Previous path " + stringSplit[2] + " on device " + stringSplit[1] + " is no longer mounted. Please choose a theme path.")
-                        ShowMessageBox();
-                    }
-                }
-            }
+                break;
         }
-        // Notify bash script that setup has completed.
-        macgap.app.launch("CTM_setupCompleted");
-        // Change justLoaded flag to 0 so future path dropdown changes report back to bash script.
-        justLoaded=0;
+	    // recursively call function as long as file exists every 1/10th second.
+        timerReadMessageFile = setTimeout(readBashToJsMessageFile, 100);
     } else {
-        alert("readLastSettings(): Failed");
-        terminate();
+        //alert("Empty - bugging out");
+        //clearTimeout(timerReadMessageFile);
+
+        // recursively call function as long as file exists but at 2 second intervals
+        timerReadMessageFile = setTimeout(readBashToJsMessageFile, 2000);
     }
 }
+
+//-------------------------------------------------------------------------------------
+function setTargetThemePath(device,path)
+{
+    $('#partitionSelect').val(device + "@" + path);
+    if (device != "-" && path != "-") {
+        showButtons();
+        // Show open button beside device dropdown
+        $("#OpenPathButton").css("display","block");
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function presentNotExistsDialog(device,path)
+{
+    if (device != "" & path != "") {
+        ChangeMessageBoxHeaderColour("red");
+        SetMessageBoxText("Attention:" , "Previous path " + path + " on device " + device + " is no longer mounted. Please choose a theme path.")
+        ShowMessageBox();
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function updateBandsWithInstalledThemes(themeList)
+{
+    if (themeList != "") {
+        splitThemeList = (themeList).split(',');
+        if (splitThemeList != "-") {
+        
+            showButtons();
+            // Update only installed themes with uninstall buttons
+            for (var t = 0; t < splitThemeList.length; t++) {
+                ChangeButtonAndBandToUnInstall(splitThemeList[t]);
+            }  
+            
+            // Update number of installed themes
+            if (splitThemeList != ",") { // This check needs verifying!! - is a single comma possible?
+                $("#NumInstalledThemes").html("Installed themes: " + splitThemeList.length + "/" + $('div[id^=ThemeBand]').length);
+            } else {
+                $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
+            }
+
+            // Populate the config plist key drop down menu
+            UpdateAndRefreshInstalledThemeDropDown(splitThemeList);
+        } else {
+            UpdateAndRefreshInstalledThemeDropDown("-");
+                    
+            // Update number of installed themes
+            $("#NumInstalledThemes").html("Installed themes: -/" + $('div[id^=ThemeBand]').length);
+        }
+    } else {
+        // No themes installed on this volume
+        $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function actOnFreeSpace(availableSpace)
+{
+    if (availableSpace != "") {
+        // Bash sends the size read from the result of df
+        // This will look like 168M 
+        // Is the last character a G?
+        lastChar = availableSpace.slice(-1);
+           
+        if (lastChar == "K") {
+            // change colour to red
+            $(".textFreeSpace").css("color","#C00000");
+        }
+                
+        if (lastChar == "M") {
+            // Remove last character of string
+            number = availableSpace.slice(0,-1);
+            // round down
+            number = Math.floor(number);
+                    
+            if(parseInt(number, 10) < parseInt(10, 10)) {
+                // change colour to red
+                $(".textFreeSpace").css("color","#C00000");
+                        
+                // Show user a low space warning message
+                ChangeMessageBoxHeaderColour("red");                            
+                SetMessageBoxText("Warning: Low Space","You only have " + number +"MB remaining on this volume. Installing another theme may fail!");
+                ShowMessageBoxClose();
+                ShowMessageBox();
+            }
+        }
+                
+        if (lastChar == "G") {
+            // set to blue as defined in the .css file
+            $(".textFreeSpace").css("color","#00CCFF");
+        }
+        $(".textFreeSpace").text("Free Space:" + availableSpace );
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function actOnUpdates(themeList)
+{    
+    if (themeList != "") {
+        disableInterface();
+        localThemeUpdates = (themeList).split(',');
+        if (splitThemeList != "") {
+        
+            var printString=("<br>");
+        
+            // Update only installed themes with uninstall buttons
+            for (var t = 0; t < localThemeUpdates.length; t++) {
+                    
+                // Here we change any installed themes to have an uninstall button.
+                ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
+                        
+                // Prepare text for pretty print
+                printString=(printString + "<br>" + localThemeUpdates[t])
+            }
+                    
+            // Show a message to the user
+            ChangeMessageBoxHeaderColour("blue");                            
+            SetMessageBoxText("Theme Updates:","There is an update available for: " + printString);
+            ShowMessageBoxClose();
+            ShowMessageBox();
+        }
+    }
+    // re-enable UI
+    // This must be unconditional as the UI is disabled when user changes volume
+    enableInterface(); 
+}
+
+//-------------------------------------------------------------------------------------
+function displayUnversionedThemes(themeList)
+{
+    if (themeList != "") {
+        unVersionedThemes = (themeList).split(',');
+        if (splitThemeList != "") {
+            for (var t = 0; t < unVersionedThemes.length; t++) {
+                SetUnVersionedControlIndicator(unVersionedThemes[t]);
+            }
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function actOnNvramThemeVar(nvramThemeVar)
+{
+    // Print curent NVRAM var to UI
+    if(nvramThemeVar == "-") {        
+        SetNvramFooterToNotSet();
+    } else {
+        // Does the current NVRAM variable match an installed theme on this volume? 
+        var matchFound=0;
+
+        // Check this theme from nvram against the ones installed on current volume.
+        $('#installedThemeDropDown option').each(function(){
+
+            if(this.value == nvramThemeVar) {
+                matchFound=1;
+            }
+        });
+
+        // Print Current NVRAM var contents
+        $("#currentNVRAMvar").text("NVRAM theme: " + nvramThemeVar );
+                
+        // Change UI content to match results
+        if(matchFound==1) {
+            // Print message
+            $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
+            // Change background colour to green
+            $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(81,199,56,1) 0%,rgba(28,127,42,1) 100%)");
+            // Change nvram dropdown option to match nvram var
+            $("#installedThemeDropDown").val(nvramThemeVar);
+        } else {
+            // Print message
+            $("#currentNVRAMMessage").text("Not Installed on this volume"); 
+            // Change background colour to red
+            $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(193,34,20,1) 0%,rgba(117,2,4,1) 100%)");
+            // Change nvram dropdown option to "-"
+            $("#installedThemeDropDown").val("-");
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function themeActionSuccess(action,themeName)
+{
+    if (action != "" & themeName != "") {
+    
+        // Present dialog to the user
+        ChangeMessageBoxHeaderColour("green");
+
+        // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
+        if (action == "Update") {
+            printText="Updated";
+        } else {
+            printText=(action + "ed");
+        }
+        
+        // Print message
+        HideProgressBar();
+        SetMessageBoxText("Success:","The theme " + themeName + " was successfully " + printText + ".");
+        ShowMessageBoxClose();
+                
+        // Reset current theme list, bands and buttons
+        ResetButtonsAndBandsToDefault();
+        hideButtons();
+                
+        // Show Overlay Box to stop user interacting with buttons
+        disableInterface(); // it's re-enabled by actOnUpdates()
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function themeActionFail(action,themeName)
+{
+    if (action != "" & themeName != "") {
+    
+        // Present dialog to the user
+        ChangeMessageBoxHeaderColour("red");
+
+        // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
+        if (action == "Update") {
+            printText="Updated";
+        } else {
+            printText=(action + "ed");
+        }
+        
+        // Print message
+        HideProgressBar();
+        SetMessageBoxText("Failure:","The theme " + themeName + " was not " + printText + ".");
+        ShowMessageBoxClose();
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function disableInterface()
+{
+    // Disable path drop down menu and open button until updates have been checked.
+    // Will re-enable in CheckForUpdatesThemeList();
+    $("#partitionSelect").prop("disabled", true);
+    $("#OpenPathButton").prop("disabled", true);
+            
+    // Display message to notify checking for updates
+    $("#CheckingUpdatesMessage").css("display","block");
+            
+    // Show Overlay Box to stop user interacting with buttons
+    DisplayOverlayTwoBox();
+
+    // Show open button beside device dropdown
+    $("#OpenPathButton").css("display","block");
+}      
+
+//-------------------------------------------------------------------------------------
+function enableInterface()
+{
+    // Re-enable drop down menu and open button
+    $("#partitionSelect").prop("disabled", false);
+    $("#OpenPathButton").prop("disabled", false);
+            
+    // Hide message to notify checking for updates
+    $("#CheckingUpdatesMessage").css("display","none");
+            
+    // Hide Overlay Box to allow user to interact with buttons
+    HideOverlayTwoBox();    
+}        
 
 //-------------------------------------------------------------------------------------
 $(function()
@@ -131,57 +409,20 @@ $(function()
         // The bash script will get, and return, a list of installed themes for this path.
         // The bash script will then check if any of the themes have available updates.
         
-        // Only reply to bash script if the app has not just been launched.
-        if (justLoaded==0) {
-            macgap.app.launch("CTM_selectedPartition@" + selectedPartition);
-        }
-
-
-        // TO DO - look at retaining the hidden uninstalled themes later.
-        // For now, reset view even if user chose to hide uninstalled themes.
-        $(".accordion").css("display","block");
-        $("[id='ShowHideToggleButton']").text("Hide UnInstalled");
-        // Then call ShowHideUnInstalledThemes at the end of CheckForUpdatesThemeList().
+        // Send a message to the bash script to fetch new theme list.
+        macgap.app.launch("CTM_selectedPartition@" + selectedPartition);
         
-        
-        // Reset current theme list, bands and buttons
-        ResetButtonsAndBandsToDefault();
-        hideButtons();
-        
-        // show all themes, even if asked to hide uninstalled
-        $(".accordion").css("display","block");
-
-        // Listen out for the install theme list from the bash script.
-        CheckForRevisedInstallThemeList();
+        // The bash script will send back:
+        // 1 - A list of themes.
+        // 2 - Any themes from user prefs marked with an update available.
+        // 3 - Any themes flagged as orphaned (ie. not parent bare clone).
+        // These will be picked up by function readBashToJsMessageFile()
 
         // As long as the user did not select the 'Please Choose' menu option.
-        // And only if there are themes installed on this volume
         if (selectedPartition != "-@-") {
-
-            // Disable path drop down menu and open button until updates have been checked.
-            // Will re-enable in CheckForUpdatesThemeList();
-            $("#partitionSelect").prop("disabled", true);
-            $("#OpenPathButton").prop("disabled", true);
-            
-            // Display message to notify checking for updates
-            $("#CheckingUpdatesMessage").css("display","block");
-            
+        
             // Show Overlay Box to stop user interacting with buttons
-            DisplayOverlayTwoBox();
-
-            // Show open button beside device dropdown
-            $("#OpenPathButton").css("display","block");
-            
-            // Show the Free Space text
-            ShowFreeSpace();
-            
-            // Check for updates after 1 second delay.
-            // This allows time for the CTM_selectedPartition message
-            // to reach the bash script and for it to delete previous
-            // update message.
-            setTimeout(function() {
-                CheckForUpdatesThemeList();
-            }, 1000);
+            disableInterface(); // it's re-enabled by actOnUpdates()
             
         } else {
             // Hide open button beside device dropdown
@@ -189,11 +430,20 @@ $(function()
 
             // Hide the Free Space text
             HideFreeSpace();
-            
-            // Set Nvram area to nothing.
-            SetNvramFooterToNotSet();
         }
-            
+        
+        // TO DO - look at retaining the hidden uninstalled themes later.
+        // For now, reset view even if user chose to hide uninstalled themes.
+        $(".accordion").css("display","block");
+        $("[id='ShowHideToggleButton']").text("Hide UnInstalled");
+        // Then call ShowHideUnInstalledThemes at the end of CheckForUpdatesThemeList().
+        
+        // Reset current theme list, bands and buttons
+        ResetButtonsAndBandsToDefault();
+        hideButtons();
+        
+        // show all themes, even if asked to hide uninstalled
+        $(".accordion").css("display","block");
     });
     
     //-----------------------------------------------------
@@ -289,18 +539,7 @@ $(function()
             $(this).text("Hide Thumbnails");
         }
     });
-    
-    //-----------------------------------------------------
-    // On clicking the Toggle Preview button
-    //$("#preview_Toggle_Button").click(function() {
-    //    var hidden = $('[class="accordionContent"]').is(":hidden");
-    //    if (!hidden) {
-    //        $('[class="accordionContent"]').slideUp('normal');
-    //    } else {
-    //        $('[class="accordionContent"]').slideToggle('normal');
-    //    }
-    //});	
-    
+        
     //-----------------------------------------------------
     // On clicking the Toggle Preview button - change to Expand/Collapse All
     $("#preview_Toggle_Button").click(function() {
@@ -353,12 +592,9 @@ $(function()
         }
     });
     
-    
     //-----------------------------------------------------
     // On clicking a version X mark
     $("[id^=indicator]").on('click', function() {
-        //var pressedButton=$(this).attr('id');
-        //alert(pressedButton);
         // Show a message to the user
         ChangeMessageBoxHeaderColour("blue");                            
         SetMessageBoxText("Untracked Theme","This theme has no bare git clone in the app support dir. This means you will not be notified of any updates for this theme unless you UnInstall and then re-install it.");
@@ -370,323 +606,12 @@ $(function()
     // On changing the 'NVRAM theme' dropdown menu.
     $("#installedThemeDropDown").change(function() {
         var chosenNvramTheme=$("#installedThemeDropDown").val();
-        
         if(chosenNvramTheme != "-") {
-        
             // Send massage to bash script to notify setting of NVRAM variable.
             macgap.app.launch("CTM_chosenNvramTheme@" + chosenNvramTheme);
-        
-            // Check for new nvram message from bash script after 1 second delay.
-            // This allows time for the CTM_chosenNvramTheme message
-            // to reach the bash script, for it to set new variable and then
-            // read it before sending it back.
-            setTimeout(function() {
-               CheckForNvramTheme();
-            }, 1000);
         }
     });
 });
-
-//-------------------------------------------------------------------------------------
-function CheckForRevisedInstallThemeList()
-{
-    var receivedFile=0;
-    var stringSplit="";
-
-    // Set timer at the beginning.
-    // If the InstalledThemes message filters straight through on first
-    // run then the timer will be cleared anyway.
-    timerCheckRevisedThemeList = setTimeout(CheckForRevisedInstallThemeList, 250);
-    
-    fileContent=GetFileContents(gLogBashToJs);
-    if (fileContent != 0) {
-        if ((fileContent).indexOf("InstalledThemes") >= 0) {
-
-            var lineToRead = FindLineInString(fileContent,"InstalledThemes");
-
-            stringSplit = (lineToRead).split('@');
-            if (stringSplit != "") {
-                localThemes = (stringSplit[1]).split(',');
-
-                if (localThemes != "-") {
-
-                    showButtons();
-                    // Update only installed themes with uninstall buttons
-                    for (var t = 0; t < localThemes.length; t++) {
-                        ChangeButtonAndBandToUnInstall(localThemes[t]);
-                    }
-                    // Update number of installed themes
-                    if (stringSplit != "InstalledThemes,,") {
-                        $("#NumInstalledThemes").html("Installed themes: " + localThemes.length + "/" + $('div[id^=ThemeBand]').length);
-                    } else {
-                        $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
-                    }
-
-                    // Populate the config plist key drop down menu
-                    UpdateAndRefreshInstalledThemeDropDown(localThemes);
-                } else {
-                    UpdateAndRefreshInstalledThemeDropDown("-");
-                    
-                    // Update number of installed themes
-                    $("#NumInstalledThemes").html("Installed themes: -/" + $('div[id^=ThemeBand]').length);
-                }
-            }
-            receivedFile=1;
-            clearTimeout(timerCheckRevisedThemeList);
-            
-            // Send message back to bash script to notify receipt
-            macgap.app.launch("CTM_received");
-            
-            // Listen out for a list of any unVersioned themes.
-            CheckForThemesUnderVersionControl();
-            
-            // Listen out for message for available free space
-            CheckForFreeSpace();
-        }
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckRevisedThemeList = setTimeout(CheckForRevisedInstallThemeList, 250);
-	}
-}
-
-//-------------------------------------------------------------------------------------
-function CheckForThemesUnderVersionControl()
-{
-    var receivedFile=0;
-    var stringSplit="";
-
-    // Set timer at the beginning.
-    // If the UnversionedThemes message filters straight through on first
-    // run then the timer will be cleared anyway.
-    timerCheckVersionedThemeList = setTimeout(CheckForThemesUnderVersionControl, 500);
-    
-    fileContent=GetFileContents(gLogBashToJsVersionedThemes);
-    if (fileContent != 0) {
-        if ((fileContent).indexOf("UnversionedThemes") >= 0) {
-
-            var lineToRead = FindLineInString(fileContent,"UnversionedThemes");
-
-            stringSplit = (lineToRead).split('@');
-            if (stringSplit != "") {
-                versionedThemes = (stringSplit[1]).split(',');
-                if (versionedThemes != "") {
-                    for (var t = 0; t < versionedThemes.length; t++) {
-                        SetUnVersionedControlIndicator(versionedThemes[t]);
-                    }
-                }
-            }
-            receivedFile=1;
-            clearTimeout(timerCheckVersionedThemeList);  
-                      
-        } 
-
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckVersionedThemeList = setTimeout(CheckForThemesUnderVersionControl, 500);
-	}
-}
-
-//-------------------------------------------------------------------------------------
-function CheckForNvramTheme()
-{
-    var receivedFile=0;
-
-    timerCheckNvramVar = setTimeout(CheckForNvramTheme, 500);
-    fileContent=GetFileContents(gLogBashToJsNvramVar);
-    if (fileContent != 0) {
- 
-       // Split settings by newline
-        lineSplit = fileContent.split('\n');
-        // if array is not blank
-        if (lineSplit != "") {
-            currentNvramVar = (lineSplit[0]);
-
-            // Print curent NVRAM var to UI
-            if(currentNvramVar == "-") {
-            
-                SetNvramFooterToNotSet();
-
-            } else {
-            
-                // Does the current NVRAM variable match an installed theme on this volume? 
-                var matchFound=0;
-
-                // Check this theme from nvram against the ones installed on current volume.
-                $('#installedThemeDropDown option').each(function(){
-
-                    if(this.value == currentNvramVar) {
-                        matchFound=1;
-                    }
-                });
-
-                // Print Current NVRAM var contents
-                $("#currentNVRAMvar").text("NVRAM theme: " + currentNvramVar );
-                
-                // Change UI content to match results
-                if(matchFound==1) {
-                    // Print message
-                    $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
-                    // Change background colour to green
-                    //$("#AboveFooter").css("background-color","#629848");
-                    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(88,249,24,1) 0%,rgba(2,145,26,1) 100%)");
-                    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(81,199,56,1) 0%,rgba(28,127,42,1) 100%)");
-                    // Change nvram dropdown option to match nvram var
-                    $("#installedThemeDropDown").val(currentNvramVar);
-                } else {
-                    // Print message
-                    $("#currentNVRAMMessage").text("Not Installed on this volume"); 
-                    // Change background colour to red
-                    //$("#AboveFooter").css("background-color","#a13e41");
-                    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(255,48,25,1) 0%,rgba(145,2,2,1) 100%)");
-                    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(193,34,20,1) 0%,rgba(117,2,4,1) 100%)");
-                    // Change nvram dropdown option to "-"
-                    $("#installedThemeDropDown").val("-");
-                }
-            }
-        }
-            
-        receivedFile=1;
-        clearTimeout(timerCheckNvramVar);          
-	}
-	// recursively call function providing we haven't completed.
-    if(receivedFile==0)
-            timerCheckNvramVar = setTimeout(CheckForNvramTheme, 500);
-}
-
-
-//-------------------------------------------------------------------------------------
-function CheckForUpdatesThemeList()
-{
-    var receivedFile=0;
-    var stringSplit="";
-    var printString="";
-
-    // Set timer at the beginning.
-    // If the UpdateAvailThemes message filters straight through on first
-    // run then the timer will be cleared anyway.
-    timerCheckReplyUpdatedThemes = setTimeout(CheckForUpdatesThemeList, 250);
-    
-    fileContent=GetFileContents(gLogBashToJsUpdates);
-    if (fileContent != 0) {
-        if ((fileContent).indexOf("UpdateAvailThemes") >= 0) {
-            
-            var lineToRead = FindLineInString(fileContent,"UpdateAvailThemes");
-            
-            stringSplit = (lineToRead).split('@');
-            if (stringSplit != "") {
-                localThemeUpdates = (stringSplit[1]).split(',');
-                if (localThemeUpdates != "") {
-
-                    printString=("<br>");
-                    
-                    // Update only installed themes with uninstall buttons
-                    for (var t = 0; t < localThemeUpdates.length; t++) {
-                    
-                        // Here we change any installed themes to have an uninstall button.
-                        ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
-                        
-                        // Prepare text for pretty print
-                        printString=(printString + "<br>" + localThemeUpdates[t])
-                    }
-                    
-                    // Show a message to the user
-                    ChangeMessageBoxHeaderColour("blue");                            
-                    SetMessageBoxText("Theme Updates:","There is an update available for: " + printString);
-                    ShowMessageBoxClose();
-                    ShowMessageBox();
-                }
-            }
-            receivedFile=1;
-            clearTimeout(timerCheckReplyUpdatedThemes);
-            
-            // Re-enable drop down menu and open button
-            $("#partitionSelect").prop("disabled", false);
-            $("#OpenPathButton").prop("disabled", false);
-            
-            // Hide message to notify checking for updates
-            $("#CheckingUpdatesMessage").css("display","none");
-            
-            // Hide Overlay Box to allow user to interact with buttons
-            HideOverlayTwoBox();
-            
-            // Check NVRAM theme against list on this volume.
-            CheckForNvramTheme();
-            
-            // Set view to show all themes.
-            //ShowHideUnInstalledThemes($("[id='ShowHideToggleButton']").text(),$("[id='preview_Toggle_Button']").text());
-            ShowHideUnInstalledThemes("Show",$("[id='preview_Toggle_Button']").text());
-            
-        }
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckReplyUpdatedThemes = setTimeout(CheckForUpdatesThemeList, 250);
-	}
-}
-
-//-------------------------------------------------------------------------------------
-function CheckForFreeSpace()
-{
-    var receivedFile=0;
-    var stringSplit="";
-
-    // Set timer at the beginning.
-    // If the UnversionedThemes message filters straight through on first
-    // run then the timer will be cleared anyway.
-    timerCheckFreeSpace = setTimeout(CheckForFreeSpace, 500);
-    
-    fileContent=GetFileContents(gLogBashToJsSpace);
-    if (fileContent != 0) {
-        if ((fileContent).indexOf("FreeSpace") >= 0) {
-
-            var lineToRead = FindLineInString(fileContent,"FreeSpace");
-
-            stringSplit = (lineToRead).split('@');
-            if (stringSplit != "") {
-                freeSpace = (stringSplit[1]);
-
-                // Bash sends the size read from the result of df
-                // This will look like 168M 
-                // Is the last character a G?
-                lastChar = freeSpace.slice(-1);
-                
-                
-                if (lastChar == "K") {
-                    // change colour to red
-                    $(".textFreeSpace").css("color","#C00000");
-                }
-                
-                if (lastChar == "M") {
-                    // Remove last character of string
-                    number = freeSpace.slice(0,-1);
-                    // round down
-                    number = Math.floor(number);
-                    
-                    if(parseInt(number, 10) < parseInt(10, 10)) {
-                        // change colour to red
-                        $(".textFreeSpace").css("color","#C00000");
-                        
-                        // Show user a low space warning message
-                        ChangeMessageBoxHeaderColour("red");                            
-                        SetMessageBoxText("Warning: Low Space","You only have " + number +"MB remaining on this volume. Installing another theme may fail!");
-                        ShowMessageBoxClose();
-                        ShowMessageBox();
-                    }
-                }
-                
-                if (lastChar == "G") {
-                    // set to blue as defined in the .css file
-                    $(".textFreeSpace").css("color","#00CCFF");
-                }
-                $(".textFreeSpace").text("Free Space:" +freeSpace );
-            }
-            receivedFile=1;
-            clearTimeout(timerCheckFreeSpace);            
-        }
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckFreeSpace = setTimeout(CheckForFreeSpace, 500);
-	}
-}
 
 //-------------------------------------------------------------------------------------
 function FindLineInString(CompleteString,SearchString)
@@ -697,111 +622,6 @@ function FindLineInString(CompleteString,SearchString)
             return splitLines[l];
     }
     return "0";
-}
-
-//-------------------------------------------------------------------------------------
-function CheckForThemeActionConfirmation()
-{
-    var receivedFile=0;
-    var stringSplit="";
-
-    fileContent=GetFileContents(gLogBashToJsResult);
-    if (fileContent != 0) {
-
-        if ((fileContent).indexOf("Success") >= 0) {
-
-            var lineToRead = FindLineInString(fileContent,"Success");
-            
-            stringSplit = (lineToRead).split('@');
-            // if array is not blank
-            if (stringSplit != "") {
-            
-                // Structure will be: Success@Action@$themeName
-                ChangeMessageBoxHeaderColour("green");
-
-                // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
-                if (stringSplit[1] == "Update") {
-                    printText="Updated";
-                } else {
-                    printText=(stringSplit[1] + "ed");
-                }
-                // Print message
-                HideProgressBar();
-                SetMessageBoxText("Success:","The theme " + stringSplit[2] + " was successfully " + printText + ".");
-                ShowMessageBoxClose();
-                
-                // Refresh theme list
-                macgap.app.launch("CTM_refreshThemeList");
-                
-                // Reset current theme list, bands and buttons
-                ResetButtonsAndBandsToDefault();
-                hideButtons();
-        
-                // Listen out for revised theme list
-                CheckForRevisedInstallThemeList();
-                
-                // Disable path drop down menu and open button until updates have been checked.
-                // Will re-enable in CheckForUpdatesThemeList();
-                $("#partitionSelect").prop("disabled", true);
-                $("#OpenPathButton").prop("disabled", true);
-            
-                // Display message to notify checking for updates
-                $("#CheckingUpdatesMessage").css("display","block");
-                
-                // Show Overlay Box to stop user interacting with buttons
-                DisplayOverlayTwoBox();
-
-                // Show open button beside device dropdown
-                $("#OpenPathButton").css("display","block");
-
-                // Check for updates after 1 second delay.
-                // This allows time for the CTM_selectedPartition message
-                // to reach the bash script and for it to delete previous
-                // update message.
-                setTimeout(function() {
-                    CheckForUpdatesThemeList();
-                }, 1000);
-            }
-            
-            receivedFile=1;
-            clearTimeout(timerCheckForThemeActionConfirmation);
-            
-        } else if ((fileContent).indexOf("Fail") >= 0) {
-
-            var lineToRead = FindLineInString(fileContent,"Fail");
-            
-            stringSplit = (lineToRead).split('@');
-            // if array is not blank
-            if (stringSplit != "") {
-            
-                // Structure will be: Success@Action@$themeName
-                ChangeMessageBoxHeaderColour("red");
-
-                // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
-                if (stringSplit[1] == "Update") {
-                    printText="Updated";
-                } else {
-                    printText=(stringSplit[1] + "ed");
-                }
-                // Print message
-                HideProgressBar();
-                SetMessageBoxText("Failure:","The theme " + stringSplit[2] + " was not " + printText + ".");
-                ShowMessageBoxClose();
-            }
-            
-            receivedFile=1;
-            clearTimeout(timerCheckForThemeActionConfirmation);
-        }
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckForThemeActionConfirmation = setTimeout(CheckForThemeActionConfirmation, 500);
-	}
-	else
-	{
-	    // recursively call function providing we haven't completed.
-        if(receivedFile==0)
-            timerCheckForThemeActionConfirmation = setTimeout(CheckForThemeActionConfirmation, 500);
-    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -843,14 +663,6 @@ function RespondToButtonPress(button,status)
     HideMessageBoxClose();
     ShowProgressBar();
     ShowMessageBox();
-    
-    // Check for confirmation of result after 1 second delay.
-    // This allows time for the CTM_ThemeAction message
-    // to reach the bash script and for it to delete previous
-    // message from $logBashToJsResult.
-    setTimeout(function() {
-        CheckForThemeActionConfirmation();
-    }, 1000);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1131,8 +943,6 @@ function RemoveYesNoButtons(){
 function SetNvramFooterToNotSet(){
     $("#currentNVRAMvar").text("NVRAM theme: Not set:"); 
     $("#currentNVRAMMessage").text(""); 
-    //$("#AboveFooter").css("background-color","#888888");
-    //$("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(247,247,247,1) 0%,rgba(142,142,142,1) 100%)");
     $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(195,195,195,1) 0%,rgba(123,123,123,1) 100%)");
 }
 

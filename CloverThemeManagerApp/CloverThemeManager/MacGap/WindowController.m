@@ -51,5 +51,4 @@
     // window controller's window has been loaded from its nib file.
 }
 
-
 @end

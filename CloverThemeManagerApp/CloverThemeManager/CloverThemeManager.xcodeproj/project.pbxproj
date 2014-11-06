@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		013A962119D4B12000E4310E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 013A962019D4B12000E4310E /* Foundation.framework */; };
 		1495814F15C15CCC00E1CFE5 /* Notice.m in Sources */ = {isa = PBXBuildFile; fileRef = 1495814E15C15CCC00E1CFE5 /* Notice.m */; };
 		6F169DA718CC332E005EDDF3 /* Command.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F169DA618CC332E005EDDF3 /* Command.m */; };
 		6F169DAA18CC35FD005EDDF3 /* CallbackDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F169DA918CC35FD005EDDF3 /* CallbackDelegate.m */; };
@@ -56,7 +55,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		013A962019D4B12000E4310E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = ../../../../../../Users/nick/Desktop/Foundation.framework; sourceTree = "<group>"; };
 		1495814D15C15CCC00E1CFE5 /* Notice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Notice.h; path = Classes/Commands/Notice.h; sourceTree = "<group>"; };
 		1495814E15C15CCC00E1CFE5 /* Notice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Notice.m; path = Classes/Commands/Notice.m; sourceTree = "<group>"; };
 		6F169DA518CC332E005EDDF3 /* Command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Command.h; path = Classes/Commands/Command.h; sourceTree = "<group>"; };
@@ -124,7 +122,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				013A962119D4B12000E4310E /* Foundation.framework in Frameworks */,
 				6F169DAC18CD8A4A005EDDF3 /* JavaScriptCore.framework in Frameworks */,
 				FA3F7743168F70850027B324 /* Growl.framework in Frameworks */,
 				FA3F7742168F70790027B324 /* Cocoa.framework in Frameworks */,
@@ -211,7 +208,6 @@
 		FAE451BD14BA79C600190544 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				013A962019D4B12000E4310E /* Foundation.framework */,
 				6F169DAB18CD8A4A005EDDF3 /* JavaScriptCore.framework */,
 				FA3250DE14BA878D00BF0781 /* Growl.framework */,
 				FA32509E14BA816E00BF0781 /* Growl.framework */,
@@ -443,14 +439,13 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\\\"$(SRCROOT)/MacGap\\\"",
-					/Users/nick/Desktop,
+					"\"$(SRCROOT)/MacGap\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -465,14 +460,13 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\\\"$(SRCROOT)/MacGap\\\"",
-					/Users/nick/Desktop,
+					"\"$(SRCROOT)/MacGap\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
