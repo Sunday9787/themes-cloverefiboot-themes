@@ -479,12 +479,10 @@ a:active {
 }
 
 .toggleButton {
-    /*background-color: #b3b3b3;
-    background-image: -moz-linear-gradient(center top , #b3b3b3, #a4a4a4);
-    background-image: -webkit-linear-gradient(top, #b3b3b3, #a4a4a4);*/
+    background-image: -webkit-linear-gradient(top, rgba(224,224,224,1) 0%,rgba(114,114,114,1) 100%); 
     border: 1px solid #a6a6a6;
     border-radius: 4px;
-    color: #EEE;
+    color: #FFF;
     float: right;
     font-family: helvetica;
     font-size: 12px;
@@ -497,12 +495,13 @@ a:active {
     cursor: pointer;
 }
 
-.toggleButton:hover{
-    background-color: #9a9a9a;
+.toggleButton:hover {
+    background-image: -webkit-linear-gradient(top, #e5e5e5, #b6b6b6);
     border: 1px solid #cacaca;
+    color:#333;
 }
 
-.toggleButton:active{
+.toggleButton:active {
     background-color: #FFF;
 }
 
