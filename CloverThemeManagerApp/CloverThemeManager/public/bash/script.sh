@@ -21,9 +21,9 @@
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.65"
+VERS="0.66"
 
-DEBUG=0
+DEBUG=1
 #set -x
 
 # =======================================================================================
@@ -239,30 +239,34 @@ MaintainInstalledThemeListInPrefs()
          # Don't write back a theme if marked to be removed
          if [ $n -ne $dontReAddThemeId ]; then
 
-            # Add theme key
-            if [ "${installedThemeName[$n]}" != "-" ] && [ "${installedThemeName[$n]}" != "$lastAddedThemeName" ]; then
+            # Housekeeping can change a theme name to a dash.
+            # This indicates the theme entry in no longer required.
+            if [ "${installedThemeName[$n]}" != "-" ]; then
+            
+                # Add theme key
+                if [ "${installedThemeName[$n]}" != "$lastAddedThemeName" ]; then
 
-                # Check if there's a newly installed theme to append to this current array
-                if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
-                    InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID" ""
-                    themeToAppend=0
-                    ResetNewlyInstalledThemeVars
+                    # Check if there's a newly installed theme to append to this current array
+                    if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
+                        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID" ""
+                        themeToAppend=0
+                        ResetNewlyInstalledThemeVars
+                    fi
+
+                    # close any previous arrays
+                    if [ "$lastAddedThemeName" != "" ]; then
+                        arrayString="${arrayString}$closeArray"
+                    fi
+
+                    # Write new theme key
+                    arrayString="${arrayString}<key>${installedThemeName[$n]}</key>"
+
+                    # open array
+                    arrayString="${arrayString}$openArray"
+                    lastAddedThemeName="${installedThemeName[$n]}"
                 fi
-
-                # close any previous arrays
-                if [ "$lastAddedThemeName" != "" ]; then
-                    arrayString="${arrayString}$closeArray"
-                fi
-
-                # Write new theme key
-                arrayString="${arrayString}<key>${installedThemeName[$n]}</key>"
-
-                # open array
-                arrayString="${arrayString}$openArray"
-                lastAddedThemeName="${installedThemeName[$n]}"
+                InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemeVolumeUUID[$n]}" "${installedThemeUpdateAvailable[$n]}" 
             fi
-
-            InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemeVolumeUUID[$n]}" "${installedThemeUpdateAvailable[$n]}" 
         fi
     done
     
@@ -1358,7 +1362,7 @@ CheckAndRecordOrphanedThemesAndSendToUI()
             # Append to list of themes that will cannot be checked for updates
             unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
         else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone is support dir"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
             # Match - theme dir in users theme path also has a parent bare clone in app support dir.
             # Double check this is also in user prefs file.
             CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
@@ -1504,6 +1508,78 @@ CheckForUpdatesInTheBackground()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+CheckAndRemoveBareClonesNoLongerNeeded()
+{
+    foundCloneToDelete=0
+    # Loop through themes installed in prefs file
+    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+    do
+    
+        # Check current path in prefs matches current theme dir
+        if [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
+        
+            # Is theme installed in current theme dir?
+            local themeIsInDir=0
+            for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+            do
+                if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+                    themeIsInDir=1
+                fi
+            done
+            if [ $themeIsInDir -eq 0 ]; then
+                WriteToLog "Housekeeping: ${installedThemeName[$n]} exists in prefs for $TARGET_THEME_DIR but it's not installed!"
+                foundCloneToDelete=1
+                # Does bare clone for this theme exist?
+                if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${installedThemeName[$n]}".git ]; then
+                    WriteToLog "Housekeeping: Deleting bare clone ${installedThemeName[$n]}.git"
+                    cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                    rm -rf "${installedThemeName[$n]}".git
+                fi
+                
+                # Set theme name to -
+                # Doing this will effectively delete the theme from prefs as it 
+                # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
+                WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$n]} in $TARGET_THEME_DIR"
+                installedThemeName[$n]="-"
+            fi
+        fi
+    done
+    
+    # Run routine to update prefs file.
+    if [ $foundCloneToDelete -eq 1 ]; then
+        MaintainInstalledThemeListInPrefs  
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+CleanInstalledThemesPrefEntries()
+{
+    foundEntryToDelete=0
+    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+    do
+        for ((m=0; m<${#installedThemeName[@]}; m++ ));
+        do
+            if [ $m -ne $n ] && [ "${installedThemeName[$n]}" == "${installedThemeName[$m]}" ]; then
+                # Found another theme entry by same name
+                # Is this installed elsewhere or a duplicate entry?
+                if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && [ "${installedThemeVolumeUUID[$n]}" == "${installedThemeVolumeUUID[$m]}" ]; then
+                    # Duplicate entry. Remove
+                    foundEntryToDelete=1
+                    WriteToLog "Housekeeping: Removing duplicate prefs entry for ${installedThemeName[$n]} at ${installedThemePath[$n]}."
+                    installedThemeName[$n]="-"
+                fi
+            fi
+        done
+    done
+    
+    # Run routine to update prefs file.
+    if [ $foundEntryToDelete -eq 1 ]; then
+        MaintainInstalledThemeListInPrefs  
+    fi
+    
+}
+
 
 #===============================================================
 # Main
@@ -1645,6 +1721,8 @@ else
     CreateDiskPartitionDropDownHtml
     ReadPrefsFile
     #wait
+    
+    CleanInstalledThemesPrefEntries
 
     SendUIThemePathThemeListAndFreeSpace # Includes checking for updates also
 
@@ -1666,7 +1744,8 @@ else
     # Remember parent process id
     parentId=$appPid
 
-    CheckForUpdatesInTheBackground & #pidUpdateProcess=$!
+    CheckAndRemoveBareClonesNoLongerNeeded &
+    CheckForUpdatesInTheBackground &
 
     # The messaging system is event driven and quite simple.
     # Run a loop for as long as the parent process ID still exists

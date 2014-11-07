@@ -118,6 +118,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 themeActionFail(firstLineSplit[1],firstLineSplit[2]);
                 break;
+            case "NoPathSelected":
+                // Bash sends: "NoPathSelected@@"
+                macgap.app.removeMessage(firstLine);
+                HideFreeSpace();
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
