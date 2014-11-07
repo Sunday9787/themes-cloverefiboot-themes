@@ -725,7 +725,7 @@ a.boxclose {
     font-size: 12px;
     color: #FFF;
     padding: 8px 0px 0px 20px;
-    content: "Building list of installed themes on this volume...";
+    content: "Listing installed themes on this volume. Cross checking cloned themes match pref entries. Checking updates...";
     
     position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;

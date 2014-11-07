@@ -191,6 +191,7 @@ function updateBandsWithInstalledThemes(themeList)
             $("#NumInstalledThemes").html("Installed themes: -/" + $('div[id^=ThemeBand]').length);
         }
     } else {
+        showButtons();
         // No themes installed on this volume
         $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
     }
