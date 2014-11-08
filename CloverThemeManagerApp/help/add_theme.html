@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Clover Theme Manager - How to add a theme</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="description" content="Help page for adding theme" />
+    <meta name="author" content="Blackosx" />
+    <meta name="copyright" content="Copyright 2014 org.black.CloverThemeManager. All rights reserved.">    
+    <style>
+        html, body { padding: 0; margin: 0; height: 100%; background-color: #333; }
+        #Footer { position: fixed; width: 100%; bottom: 0px; height: 36px; border-top: 2px solid #333; background-color: #737075; z-index:2; 
+                  background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%); }
+        .textFooter { font-family: Helvetica; font-size: 12px; color: #FFF; text-align: center; margin-top:10px; }
+        a:link { color: #00CCFF; }
+        a:visited { color: #00CCFF; }
+        a:hover { color: #3ef14b; }
+        a:active { color: #00CCFF; }
+        .textTitleHeading { margin-top:74px; font-family: Helvetica; font-size: 24px; font-weight: bold; color: #FFF; text-align:center; line-height: 2px; }
+        .textTitleSubHeading { margin: 0px 20% 40px 20%; font-family: Helvetica; font-size: 16px; color: #33FF33; text-align:center; margin-top: 32px; }
+        .textSectionHeading { font-family: Helvetica; font-size: 18px; font-weight: bold; color: #FFF; text-align:center; }
+        .textSectionBody { font-family: Helvetica; font-size: 13px; color: #CCC; margin: 20px 10% 0px 10%; line-height:140%; text-align:center; }
+        code { padding: 8px; line-height: 195%; font-size: 12px; }
+        code a:link, code a:visited { color:#FFFF33; }
+        code a:hover { color:#33FF33; }
+        .terminal { background-color:#000; font-family: courier; font-size: 10px; color: #CCC; text-align:left; margin: 28px 10% 0px 10%; padding: 12px; line-height:140%; }
+        .highlight { color: #FFF; font-weight: bold; }
+        .section1 { padding: 20px; background-color:#383838; }
+        .section2 { padding: 20px; background-color:#484848; }
+        .sectionEnd { padding: 20px; }
+    </style>
+
+</head>
+<body>
+<div id="Container">
+
+        <p class="textTitleHeading">I have created a theme. How can I add it?</p>
+        <p class="textTitleSubHeading">The following steps show how you can add a new theme to the repository so it automatically becomes available for anyone to install.</p>
+        
+        <a name="1"></a>
+        <div class="section2">
+            <p class="textSectionHeading">1 - SF user account</p>
+            <p class="textSectionBody">You need to have a sourceforge account and know your username.<br>If you don't already have one then you can register by following this link:<br><code><a href="http://sourceforge.net" target="_blank">http://sourceforge.net</a></code></p>
+        </div>
+
+        <a name="2"></a>
+        <div class="section1">
+            <h1 class="textSectionHeading">2 - Ask permission to add theme</h1>
+            <p class="textSectionBody">You will need to ask a developer associated with Clover to assign you write access for you and your theme. A list of developers who can do this can be found in the following access list with |* beside their username:<br>
+            <code><a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access" target="_blank">http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access<a></code></p>
+            <p class="textSectionBody">The developer will need to know your sourceforge username and the title of your theme (exact spelling, capitalisation etc.) before they can add you to the access list.</p>
+            <p class="textSectionBody">One place to ask is in the Clover Theme Manager topic at projectosx<br><code><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">http://www.projectosx.com/forum/index.php?showtopic=3329</a></code></p>
+        </div>
+
+        <a name="3"></a>
+        <div class="section2">
+            <h1 class="textSectionHeading">3 - Clone the existing repository</h1>
+            <p class="textSectionBody">Decide where on your local hard drive you wish to store the clover theme repository.<br>Load Terminal.app and cd to that directory.<p>
+            <p class="textSectionBody">As an example, here I wish to clone the repository to my HDD partition named Data.</p>
+            <p class="terminal">cd /Volumes/Data/</p>
+            <p class="textSectionBody">Then enter the following, replacing USERNAME with your sourceforge username:</p>
+            <p class="terminal">git clone ssh://USERNAME@git.code.sf.net/p/cloverefiboot/themes cloverefiboot-themes</p>
+            <p class="textSectionBody">After pressing return you will be asked for your sourceforge password and then will see something like the following:</p>
+            <p class="terminal">Cloning into 'cloverefiboot-themes'...<br>
+Password: <br>
+remote: Counting objects: 4444, done.<br>
+remote: Compressing objects: 100% (4079/4079), done.<br>
+Receiving objects:  19% (845/4444), 11.54 MiB | 987.00 KiB/s<br>
+Resolving deltas: 100% (702/702), done.<br>
+Checking connectivity... done.<br>
+        </div>
+
+        <a name="4"></a>
+        <div class="section1">
+            <h1 class="textSectionHeading">4 - Add your theme to your local cloned repository</h1>
+            <p class="textSectionBody">You can add your theme to the path/to/cloverefiboot-themes/themes directory by either copying it using the Terminal or dragging and dropping from within the Finder.</p>
+            <p class="textSectionBody">To check all is good, you can <span class="highlight">cd</span> in to cloverefiboot-themes directory and run <span class="highlight">git status</span>.<br>To continue my example from step 3:</p>
+            <p class="terminal">cd /Volumes/Data/cloverefiboot-themes<br>git status</p>
+            <p class="textSectionBody">You will see something like this:</p>
+            <p class="terminal">On branch master<br>
+Your branch is up-to-date with 'origin/master'.<br>
+<br>
+Untracked files:<br>
+  (use "git add <file>..." to include in what will be committed)<br>
+<br>
+	themes/myNewTheme/<br>
+<br>
+nothing added to commit but untracked files present (use "git add" to track)<br>
+</p>
+        </div>
+        
+        <a name="5"></a>
+        <div class="section2">
+            <h1 class="textSectionHeading">5 - Stage your change</h1>
+            <p class="textSectionBody">The previous message tells you there are untracked files. You can now follow the suggestion and <span class="highlight">add</span> your theme to git's staging area. To continue my example from above:</p>
+            <p class="terminal">git add themes/myNewTheme/</p>
+            <p class="textSectionBody">You wont see any feedback after running this command but if you wish to check all is good then you could run <span class="highlight">git status</span> again:</p>
+            <p class="terminal">On branch master<br>
+Your branch is up-to-date with 'origin/master'.<br>
+<br>
+Changes to be committed:<br>
+  (use "git reset HEAD <file>..." to unstage)<br>
+<br>
+	new file:   themes/myNewTheme/banner.png<br>
+	new file:   themes/myNewTheme/bg.png<br>
+	new file:   themes/myNewTheme/font.png<br>
+	new file:   themes/myNewTheme/icons/cd_lin.icns<br>
+	new file:   themes/myNewTheme/icons/cd_mac.icns<br>
+	new file:   themes/myNewTheme/icons/cd_win.icns<br>
+	new file:   themes/myNewTheme/icons/func_about.png<br>
+	new file:   themes/myNewTheme/icons/func_clover.png<br>
+	new file:   themes/myNewTheme/icons/func_help.png<br>
+	new file:   themes/myNewTheme/icons/func_options.png<br>
+	new file:   themes/myNewTheme/icons/func_reset.png<br>
+	../snip/..<br>
+	new file:   themes/myNewTheme/screenshot.png<br>
+	new file:   themes/myNewTheme/selection_big.png<br>
+	new file:   themes/myNewTheme/theme.plist<br>
+</p>
+        </div>
+   
+        <a name="6"></a>
+        <div class="section1">
+            <h1 class="textSectionHeading">6 - Commit your change</h1>
+            <p class="textSectionBody">You can now commit this change with a descriptive message using the <span class="highlight">git commit</span> command with the -m option.<p>
+            <p class="terminal">git commit -m "Adding my new theme."</p>
+            <p class="textSectionBody">After pressing enter you will see something like this:<p>
+            <p class="terminal">[master d4ac14d] Adding my new theme.<br>
+ 47 files changed, 51 insertions(+)<br>
+ create mode 100755 themes/myNewTheme/banner.png<br>
+ create mode 100755 themes/myNewTheme/bg.png<br>
+ create mode 100755 themes/myNewTheme/font.png<br>
+ create mode 100755 themes/myNewTheme/icons/cd_lin.icns<br>
+ create mode 100755 themes/myNewTheme/icons/cd_mac.icns<br>
+ create mode 100755 themes/myNewTheme/icons/cd_win.icns<br>
+ create mode 100755 themes/myNewTheme/icons/func_about.png<br>
+ create mode 100755 themes/myNewTheme/icons/func_clover.png<br>
+ create mode 100755 themes/myNewTheme/icons/func_help.png<br>
+ create mode 100755 themes/myNewTheme/icons/func_options.png<br>
+ create mode 100755 themes/myNewTheme/icons/func_reset.png<br>
+ 	../snip/..<br>
+        </div>
+        
+        <a name="7"></a>
+        <div class="section2">
+            <h1 class="textSectionHeading">7 - Push your changes</h1>
+            <p class="textSectionBody">The final step is to push your changes to the repository. You do this with the <span class="highlight">git push</span> command.<p>
+            <p class="terminal">git push origin master</p>
+            <p class="textSectionBody">You will asked to enter your sourceforge account password. Type it and press return. All being well you will then see something like this:<p>
+            <p class="terminal">Counting objects: 6, done.<br>
+Delta compression using up to 8 threads.<br>
+Compressing objects: 100% (4/4), done.<br>
+Writing objects: 100% (4/4), 593 bytes | 0 bytes/s, done.<br>
+Total 4 (delta 2), reused 0 (delta 0)<br>
+remote: You have permission to modify *<br>
+remote: <Repository /git/p/cloverefiboot/themes.git> refresh queued.<br>
+remote: Updating server working copy<br>
+remote: HEAD is now at d4ac14d Adding my new theme.<br>
+remote: Syncing themes/*/theme.plist<br>
+../snip/..<br>
+remote: Syncing themes/myNewTheme<br>
+remote: Generating themes/myNewTheme/theme.git<br>
+remote: Initialized empty Git repository in /git/p/cloverefiboot/themes.git/themes/myNewTheme/theme.git/<br>
+remote: [master (root-commit) 168c28d] Syncing to server working copy: d4ac14d Adding my new theme.<br>
+remote:  Committer: USERNAME <USERNAME@sfp-scm-3.v30.ch3.sourceforge.com><br>
+../snip/..<br>
+remote:  47 files changed, 51 insertions(+), 0 deletions(-)<br>
+remote:  create mode 100755 themes/myNewTheme/banner.png<br>
+remote:  create mode 100755 themes/myNewTheme/bg.png<br>
+remote:  create mode 100755 themes/myNewTheme/font.png<br>
+remote:  create mode 100755 themes/myNewTheme/icons/cd_lin.icns<br>
+../snip/..<br>
+To ssh://USERNAME@git.code.sf.net/p/cloverefiboot/themes<br>
+   9bda98e..d4ac14d  master -> master<br>
+</p>
+        </div>
+        
+        <div class="section1">
+            <h1 class="textSectionHeading">8 - Complete</h1>
+            <p class="textSectionBody">Congratulations. You have just added your theme to the repository. The next time you or anybody else launches Clover Theme Manager, your theme will be available for installation.<p>
+        </div>
+        
+        <div class="sectionEnd"></div
+        
+    </div>
+    
+    
+
+    <div id="Footer">
+        <p class="textFooter"><a href="#1">(1) User Account</a> | <a href="#2">(2) Ask</a> | <a href="#3">(3) Clone</a> | <a href="#4">(4) Add</a> | <a href="#5">(5) Stage</a> | <a href="#6">(6) Commit</a> | <a href="#7">(7) Push</a> | <a href="#">Return to main app</a></p>
+    </div> <!-- End Footer -->  
+    
+</div> <!-- End Container -->
+    
+</body>
+</html>
