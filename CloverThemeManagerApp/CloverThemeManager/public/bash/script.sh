@@ -21,7 +21,7 @@
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.67"
+VERS="0.68"
 
 DEBUG=0
 #set -x
@@ -1683,23 +1683,6 @@ gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
 remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
 debugIndent="    "
 
-# Globals for newly installed theme before adding to prefs
-ResetNewlyInstalledThemeVars
-ResetUnInstalledThemeVars
-
-# Begin log file
-RemoveFile "$logFile"
-WriteToLog "CTM_Version${VERS}"
-WriteToLog "Started Clover Theme Manager script"
-WriteLinesToLog
-WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
-
-# For using additional theme repositories.
-# Not working in this version
-declare -a repositoryUrls
-declare -a repositoryThemes
-ReadRepoUrlList
-
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
 if [ "${identityCallerCheck:1:1}" == "+" ]; then
@@ -1769,6 +1752,23 @@ else
     declare -a installedThemeUpdateAvailable
     
     tmp_dir=$(mktemp -d -t theme_manager)
+
+    # Globals for newly installed theme before adding to prefs
+    ResetNewlyInstalledThemeVars
+    ResetUnInstalledThemeVars
+
+    # Begin log file
+    RemoveFile "$logFile"
+    WriteToLog "CTM_Version${VERS}"
+    WriteToLog "Started Clover Theme Manager script"
+    WriteLinesToLog
+    WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
+
+    # For using additional theme repositories.
+    # Not working in this version
+    declare -a repositoryUrls
+    declare -a repositoryThemes
+    ReadRepoUrlList
 
     # Begin
     RefreshHtmlTemplates "managethemes.html"
