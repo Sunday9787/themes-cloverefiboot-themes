@@ -1857,11 +1857,22 @@ else
             fi 
 
         # Has user selected a theme for NVRAM variable?
-        elif grep "CTM_chosenNvramTheme@" "$logJsToBash" ; then
+        elif grep "CTM_chosenNvramTheme" "$logJsToBash" ; then
             uiReturn=$(cat "$logJsToBash")
             ClearMessageLog "$logJsToBash"
             WriteToLog "User chose to set nvram theme."
             SetNvramTheme "$uiReturn"
+            
+        # Has user returned back from help page?
+        # Send back what's needed to restore state.
+        elif grep "ReloadToPreviousState" "$logJsToBash" ; then
+            ClearMessageLog "$logJsToBash"
+            SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+            GetListOfInstalledThemesAndSendToUI
+            GetFreeSpaceOfTargetDeviceAndSendToUI
+            CheckAndRecordOrphanedThemesAndSendToUI
+            CheckForAnyUpdatesStoredInPrefsAndSendToUI
+            ReadAndSendCurrentNvramTheme
         fi
 
         # Get process ID of parent

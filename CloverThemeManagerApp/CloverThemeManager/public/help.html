@@ -20,6 +20,19 @@
                     alert("Error: "+xhr.status+": "+xhr.statusText);
             });
         });
+        
+        $(function()
+        {
+            $('#BackButton').click(function(){ Go(); return false; });
+        });
+            
+        function Go()
+        {
+            var redirect="managethemes.html"
+            macgap.app.launch("ReloadToPreviousState");
+            window.location = (redirect);
+        }
+        
 	</script>
 </head>
 <body>
@@ -27,7 +40,7 @@
 
     <div id="TopOfHelpPage">
         <div id="HeaderBar">
-            <div class="toggleButton" onclick="location.href = 'managethemes.html';">Back to App</div>
+            <div class="toggleButton" id="BackButton" onclick="location.href = 'managethemes.html';  ">Back to App</div>
         </div>
     </div>
 
