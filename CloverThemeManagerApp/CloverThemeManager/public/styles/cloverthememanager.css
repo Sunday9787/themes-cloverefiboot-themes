@@ -50,6 +50,17 @@ p a:hover {
     background-image: -webkit-linear-gradient(top, #737075, #59565b);
 }
 
+#TopOfHelpPage {
+    position: fixed;
+    width: 100%;
+    top: 0px;
+    height:24px;
+    background-color: #333;
+    z-index:2;
+    opacity: 0.95;
+}
+
+
 #CheckingUpdatesMessage {
     position: absolute;
     float: left;
@@ -280,6 +291,16 @@ a:active {
 
 #ThemeListSpacerBottom {
     height: 74px;
+    clear: both;
+}
+
+#SpacerTop {
+    height: 34px;
+    clear: both;
+}
+
+#SpacerBottom {
+    height: 37px;
     clear: both;
 }
 

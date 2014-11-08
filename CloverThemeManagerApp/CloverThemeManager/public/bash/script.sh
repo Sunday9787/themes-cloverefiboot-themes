@@ -37,6 +37,11 @@ CreateSymbolicLink() {
     # Create symbolic link to local images
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
     ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR"
+    
+    # Create symbolic link to local help page
+    WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR"
+    
 }
 
 # ---------------------------------------------------------------------------------------
@@ -745,6 +750,11 @@ EnsureSymlink()
     if [ -h "$ASSETS_DIR"/images ]; then
         rm "$ASSETS_DIR"/images
     fi
+    
+    if [ -h "$PUBLIC_DIR"/add_theme.html ]; then
+        rm "$PUBLIC_DIR"/add_theme.html
+    fi
+    
     CreateSymbolicLink
     WriteLinesToLog
 }

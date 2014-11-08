@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Clover Theme Manager</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+	<meta name="description" content="A user interface for Clover Theme Manager" />
+    <meta name="author" content="Blackosx" />
+    <meta name="copyright" content="Copyright 2014 org.black.CloverThemeManager. All rights reserved.">    
+    <link rel="stylesheet" type="text/css" href="styles/cloverthememanager.css"/>
+    <style>
+        .toggleButton { margin-right: 480px; } /* Override default margin in cloverthememanager.css */
+    </style>
+	<script src="scripts/jquery-2.1.1.min.js"></script>
+	<script>
+        $(document).ready(function() {   
+            fileToLoad=("add_theme.html");
+            $('#PageContent').load(fileToLoad,function(responseTxt,statusTxt,xhr){
+                if(statusTxt=="error")
+                    alert("Error: "+xhr.status+": "+xhr.statusText);
+            });
+        });
+	</script>
+</head>
+<body>
+<div id="Container">
+
+    <div id="TopOfHelpPage">
+        <div id="HeaderBar">
+            <div class="toggleButton" onclick="location.href = 'managethemes.html';">Back to App</div>
+        </div>
+    </div>
+    
+    <div id="SpacerTop">&nbsp;</div>
+    <div id="PageContent"></div>
+    <div id="SpacerBottom">&nbsp;</div>
+        
+
+</div> <!-- End Container -->
+</body>
+</html>

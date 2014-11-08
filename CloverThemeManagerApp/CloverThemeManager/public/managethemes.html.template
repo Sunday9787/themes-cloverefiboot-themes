@@ -54,13 +54,9 @@
         </div> <!-- End FreeSpace -->        
         
         <div id="HeaderBar">
-            <!--<div class="textHeaderPreview"><p>Preview</p></div>-->
-            <!--<div class="textHeaderDescription">Description</div>-->
-            <!--<div class="textHeaderOptions">Options</div>-->
             <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
             <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
             <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
-            <!--<div class="textHeaderInstalled">Installed</div>-->
         </div>
     </div> <!-- End TopOfPage -->  
 
@@ -93,7 +89,7 @@
     </div> <!-- End Footer -->  
     
     <div id="Footer">
-        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a> | <a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a> | <a href="#">How to add my theme</a></p>
+        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a> | <a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a> | <a href="help.html">How to add my theme</a></p>
     </div> <!-- End Footer -->  
                                                          
 </div> <!-- End Container -->
