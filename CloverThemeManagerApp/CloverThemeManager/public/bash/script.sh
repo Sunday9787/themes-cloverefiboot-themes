@@ -21,7 +21,7 @@
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 
-VERS="0.66"
+VERS="0.67"
 
 DEBUG=0
 #set -x

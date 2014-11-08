@@ -12,6 +12,10 @@
 #import "MenuProxy.h"
 #import "UserDefaults.h"
 
+// Blackosx added this to overcome the following error with objc_msgSend for disabling rubbed band effect on 10.6.
+// Implicitly declaring C library function 'objc_msgSend' with type 'id (id, SEL, ...)'
+#import <objc/message.h>
+
 @implementation WebViewDelegate
 
 @synthesize sound;
@@ -190,6 +194,25 @@
 {
     [[NSWorkspace sharedWorkspace] openURL:[request URL]];
     [listener ignore];
+}
+
+// Blackosx - Add the following to disable the rubber band scrolling effect:
+// From http://stackoverflow.com/questions/7020842/disable-rubber-band-scrolling-for-webview-in-lion
+- (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame {
+    NSScrollView *mainScrollView = sender.mainFrame.frameView.documentView.enclosingScrollView;
+    //[mainScrollView setVerticalScrollElasticity:NSScrollElasticityNone];
+    //[mainScrollView setHorizontalScrollElasticity:NSScrollElasticityNone];
+    
+    // Note: The above code was generating the following error in OS X 10.6:
+    // -[WebDynamicScrollBarsView setVerticalScrollElasticity:]: unrecognized selector sent to instance 0x10dbf0
+    
+    // So instead - Add this further hack for 10.6
+    // See https://github.com/mapbox/tilemill/commit/056bf87a25d6a235bdec80838dbf68ab510265df
+    if ([mainScrollView respondsToSelector:@selector(setHorizontalScrollElasticity:)])
+    {
+        objc_msgSend(mainScrollView, @selector(setHorizontalScrollElasticity:), 1);
+        objc_msgSend(mainScrollView, @selector(setVerticalScrollElasticity:),   1);
+    }
 }
 
 #pragma mark WebScripting protocol
