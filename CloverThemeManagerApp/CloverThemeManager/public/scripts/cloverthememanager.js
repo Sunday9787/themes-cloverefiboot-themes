@@ -231,8 +231,8 @@ function actOnFreeSpace(availableSpace)
         }
                 
         if (lastChar == "G") {
-            // set to blue as defined in the .css file
-            $(".textFreeSpace").css("color","#00CCFF");
+            // set to green as defined in the .css file
+            $(".textFreeSpace").css("color","#3ef14b");
         }
         $(".textFreeSpace").text("Free Space:" + availableSpace );
     }
@@ -432,6 +432,9 @@ $(function()
         
             // Show Overlay Box to stop user interacting with buttons
             disableInterface(); // it's re-enabled by actOnUpdates()
+            
+            // Show the Free Space text
+            ShowFreeSpace();
             
         } else {
             // Hide open button beside device dropdown

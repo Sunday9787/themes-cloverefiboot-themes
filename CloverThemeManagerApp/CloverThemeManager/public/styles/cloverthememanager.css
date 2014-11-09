@@ -11,18 +11,6 @@ p {
     font-family: Helvetica;
 }
 
-p a:link {
-    color: #CCC;
-}
-
-p a:visited {
-    color: #CCC;
-}
-
-p a:hover {
-    color: #FFF;
-}
-
 #Container {
     /* min-height: 100%; */
     /* position:relative; */
@@ -230,7 +218,7 @@ p a:hover {
 .textFreeSpace {
     font-family: Helvetica;
     font-size: 12px;
-    color: #00CCFF;
+    color: #3ef14b;
 }
 
 .textThemeCount {
