@@ -37,14 +37,14 @@
         <a name="1"></a>
         <div class="section2">
             <p class="textSectionHeading">1 - SF user account</p>
-            <p class="textSectionBody">You need to have a sourceforge account and know your username.<br>If you don't already have one then you can register by following this link:<br><code><a href="http://sourceforge.net" target="_blank">http://sourceforge.net</a></code></p>
+            <p class="textSectionBody">You need to have a sourceforge account and know your username. If you don't already have one then you can register by clicking the following link and clicking 'Join' in the top right corner.<br><code><a href="http://sourceforge.net" target="_blank">http://sourceforge.net</a></code></p>
         </div>
 
         <a name="2"></a>
         <div class="section1">
             <h1 class="textSectionHeading">2 - Ask permission to add theme</h1>
-            <p class="textSectionBody">You will need to ask a developer associated with Clover to assign you write access for you and your theme. A list of developers who can do this can be found in the following access list with |* beside their username:<br>
-            <code><a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access" target="_blank">http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access<a></code></p>
+            <p class="textSectionBody">You will need to ask a developer associated with Clover to assign write access for you and your theme. A list of developers who can do this can be found in the following access list with |* beside their username:<br>
+            <code><a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access" target="_blank">http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/index-access</a></code></p>
             <p class="textSectionBody">The developer will need to know your sourceforge username and the title of your theme (exact spelling, capitalisation etc.) before they can add you to the access list.</p>
             <p class="textSectionBody">One place to ask is in the Clover Theme Manager topic at projectosx<br><code><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">http://www.projectosx.com/forum/index.php?showtopic=3329</a></code></p>
         </div>
@@ -52,12 +52,12 @@
         <a name="3"></a>
         <div class="section2">
             <h1 class="textSectionHeading">3 - Clone the existing repository</h1>
-            <p class="textSectionBody">Decide where on your local hard drive you wish to store the clover theme repository.<br>Load Terminal.app and cd to that directory.<p>
+            <p class="textSectionBody">Decide where on your local hard drive you wish to store the Clover theme repository.<br>Load Terminal.app and <span class="highlight">cd</span> to that directory.<p>
             <p class="textSectionBody">As an example, here I wish to clone the repository to my HDD partition named Data.</p>
             <p class="terminal">cd /Volumes/Data/</p>
             <p class="textSectionBody">Then enter the following, replacing USERNAME with your sourceforge username:</p>
             <p class="terminal">git clone ssh://USERNAME@git.code.sf.net/p/cloverefiboot/themes cloverefiboot-themes</p>
-            <p class="textSectionBody">After pressing return you will be asked for your sourceforge password and then will see something like the following:</p>
+            <p class="textSectionBody">After pressing return you will be asked for your sourceforge password and then see something like the following:</p>
             <p class="terminal">Cloning into 'cloverefiboot-themes'...<br>
 Password: <br>
 remote: Counting objects: 4444, done.<br>
@@ -73,7 +73,7 @@ Checking connectivity... done.<br>
             <p class="textSectionBody">You can add your theme to the path/to/cloverefiboot-themes/themes directory by either copying it using the Terminal or dragging and dropping from within the Finder.</p>
             <p class="textSectionBody">To check all is good, you can <span class="highlight">cd</span> in to cloverefiboot-themes directory and run <span class="highlight">git status</span>.<br>To continue my example from step 3:</p>
             <p class="terminal">cd /Volumes/Data/cloverefiboot-themes<br>git status</p>
-            <p class="textSectionBody">You will see something like this:</p>
+            <p class="textSectionBody">After pressing return you will see something like this:</p>
             <p class="terminal">On branch master<br>
 Your branch is up-to-date with 'origin/master'.<br>
 <br>
@@ -89,7 +89,7 @@ nothing added to commit but untracked files present (use "git add" to track)<br>
         <a name="5"></a>
         <div class="section2">
             <h1 class="textSectionHeading">5 - Stage your change</h1>
-            <p class="textSectionBody">The previous message tells you there are untracked files. You can now follow the suggestion and <span class="highlight">add</span> your theme to git's staging area. To continue my example from above:</p>
+            <p class="textSectionBody">The previous message tells you there are untracked files. You can now follow the suggestion and <span class="highlight">git add</span> your theme to git's staging area. To continue my example from above:</p>
             <p class="terminal">git add themes/myNewTheme/</p>
             <p class="textSectionBody">You wont see any feedback after running this command but if you wish to check all is good then you could run <span class="highlight">git status</span> again:</p>
             <p class="terminal">On branch master<br>
@@ -121,7 +121,7 @@ Changes to be committed:<br>
             <h1 class="textSectionHeading">6 - Commit your change</h1>
             <p class="textSectionBody">You can now commit this change with a descriptive message using the <span class="highlight">git commit</span> command with the -m option.<p>
             <p class="terminal">git commit -m "Adding my new theme."</p>
-            <p class="textSectionBody">After pressing enter you will see something like this:<p>
+            <p class="textSectionBody">After pressing return you will see something like this:<p>
             <p class="terminal">[master d4ac14d] Adding my new theme.<br>
  47 files changed, 51 insertions(+)<br>
  create mode 100755 themes/myNewTheme/banner.png<br>
@@ -143,7 +143,7 @@ Changes to be committed:<br>
             <h1 class="textSectionHeading">7 - Push your changes</h1>
             <p class="textSectionBody">The final step is to push your changes to the repository. You do this with the <span class="highlight">git push</span> command.<p>
             <p class="terminal">git push origin master</p>
-            <p class="textSectionBody">You will asked to enter your sourceforge account password. Type it and press return. All being well you will then see something like this:<p>
+            <p class="textSectionBody">You will asked to enter your sourceforge account password. Type it and press return.<br>All being well you will see something like this:<p>
             <p class="terminal">Counting objects: 6, done.<br>
 Delta compression using up to 8 threads.<br>
 Compressing objects: 100% (4/4), done.<br>
