@@ -37,12 +37,12 @@
         <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
         <!--<div id="CheckingUpdatesMessage" class="textMessage">Checking for updates to your installed themes, and if your themes are under version control...</div>-->
         <div id="PathSelector">
-            <select name="dropdown" id="partitionSelect">
+            <select name="dropdown" id="partitionSelect" class="custom-dropdown">
                 <!--INSERT_MENU_OPTIONS_HERE-->
             </select>
         </div> <!-- End PathSelector -->
         <div id="OpenButton">
-            <button type="button" id="OpenPathButton">Open</button>
+            <button type="button" id="OpenPathButton" class="openButton">Open</button>
         </div> <!-- End OpenButton -->
         
         <div id="ThemeCount">

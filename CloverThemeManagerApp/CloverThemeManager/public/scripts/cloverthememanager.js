@@ -523,7 +523,7 @@ $(function()
             // Change button text
             $(this).text("Show Thumbnails");
             // Set background colour to indicate its selected
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(133,133,133,1) 0%,rgba(69,69,69,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
             
             
         } else if (bandsHeightState.indexOf("Show") >= 0) {
@@ -550,7 +550,7 @@ $(function()
             // Change button text
             $(this).text("Hide Thumbnails");
             // Revert background colour
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(224,224,224,1) 0%,rgba(114,114,114,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
         }
     });
         
@@ -568,7 +568,7 @@ $(function()
                 $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
             }
             $(this).text("Collapse Previews");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(133,133,133,1) 0%,rgba(69,69,69,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
         }
         
         if (buttonText.indexOf("Collapse") >= 0) {
@@ -579,7 +579,7 @@ $(function()
                 $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
             }
             $(this).text("Expand Previews");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(224,224,224,1) 0%,rgba(114,114,114,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
         }
 
     });	
@@ -592,11 +592,11 @@ $(function()
         var textState = $(this).text();
         if (textState.indexOf("Hide") >= 0) {
             $(this).text("Show All");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(133,133,133,1) 0%,rgba(69,69,69,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
         }
         if (textState.indexOf("Show") >= 0) {           
             $(this).text("Hide UnInstalled");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(224,224,224,1) 0%,rgba(114,114,114,1) 100%)");
+            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
         }
         
         GetShowHideButtonStateAndUpdateUI();
