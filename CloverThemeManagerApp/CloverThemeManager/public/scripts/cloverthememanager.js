@@ -500,7 +500,10 @@ $(function()
     
         var bandsHeightState=$("[id='BandsHeightToggleButton']").text();
         if (bandsHeightState.indexOf("Hide") >= 0) {
-
+        
+            // Hide + and - buttons
+            $("#thumbSizeSmaller").css("display","none");
+            $("#thumbSizeLarger").css("display","none");
             // Move theme titles up
             $("[id=ThemeText]").css("top","74%");
             // Hide all theme descriptions
@@ -512,6 +515,7 @@ $(function()
             // Adjust height of theme bands
             $(".accordion").css("height","36px");
             $(".accordionInstalled").css("height","36px");
+            $(".accordionUpdate").css("height","36px");
             // Reduce margin top of buttons
             $(".buttonInstall").css("margin-top","6px");
             $(".buttonUnInstall").css("margin-top","6px");
@@ -529,6 +533,9 @@ $(function()
             
         } else if (bandsHeightState.indexOf("Show") >= 0) {
 
+            // Show + and - buttons
+            $("#thumbSizeSmaller").css("display","block");
+            $("#thumbSizeLarger").css("display","block");
             // Revert theme titles margin top
             $("[id=ThemeText]").css("top","50%");
             // Show all theme descriptions
@@ -538,14 +545,23 @@ $(function()
             // Show thumbnails
             $(".thumbnail").css("display","block");
             // Adjust height of theme bands
-            $(".accordion").css("height","72px");
-            $(".accordionInstalled").css("height","72px");
+            var currentThumbHeight = $(".thumbnail img").first().height();
+            var accordionHeight = (currentThumbHeight+14);
+            $(".accordion").css("height",accordionHeight);
+            $(".accordionInstalled").css("height",accordionHeight);
+            $(".accordionUpdate").css("height",accordionHeight);
             // Revert margin top of buttons
-            $(".buttonInstall").css("margin-top","24px");
-            $(".buttonUnInstall").css("margin-top","24px");
-            $(".buttonUpdate").css("margin-top","24px");
+            // Note: When thumb=100px wide, default button top=24px
+            var currentThumbWidth = $(".thumbnail img").first().width();
+            var buttonMarginAdjustment = (((currentThumbWidth-100)/25)*7);
+            var buttonMarginTop = (24 + buttonMarginAdjustment);
+            $(".buttonInstall").css("margin-top",buttonMarginTop);
+            $(".buttonUnInstall").css("margin-top",buttonMarginTop);
+            $(".buttonUpdate").css("margin-top",buttonMarginTop);
             // Revert margin top of Unversioned Themes Indicatpor
-            $(".versionControl").css("margin-top","28px");
+            // Note: When thumb=100px wide, default margin top=28px
+            var versionControlMarginTop = (28 + buttonMarginAdjustment);
+            $(".versionControl").css("margin-top",versionControlMarginTop);
             // Remove added margin left to theme titles
             $("[id=ThemeText]").css("margin-left","0px");
             // Change button text
@@ -609,8 +625,71 @@ $(function()
             $(this).css("border","1px solid #282828");
             $(this).css("color","#FFF");
         }
-        
         GetShowHideButtonStateAndUpdateUI();
+    });
+    
+    //-----------------------------------------------------
+    // On clicking the Thumbnail Smaller button
+    $("#thumbSizeSmaller").on('click', function() {
+        var currentWidth = $(".thumbnail img").first().width();
+        var currentHeight = $(".thumbnail img").first().height();
+        if (currentWidth >= 125) {
+            // Adjust height of theme bands
+            var currentAccordionHeight = $(".accordion").first().height();
+            var newAccordionHeight=(currentAccordionHeight-14);
+            $(".accordion").css("height",newAccordionHeight);
+            $(".accordionInstalled").css("height",newAccordionHeight);
+            $(".accordionUpdate").css("height",newAccordionHeight);
+            // Change thumbnail size
+            var newWidth=(currentWidth-25);
+            var newHeight=(currentHeight-14);
+            $(".thumbnail img").css("width",newWidth);
+            $(".thumbnail img").css("height",newHeight);
+            // Change margin top of buttons
+            var buttonHeight = $(".buttonInstall").first().height();
+            var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
+            $(".buttonInstall").css("margin-top",newButtonTop);
+            $(".buttonUnInstall").css("margin-top",newButtonTop);
+            $(".buttonUpdate").css("margin-top",newButtonTop);
+            // Change margin top of version control indicator
+            $(".versionControl").css("margin-top",newButtonTop+3);
+            // Enlarge width of theme text (by 30px) to retain space for update button
+            var currentThemeTextWidth = $("#ThemeText").first().width();
+            var newThemeTextWidth=(currentThemeTextWidth + 30);
+            $("[id^=ThemeText]").width(newThemeTextWidth);
+        }
+    });
+    
+    //-----------------------------------------------------
+    // On clicking the Thumbnail Larger button
+    $("#thumbSizeLarger").on('click', function() {
+        var currentWidth = $(".thumbnail img").first().width();
+        var currentHeight = $(".thumbnail img").first().height();
+        if (currentWidth <= 175) {
+            // Adjust height of theme bands
+            var currentAccordionHeight = $(".accordion").first().height();
+            var newAccordionHeight=(currentAccordionHeight+14);
+            $(".accordion").css("height",newAccordionHeight);
+            $(".accordionInstalled").css("height",newAccordionHeight);
+            $(".accordionUpdate").css("height",newAccordionHeight);
+            // Change thumbnail size
+            var newWidth=(currentWidth+25);
+            var newHeight=(currentHeight+14);
+            $(".thumbnail img").css("width",newWidth);
+            $(".thumbnail img").css("height",newHeight);
+            // Change margin top of buttons
+            var buttonHeight = $(".buttonInstall").first().height();
+            var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
+            $(".buttonInstall").css("margin-top",newButtonTop);
+            $(".buttonUnInstall").css("margin-top",newButtonTop);
+            $(".buttonUpdate").css("margin-top",newButtonTop);
+            // Change margin top of version control indicator
+            $(".versionControl").css("margin-top",newButtonTop+3);
+            // Reduce width of theme text (by 30px) to retain space for update button
+            var currentThemeTextWidth = $("#ThemeText").first().width();
+            var newThemeTextWidth=(currentThemeTextWidth - 30);
+            $("[id^=ThemeText]").width(newThemeTextWidth);
+        }
     });
     
     //-----------------------------------------------------
