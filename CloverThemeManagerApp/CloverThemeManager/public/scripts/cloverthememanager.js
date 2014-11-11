@@ -234,7 +234,7 @@ function actOnFreeSpace(availableSpace)
             // set to green as defined in the .css file
             $(".textFreeSpace").css("color","#3ef14b");
         }
-        $(".textFreeSpace").text(availableSpace );
+        $(".textFreeSpace").text(availableSpace+"B");
     }
 }
 
