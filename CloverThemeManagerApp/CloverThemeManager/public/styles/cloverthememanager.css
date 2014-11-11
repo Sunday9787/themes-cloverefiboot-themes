@@ -48,7 +48,6 @@ p {
     opacity: 0.95;
 }
 
-
 #CheckingUpdatesMessage {
     position: absolute;
     float: left;
@@ -306,20 +305,13 @@ select.custom-dropdown:hover {
     float: right;
 }
 
-a:link {
-    color: #00CCFF;
-}
-
-a:visited {
-    color: #00CCFF;
+a:link, a:visited {
+    color: #BBB;
+    text-decoration: none;
 }
 
 a:hover {
-    color: #3ef14b;
-}
-
-a:active {
-    color: #00CCFF;
+    color: #FFF;
 }
 
 #ThemeListSpacerTop {
@@ -328,7 +320,7 @@ a:active {
 }
 
 #ThemeListSpacerBottom {
-    height: 74px;
+    height: 32px;
     clear: both;
 }
 

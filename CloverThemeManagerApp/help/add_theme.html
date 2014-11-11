@@ -2,26 +2,109 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head> 
     <style>
-        html, body { padding: 0; margin: 0; height: 100%; background-color: #333; }
-        #Footer { position: fixed; width: 100%; bottom: 0px; height: 36px; border-top: 2px solid #333; background-color: #737075; z-index:2; 
-                  background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%); }
-        .textFooter { font-family: Helvetica; font-size: 12px; color: #FFF; text-align: center; margin-top:10px; }
-        a:link { color: #00CCFF; }
-        a:visited { color: #00CCFF; }
-        a:hover { color: #3ef14b; }
-        a:active { color: #00CCFF; }
-        .textTitleHeading { margin-top:74px; font-family: Helvetica; font-size: 24px; font-weight: bold; color: #FFF; text-align:center; line-height: 2px; }
-        .textTitleSubHeading { margin: 0px 20% 40px 20%; font-family: Helvetica; font-size: 16px; color: #33FF33; text-align:center; margin-top: 32px; }
-        .textSectionHeading { font-family: Helvetica; font-size: 18px; font-weight: bold; color: #FFF; text-align:center; }
-        .textSectionBody { font-family: Helvetica; font-size: 13px; color: #CCC; margin: 20px 10% 0px 10%; line-height:140%; text-align:center; }
-        code { padding: 8px; line-height: 195%; font-size: 12px; }
-        code a:link, code a:visited { color:#FFFF33; }
-        code a:hover { color:#33FF33; }
-        .terminal { background-color:#000; font-family: courier; font-size: 10px; color: #CCC; text-align:left; margin: 28px 10% 0px 10%; padding: 12px; line-height:140%; }
-        .highlight { color: #FFF; font-weight: bold; }
-        .section1 { padding: 40px 20px 40px 20px; background-color:#383838; }
-        .section2 { padding: 40px 20px 40px 20px; background-color:#484848; }
-        .sectionEnd { padding: 20px; }
+
+html, body {
+    background-color: #EEE;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+#Footer {
+    background-color: #737075;
+    background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%);
+    border-top: 2px solid #333;
+    bottom: 0;
+    height: 36px;
+    position: fixed;
+    width: 100%;
+    z-index: 2;
+}
+.textFooter {
+    color: #fff;
+    font-family: Helvetica;
+    font-size: 12px;
+    margin-top: 10px;
+    text-align: center;
+}
+a:link, a:visited {
+    color: #BBB;
+    text-decoration: none;
+}
+a:hover {
+    color: #FFF;
+}
+.textTitleHeading {
+    color: #333;
+    font-family: Helvetica;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 2px;
+    margin-top: 74px;
+    text-align: center;
+}
+.textTitleSubHeading {
+    color: #888;
+    font-family: Helvetica;
+    font-size: 16px;
+    margin: 32px 20% 40px;
+    text-align: center;
+}
+.textSectionHeading {
+    color: #333;
+    font-family: Helvetica;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+.textSectionBody {
+    color: #333;
+    font-family: Helvetica;
+    font-size: 13px;
+    line-height: 140%;
+    margin: 20px 10% 0;
+    text-align: center;
+}
+code {
+    font-size: 12px;
+    line-height: 195%;
+    padding: 8px;
+}
+code a:link, code a:visited {
+    color: #1C86EE;
+}
+code a:hover {
+    color: #0000FF;
+}
+.terminal {
+    background-color: #000;
+    color: #ccc;
+    font-family: courier;
+    font-size: 10px;
+    line-height: 140%;
+    margin: 28px 10% 0;
+    padding: 12px;
+    text-align: left;
+    opacity: 0.8;
+}
+.highlight {
+    color: #000;
+    font-weight: bold;
+}
+.section1 {
+    background-color: #dbf7ff;
+    padding: 40px 20px;
+}
+.section2 {
+    background-color: #effcff;
+    padding: 40px 20px;
+}
+.sectionEnd {
+    padding: 20px;
+}
+#TopOfHelpPage {
+    height:32px;  /* Override default margin in cloverthememanager.css */
+}
+
     </style>
 
 </head>
@@ -31,12 +114,12 @@
 
         <div id="SpacerTop">&nbsp;</div>
         
-        <p class="textTitleHeading">I have created a theme. How can I add it?</p>
+        <p class="textTitleHeading">I've created a theme. How can I add it?</p>
         <p class="textTitleSubHeading">The following steps show how you can add a new theme to the repository so it automatically becomes available for anyone to install.</p>
         
         <a name="1"></a>
         <div class="section2">
-            <p class="textSectionHeading">1 - SF user account</p>
+            <p class="textSectionHeading">1 - Sourceforge user account</p>
             <p class="textSectionBody">You need to have a sourceforge account and know your username. If you don't already have one then you can register by clicking the following link and clicking 'Join' in the top right corner.<br><code><a href="http://sourceforge.net" target="_blank">http://sourceforge.net</a></code></p>
         </div>
 
@@ -182,10 +265,10 @@ To ssh://USERNAME@git.code.sf.net/p/cloverefiboot/themes<br>
         
     </div>
     
-    <div id="SpacerBottom">&nbsp;</div>   
+    <!-- <div id="SpacerBottom">&nbsp;</div> -->
     
     <div id="Footer">
-        <p class="textFooter"><a href="#Top">Top of Page</a> | <a href="#1">(1) User Account</a> | <a href="#2">(2) Ask</a> | <a href="#3">(3) Clone</a> | <a href="#4">(4) Add</a> | <a href="#5">(5) Stage</a> | <a href="#6">(6) Commit</a> | <a href="#7">(7) Push</a> | <a href="#8">(8) Complete</a></p>
+        <p class="textFooter"><a href="#Top">Top of Page</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#1">(1) User Account</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#2">(2) Ask</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#3">(3) Clone</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#4">(4) Add</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#5">(5) Stage</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#6">(6) Commit</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#7">(7) Push</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#8">(8) Complete</a></p>
     </div> <!-- End Footer -->  
      
 </div> <!-- End Container -->
