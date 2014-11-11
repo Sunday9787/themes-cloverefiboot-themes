@@ -178,9 +178,9 @@ function updateBandsWithInstalledThemes(themeList)
             
             // Update number of installed themes
             if (splitThemeList != ",") { // This check needs verifying!! - is a single comma possible?
-                $("#NumInstalledThemes").html("Installed themes: " + splitThemeList.length + "/" + $('div[id^=ThemeBand]').length);
+                $("#NumInstalledThemes").html(splitThemeList.length + "/" + $('div[id^=ThemeBand]').length);
             } else {
-                $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
+                $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
             }
 
             // Populate the config plist key drop down menu
@@ -189,12 +189,12 @@ function updateBandsWithInstalledThemes(themeList)
             UpdateAndRefreshInstalledThemeDropDown("-");
                     
             // Update number of installed themes
-            $("#NumInstalledThemes").html("Installed themes: -/" + $('div[id^=ThemeBand]').length);
+            $("#NumInstalledThemes").html("-/" + $('div[id^=ThemeBand]').length);
         }
     } else {
         showButtons();
         // No themes installed on this volume
-        $("#NumInstalledThemes").html("Installed themes: 0/" + $('div[id^=ThemeBand]').length);
+        $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
     }
 }
 
@@ -234,7 +234,7 @@ function actOnFreeSpace(availableSpace)
             // set to green as defined in the .css file
             $(".textFreeSpace").css("color","#3ef14b");
         }
-        $(".textFreeSpace").text("Free Space:" + availableSpace );
+        $(".textFreeSpace").text(availableSpace );
     }
 }
 
@@ -524,7 +524,8 @@ $(function()
             $(this).text("Show Thumbnails");
             // Set background colour to indicate its selected
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
-            
+            $(this).css("border","1px solid #000");
+            $(this).css("color","#7cf8f0");
             
         } else if (bandsHeightState.indexOf("Show") >= 0) {
 
@@ -551,6 +552,8 @@ $(function()
             $(this).text("Hide Thumbnails");
             // Revert background colour
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+            $(this).css("border","1px solid #282828");
+            $(this).css("color","#FFF");
         }
     });
         
@@ -569,6 +572,8 @@ $(function()
             }
             $(this).text("Collapse Previews");
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
+            $(this).css("border","1px solid #000");
+            $(this).css("color","#7cf8f0");
         }
         
         if (buttonText.indexOf("Collapse") >= 0) {
@@ -580,6 +585,8 @@ $(function()
             }
             $(this).text("Expand Previews");
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+            $(this).css("border","1px solid #282828");
+            $(this).css("color","#FFF");
         }
 
     });	
@@ -593,10 +600,14 @@ $(function()
         if (textState.indexOf("Hide") >= 0) {
             $(this).text("Show All");
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
+            $(this).css("border","1px solid #000");
+            $(this).css("color","#7cf8f0");
         }
         if (textState.indexOf("Show") >= 0) {           
             $(this).text("Hide UnInstalled");
             $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+            $(this).css("border","1px solid #282828");
+            $(this).css("color","#FFF");
         }
         
         GetShowHideButtonStateAndUpdateUI();

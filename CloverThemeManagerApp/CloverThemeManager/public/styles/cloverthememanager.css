@@ -96,6 +96,10 @@ select.custom-dropdown:hover {
     float: right;
 }
 
+#OpenPathButton {
+    display: none;
+}
+
 #OpenButton {
     width: 60px;
     margin: 7px 0px 0px 0px;
@@ -108,11 +112,11 @@ select.custom-dropdown:hover {
     border-radius: 4px;
     color: #FFF;
     font-family: helvetica;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     height: 19px;
     text-align: center;
-    line-height: 10px;
+    line-height: 15px;
     cursor: pointer;
 }
 
@@ -211,10 +215,6 @@ select.custom-dropdown:hover {
     line-height: 2px;
 }
 
-#OpenPathButton {
-    display: none;
-}
-
 .textHeading {
     font-family: Helvetica;
     font-size: 28px;
@@ -252,6 +252,12 @@ select.custom-dropdown:hover {
     font-size: 12px;
     color: #FFF;
     text-align:left;
+}
+
+.textHeaderSmall {
+    font-family: Helvetica;
+    font-size: 10px;
+    color: #a1a1a1;
 }
 
 .textFreeSpace {
@@ -544,12 +550,12 @@ a:active {
 }
 
 .toggleButton:hover {
-    border: 1px solid #CCC;
+    border: 1px solid #AAA !important;
     
 }
 
 .toggleButton:active {
-    background-color: #FFF;
+    background: #888 !important;
 }
 
 .accordion {

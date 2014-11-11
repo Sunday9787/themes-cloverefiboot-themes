@@ -42,15 +42,15 @@
             </select>
         </div> <!-- End PathSelector -->
         <div id="OpenButton">
-            <button type="button" id="OpenPathButton" class="openButton">Open</button>
+            <button type="button" id="OpenPathButton" class="openButton">OPEN</button>
         </div> <!-- End OpenButton -->
         
         <div id="ThemeCount">
-            <span class="textThemeCount" id="NumInstalledThemes">Total themes installed: -</span>
+            <span class="textHeaderSmall">Installed Themes:</span>&nbsp<span class="textThemeCount" id="NumInstalledThemes">Installed Themes: -</span>
         </div> <!-- End ThemeCount -->
         
         <div id="FreeSpace">
-            <span class="textFreeSpace">Free Space:</span>
+            <span class="textHeaderSmall">Free Space:</span>&nbsp<span class="textFreeSpace">Free Space:</span>
         </div> <!-- End FreeSpace -->        
         
         <div id="HeaderBar">
