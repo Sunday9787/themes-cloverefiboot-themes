@@ -134,6 +134,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetShowHideButton(firstLineSplit[1]);
                 break;
+            case "ThumbnailView":
+                // Bash sends: "UnInstalledView@${gUISettingViewUnInstalled}@"
+                macgap.app.removeMessage(firstLine);
+                SetThemeBandHeight(firstLineSplit[1]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -527,81 +532,19 @@ $(function()
     });
     
     //-----------------------------------------------------
-    // On pressing Toggle Theme Height button
+    // On clicking the Hide UnInstalled / Show All button
     $("#BandsHeightToggleButton").on('click', function() {
     
-        var bandsHeightState=$("[id='BandsHeightToggleButton']").text();
-        if (bandsHeightState.indexOf("Hide") >= 0) {
-        
-            // Hide + and - buttons
-            $("#thumbSizeSmaller").css("display","none");
-            $("#thumbSizeLarger").css("display","none");
-            // Move theme titles up
-            $("[id=ThemeText]").css("top","74%");
-            // Hide all theme descriptions
-            $(".themeDescription").css("display","none");
-            // Hide all theme authors
-            $(".themeAuthor").css("display","none");
-            // Hide thumbnails
-            $(".thumbnail").css("display","none");
-            // Adjust height of theme bands
-            $(".accordion").css("height","36px");
-            $(".accordionInstalled").css("height","36px");
-            $(".accordionUpdate").css("height","36px");
-            // Reduce margin top of buttons
-            $(".buttonInstall").css("margin-top","6px");
-            $(".buttonUnInstall").css("margin-top","6px");
-            $(".buttonUpdate").css("margin-top","6px");
-            // Reduce margin top of Unversioned Themes Indicatpor
-            $(".versionControl").css("margin-top","9px");
-            // Add margin left to theme titles
-            $("[id=ThemeText]").css("margin-left","32px");
-            // Change button text
-            $(this).text("Show Thumbnails");
-            // Set background colour to indicate its selected
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
-            $(this).css("border","1px solid #000");
-            $(this).css("color","#7cf8f0");
-            
-        } else if (bandsHeightState.indexOf("Show") >= 0) {
-
-            // Show + and - buttons
-            $("#thumbSizeSmaller").css("display","block");
-            $("#thumbSizeLarger").css("display","block");
-            // Revert theme titles margin top
-            $("[id=ThemeText]").css("top","50%");
-            // Show all theme descriptions
-            $(".themeDescription").css("display","inline");
-            // Show all theme authors
-            $(".themeAuthor").css("display","inline");
-            // Show thumbnails
-            $(".thumbnail").css("display","block");
-            // Adjust height of theme bands
-            var currentThumbHeight = $(".thumbnail img").first().height();
-            var accordionHeight = (currentThumbHeight+14);
-            $(".accordion").css("height",accordionHeight);
-            $(".accordionInstalled").css("height",accordionHeight);
-            $(".accordionUpdate").css("height",accordionHeight);
-            // Revert margin top of buttons
-            // Note: When thumb=100px wide, default button top=24px
-            var currentThumbWidth = $(".thumbnail img").first().width();
-            var buttonMarginAdjustment = (((currentThumbWidth-100)/25)*7);
-            var buttonMarginTop = (24 + buttonMarginAdjustment);
-            $(".buttonInstall").css("margin-top",buttonMarginTop);
-            $(".buttonUnInstall").css("margin-top",buttonMarginTop);
-            $(".buttonUpdate").css("margin-top",buttonMarginTop);
-            // Revert margin top of Unversioned Themes Indicatpor
-            // Note: When thumb=100px wide, default margin top=28px
-            var versionControlMarginTop = (28 + buttonMarginAdjustment);
-            $(".versionControl").css("margin-top",versionControlMarginTop);
-            // Remove added margin left to theme titles
-            $("[id=ThemeText]").css("margin-left","0px");
-            // Change button text
-            $(this).text("Hide Thumbnails");
-            // Revert background colour
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
-            $(this).css("border","1px solid #282828");
-            $(this).css("color","#FFF");
+        var textState = $(this).text();
+        if (textState.indexOf("Hide") >= 0) {
+            SetThemeBandHeight("Hide");
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_showThumbails");
+        }
+        if (textState.indexOf("Show") >= 0) {     
+            SetThemeBandHeight("Show");   
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_hideThumbails");
         }
     });
         
@@ -705,6 +648,84 @@ function SetShowHideButton(state)
         $("#ShowHideToggleButton").css("border","1px solid #282828");
         $("#ShowHideToggleButton").css("color","#FFF");
         GetShowHideButtonStateAndUpdateUI();
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function SetThemeBandHeight(setting)
+{
+    if (setting == "Hide") {
+    
+            // Hide + and - buttons
+            $("#thumbSizeSmaller").css("display","none");
+            $("#thumbSizeLarger").css("display","none");
+            // Move theme titles up
+            $("[id=ThemeText]").css("top","74%");
+            // Hide all theme descriptions
+            $(".themeDescription").css("display","none");
+            // Hide all theme authors
+            $(".themeAuthor").css("display","none");
+            // Hide thumbnails
+            $(".thumbnail").css("display","none");
+            // Adjust height of theme bands
+            $(".accordion").css("height","36px");
+            $(".accordionInstalled").css("height","36px");
+            $(".accordionUpdate").css("height","36px");
+            // Reduce margin top of buttons
+            $(".buttonInstall").css("margin-top","6px");
+            $(".buttonUnInstall").css("margin-top","6px");
+            $(".buttonUpdate").css("margin-top","6px");
+            // Reduce margin top of Unversioned Themes Indicatpor
+            $(".versionControl").css("margin-top","9px");
+            // Add margin left to theme titles
+            $("[id=ThemeText]").css("margin-left","32px");
+            // Change button text
+            $("#BandsHeightToggleButton").text("Show Thumbnails");
+            // Set background colour to indicate its selected
+            $("#BandsHeightToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
+            $("#BandsHeightToggleButton").css("border","1px solid #000");
+            $("#BandsHeightToggleButton").css("color","#7cf8f0");
+            
+    } else if (setting == "Show") {
+
+            // Show + and - buttons
+            $("#thumbSizeSmaller").css("display","block");
+            $("#thumbSizeLarger").css("display","block");
+            // Revert theme titles margin top
+            $("[id=ThemeText]").css("top","50%");
+            // Show all theme descriptions
+            $(".themeDescription").css("display","inline");
+            // Show all theme authors
+            $(".themeAuthor").css("display","inline");
+            // Show thumbnails
+            $(".thumbnail").css("display","block");
+            // Adjust height of theme bands
+            var currentThumbHeight = $(".thumbnail img").first().height();
+            var accordionHeight = (currentThumbHeight+14);
+            $(".accordion").css("height",accordionHeight);
+            $(".accordionInstalled").css("height",accordionHeight);
+            $(".accordionUpdate").css("height",accordionHeight);
+            // Revert margin top of buttons
+            // Note: When thumb=100px wide, default button top=24px
+            var currentThumbWidth = $(".thumbnail img").first().width();
+            var buttonMarginAdjustment = (((currentThumbWidth-100)/25)*7);
+            var buttonMarginTop = (24 + buttonMarginAdjustment);
+            $(".buttonInstall").css("margin-top",buttonMarginTop);
+            $(".buttonUnInstall").css("margin-top",buttonMarginTop);
+            $(".buttonUpdate").css("margin-top",buttonMarginTop);
+            // Revert margin top of Unversioned Themes Indicatpor
+            // Note: When thumb=100px wide, default margin top=28px
+            var versionControlMarginTop = (28 + buttonMarginAdjustment);
+            $(".versionControl").css("margin-top",versionControlMarginTop);
+            // Remove added margin left to theme titles
+            $("[id=ThemeText]").css("margin-left","0px");
+            // Change button text
+            $("#BandsHeightToggleButton").text("Hide Thumbnails");
+            // Revert background colour
+            $("#BandsHeightToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+            $("#BandsHeightToggleButton").css("border","1px solid #282828");
+            $("#BandsHeightToggleButton").css("color","#FFF");
+            
     }
 }
 

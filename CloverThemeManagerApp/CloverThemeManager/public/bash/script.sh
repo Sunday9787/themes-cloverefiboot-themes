@@ -1045,6 +1045,9 @@ ReadPrefsFile()
         gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile".plist UnInstalledButton )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
         
+        gUISettingViewThumbnails=$( defaults read "$gUserPrefsFile".plist ViewThumbnails )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewThumbnails=${gUISettingViewThumbnails}"
+        
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
         local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
@@ -1176,6 +1179,9 @@ SendUIInitData()
     SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
     
+    # Send UI view choice for Thumbnails
+    SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
 }
 
 
@@ -1702,6 +1708,7 @@ debugIndent="    "
 gThumbSizeX=0
 gThumbSizeY=0
 gUISettingViewUnInstalled="Show"
+gUISettingViewThumbnails="Show"
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1906,6 +1913,20 @@ else
             ClearMessageLog "$logJsToBash"
             UpdatePrefsKey "UnInstalledButton" "Hide"
             WriteToLog "User chose to show uninstalled themes"
+            
+        # Has user chosen to show uninstalled themes?
+        elif grep "CTM_hideThumbails" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "ViewThumbnails" "Show"
+            WriteToLog "User chose to hide thumbnails"
+            
+        # Has user chosen to show uninstalled themes?
+        elif grep "CTM_showThumbails" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "ViewThumbnails" "Hide"
+            WriteToLog "User chose to show thumbnails"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.
