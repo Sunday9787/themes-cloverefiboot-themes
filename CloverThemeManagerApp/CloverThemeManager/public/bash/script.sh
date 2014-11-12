@@ -1048,6 +1048,9 @@ ReadPrefsFile()
         gUISettingViewThumbnails=$( defaults read "$gUserPrefsFile".plist ViewThumbnails )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewThumbnails=${gUISettingViewThumbnails}"
         
+        gUISettingViewPreviews=$( defaults read "$gUserPrefsFile".plist ShowPreviewsButton )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewPreviews=${gUISettingViewPreviews}"
+        
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
         local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
@@ -1182,6 +1185,10 @@ SendUIInitData()
     # Send UI view choice for Thumbnails
     SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
+    
+    # Send UI view choice for Previews
+    SendToUI "PreviewView@${gUISettingViewPreviews}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
 }
 
 
@@ -1709,6 +1716,7 @@ gThumbSizeX=0
 gThumbSizeY=0
 gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
+gUISettingViewPreviews="Hide"
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1914,19 +1922,33 @@ else
             UpdatePrefsKey "UnInstalledButton" "Hide"
             WriteToLog "User chose to show uninstalled themes"
             
-        # Has user chosen to show uninstalled themes?
+        # Has user chosen to hide thumbnails?
         elif grep "CTM_hideThumbails" "$logJsToBash" ; then
             uiReturn=$(cat "$logJsToBash")
             ClearMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Show"
             WriteToLog "User chose to hide thumbnails"
             
-        # Has user chosen to show uninstalled themes?
+        # Has user chosen to show thumbnails?
         elif grep "CTM_showThumbails" "$logJsToBash" ; then
             uiReturn=$(cat "$logJsToBash")
             ClearMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Hide"
             WriteToLog "User chose to show thumbnails"
+            
+        # Has user chosen to hide previews?
+        elif grep "CTM_hidePreviews" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "ShowPreviewsButton" "Hide"
+            WriteToLog "User chose to hide previews"
+            
+        # Has user chosen to show preview?
+        elif grep "CTM_showPreviews" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "ShowPreviewsButton" "Show"
+            WriteToLog "User chose to show previews"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.

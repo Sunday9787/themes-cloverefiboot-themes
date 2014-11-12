@@ -139,6 +139,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetThemeBandHeight(firstLineSplit[1]);
                 break;
+            case "PreviewView":
+                // Bash sends: "PreviewView@${gUISettingViewPreviews}@"
+                macgap.app.removeMessage(firstLine);
+                SetShowHidePreviews(firstLineSplit[1]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -553,33 +558,16 @@ $(function()
     $("#preview_Toggle_Button").click(function() {
 
         var buttonText=$(this).text();
-        var accordionBandState=$('.accordion').is(":hidden");
         if (buttonText.indexOf("Expand") >= 0) {
-            if (accordionBandState) {
-                $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
-            } else {
-                $(".accordion").next('[class="accordionContent"]').slideDown('normal');
-                $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
-            }
-            $(this).text("Collapse Previews");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
-            $(this).css("border","1px solid #000");
-            $(this).css("color","#7cf8f0");
+            SetShowHidePreviews("Show");
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_showPreviews");
         }
-        
         if (buttonText.indexOf("Collapse") >= 0) {
-            if (accordionBandState) {
-                $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
-            } else {
-                $(".accordion").next('[class="accordionContent"]').slideUp('normal');
-                $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
-            }
-            $(this).text("Expand Previews");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
-            $(this).css("border","1px solid #282828");
-            $(this).css("color","#FFF");
+            SetShowHidePreviews("Hide");
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_hidePreviews");
         }
-
     });	
     
     //-----------------------------------------------------
@@ -632,6 +620,36 @@ $(function()
         }
     });
 });
+
+
+//-------------------------------------------------------------------------------------
+function SetShowHidePreviews(state)
+{
+    var accordionBandState=$('.accordion').is(":hidden");
+    if(state == "Show") {
+        if (accordionBandState) {
+            $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+        } else {
+            $(".accordion").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+        }
+        $("#preview_Toggle_Button").text("Collapse Previews");
+        $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
+        $("#preview_Toggle_Button").css("border","1px solid #000");
+        $("#preview_Toggle_Button").css("color","#7cf8f0");
+    } else if (state == "Hide") {
+        if (accordionBandState) {
+            $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+        } else {
+            $(".accordion").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+        }
+        $("#preview_Toggle_Button").text("Expand Previews");
+        $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+        $("#preview_Toggle_Button").css("border","1px solid #282828");
+        $("#preview_Toggle_Button").css("color","#FFF");
+    }
+}
 
 //-------------------------------------------------------------------------------------
 function SetShowHideButton(state)
