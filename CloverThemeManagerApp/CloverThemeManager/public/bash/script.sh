@@ -1102,6 +1102,9 @@ ReadPrefsFile()
         defaults write "$gUserPrefsFile" "LastSelectedPath" "-"
         defaults write "$gUserPrefsFile" "LastSelectedPathDevice" "-"
         defaults write "$gUserPrefsFile" "LastSelectedVolumeUUID" "-"
+        TARGET_THEME_DIR="-"
+        TARGET_THEME_DIR_DEVICE="-"
+        TARGET_THEME_VOLUMEUUID="-"
     fi
     
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
