@@ -55,6 +55,7 @@
         
         <div id="HeaderBar">
             <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
+            <div class="spacerButton"">&nbsp;</div>
             <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
             <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
             <div class="toggleButtonSml" id="thumbSizeSmaller">-</div>

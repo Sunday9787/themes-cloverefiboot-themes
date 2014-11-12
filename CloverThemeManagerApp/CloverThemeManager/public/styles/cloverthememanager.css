@@ -186,9 +186,8 @@ select.custom-dropdown:hover {
 
 #HeaderBar {
     height: 24px;
-    /*background-color: #888888;*/
     background-image: -webkit-linear-gradient(top, rgba(111,111,111,1) 0%,rgba(0,0,0,1) 100%); 
-    padding:5px 130px 5px 20px;
+    padding: 5px 5px 5px 20px;
     font-family: Helvetica;
     font-size: 12px;
     line-height: 0px;
@@ -529,6 +528,20 @@ a:hover {
     border: 1px solid #c0b6eb;
 }
 
+.spacerButton {
+    color: #FFF;
+    float: right;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 40px 0px 0px;
+    width: 110px;
+    text-align: center;
+    line-height: 20px;
+    -webkit-user-select: none;
+}
+
 .toggleButton {
     background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
     border: 1px solid #282828;
@@ -539,7 +552,7 @@ a:hover {
     font-size: 12px;
     font-weight: bold;
     height: 20px;
-    margin: 1px 40px 0px 0px;
+    margin: 1px 30px 0px 0px;
     width: 120px;
     text-align: center;
     line-height: 20px;
@@ -625,6 +638,7 @@ table {
     margin: 7px 8px 5px 24px;
     float: left;
     font-weight: bold;
+    -webkit-user-select: none;
 }
 
 #NvramThemeMatch {
@@ -633,6 +647,7 @@ table {
     float: left;
     text-align: center;
     font-weight: bold;
+    -webkit-user-select: none;
 }
 
 #NvramThemeSelector {
@@ -653,8 +668,6 @@ table {
     height: 36px;
     border-top: 2px solid #333;
     background-color: #737075;
-    /*background-image: -moz-linear-gradient(center top , #737075, #59565b);
-    background-image: -webkit-linear-gradient(top, #737075, #59565b);*/
     background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%);
     z-index:2;
 }
