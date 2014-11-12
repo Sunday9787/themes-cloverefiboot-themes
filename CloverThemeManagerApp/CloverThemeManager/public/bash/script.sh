@@ -1932,7 +1932,11 @@ else
             CheckAndRecordOrphanedThemesAndSendToUI
             CheckForAnyUpdatesStoredInPrefsAndSendToUI
             ReadAndSendCurrentNvramTheme
-            
+            SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+            SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+            SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
+            SendToUI "PreviewView@${gUISettingViewPreviews}@"
+
         elif [[ "$logLine" == *started* ]]; then
             ClearTopOfMessageLog "$logJsToBash"     
         fi

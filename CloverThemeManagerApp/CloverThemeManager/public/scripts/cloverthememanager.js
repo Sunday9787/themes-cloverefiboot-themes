@@ -42,6 +42,7 @@ function GetFileContents(filename)
     xmlhttp = new XMLHttpRequest();
     xmlhttp.open("GET",gTmpDir+"/"+filename,false);
     xmlhttp.send(null);
+
     fileContent = xmlhttp.responseText;
 
     if (fileContent != "" ) {
@@ -154,11 +155,8 @@ function readBashToJsMessageFile()
 	    // recursively call function as long as file exists every 1/10th second.
         timerReadMessageFile = setTimeout(readBashToJsMessageFile, 100);
     } else {
-        //alert("Empty - bugging out");
-        //clearTimeout(timerReadMessageFile);
-
-        // recursively call function as long as file exists but at 2 second intervals
-        timerReadMessageFile = setTimeout(readBashToJsMessageFile, 2000);
+        // recursively call function as long as file exists but at 1/2 second intervals
+        timerReadMessageFile = setTimeout(readBashToJsMessageFile, 500);
     }
 }
 
@@ -194,8 +192,8 @@ function updateBandsWithInstalledThemes(themeList)
             // Update only installed themes with uninstall buttons
             for (var t = 0; t < splitThemeList.length; t++) {
                 ChangeButtonAndBandToUnInstall(splitThemeList[t]);
-            }  
-            
+            }
+
             // Update number of installed themes
             if (splitThemeList != ",") { // This check needs verifying!! - is a single comma possible?
                 $("#NumInstalledThemes").html(splitThemeList.length + "/" + $('div[id^=ThemeBand]').length);
