@@ -124,6 +124,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 HideFreeSpace();
                 break;
+            case "ThumbnailSize":
+                // Bash sends: "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+                macgap.app.removeMessage(firstLine);
+                SetThumbnailSize(firstLineSplit[1],firstLineSplit[2]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -407,6 +412,28 @@ function enableInterface()
 }        
 
 //-------------------------------------------------------------------------------------
+function SetThumbnailSize(width,height)
+{
+    // function ChangeThumbnailSize() changes thumb size +/- 25px
+    // So call it number of times necessary to achieve wanted width
+        
+    if (width != "" & height != "") {
+        var currentThumbWidth = $(".thumbnail img").first().width();
+        if (currentThumbWidth > width) {
+            var timesDifference=((currentThumbWidth-width)/25)
+            for (s = 0; s < timesDifference; s++) {
+                 ChangeThumbnailSize('smaller');
+            }
+        } else if (currentThumbWidth < width) {
+            var timesDifference=((width-currentThumbWidth)/25)
+            for (s = 0; s < timesDifference; s++) {
+                ChangeThumbnailSize('larger');
+            }
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------
 $(function()
 {
     //-----------------------------------------------------
@@ -631,65 +658,13 @@ $(function()
     //-----------------------------------------------------
     // On clicking the Thumbnail Smaller button
     $("#thumbSizeSmaller").on('click', function() {
-        var currentWidth = $(".thumbnail img").first().width();
-        var currentHeight = $(".thumbnail img").first().height();
-        if (currentWidth >= 125) {
-            // Adjust height of theme bands
-            var currentAccordionHeight = $(".accordion").first().height();
-            var newAccordionHeight=(currentAccordionHeight-14);
-            $(".accordion").css("height",newAccordionHeight);
-            $(".accordionInstalled").css("height",newAccordionHeight);
-            $(".accordionUpdate").css("height",newAccordionHeight);
-            // Change thumbnail size
-            var newWidth=(currentWidth-25);
-            var newHeight=(currentHeight-14);
-            $(".thumbnail img").css("width",newWidth);
-            $(".thumbnail img").css("height",newHeight);
-            // Change margin top of buttons
-            var buttonHeight = $(".buttonInstall").first().height();
-            var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
-            $(".buttonInstall").css("margin-top",newButtonTop);
-            $(".buttonUnInstall").css("margin-top",newButtonTop);
-            $(".buttonUpdate").css("margin-top",newButtonTop);
-            // Change margin top of version control indicator
-            $(".versionControl").css("margin-top",newButtonTop+3);
-            // Enlarge width of theme text (by 30px) to retain space for update button
-            var currentThemeTextWidth = $("#ThemeText").first().width();
-            var newThemeTextWidth=(currentThemeTextWidth + 30);
-            $("[id^=ThemeText]").width(newThemeTextWidth);
-        }
+        ChangeThumbnailSize('smaller');
     });
     
     //-----------------------------------------------------
     // On clicking the Thumbnail Larger button
     $("#thumbSizeLarger").on('click', function() {
-        var currentWidth = $(".thumbnail img").first().width();
-        var currentHeight = $(".thumbnail img").first().height();
-        if (currentWidth <= 175) {
-            // Adjust height of theme bands
-            var currentAccordionHeight = $(".accordion").first().height();
-            var newAccordionHeight=(currentAccordionHeight+14);
-            $(".accordion").css("height",newAccordionHeight);
-            $(".accordionInstalled").css("height",newAccordionHeight);
-            $(".accordionUpdate").css("height",newAccordionHeight);
-            // Change thumbnail size
-            var newWidth=(currentWidth+25);
-            var newHeight=(currentHeight+14);
-            $(".thumbnail img").css("width",newWidth);
-            $(".thumbnail img").css("height",newHeight);
-            // Change margin top of buttons
-            var buttonHeight = $(".buttonInstall").first().height();
-            var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
-            $(".buttonInstall").css("margin-top",newButtonTop);
-            $(".buttonUnInstall").css("margin-top",newButtonTop);
-            $(".buttonUpdate").css("margin-top",newButtonTop);
-            // Change margin top of version control indicator
-            $(".versionControl").css("margin-top",newButtonTop+3);
-            // Reduce width of theme text (by 30px) to retain space for update button
-            var currentThemeTextWidth = $("#ThemeText").first().width();
-            var newThemeTextWidth=(currentThemeTextWidth - 30);
-            $("[id^=ThemeText]").width(newThemeTextWidth);
-        }
+        ChangeThumbnailSize('larger');
     });
     
     //-----------------------------------------------------
@@ -714,6 +689,58 @@ $(function()
 });
 
 //-------------------------------------------------------------------------------------
+function ChangeThumbnailSize(action)
+{
+    // Adjust the width of each thumbnail image by 25px each time this is called.
+    // Each adjustment also alters:
+    // - thumbnail height and theme band height.
+    // - Y position of buttons and version control indicator.
+    // - width of title, author and description text box.
+    
+    var currentThumbWidth = $(".thumbnail img").first().width();
+    var currentThumbHeight = $(".thumbnail img").first().height();
+    var currentAccordionHeight = $(".accordion").first().height();
+    var currentThemeTextWidth = $("#ThemeText").first().width();
+
+    if (action=='larger' && currentThumbWidth <= 175) {
+        var newAccordionHeight=(currentAccordionHeight+14);
+        var newThumbWidth=(currentThumbWidth+25);
+        var newThumbHeight=(currentThumbHeight+14);
+        var newThemeTextWidth=(currentThemeTextWidth-30);
+    } else if (action=='smaller' && currentThumbWidth >= 125) {
+        var newAccordionHeight=(currentAccordionHeight-14);
+        var newThumbWidth=(currentThumbWidth-25);
+        var newThumbHeight=(currentThumbHeight-14);
+        var newThemeTextWidth=(currentThemeTextWidth+30);
+    }
+            
+    // Adjust height of theme bands
+    $(".accordion").css("height",newAccordionHeight);
+    $(".accordionInstalled").css("height",newAccordionHeight);
+    $(".accordionUpdate").css("height",newAccordionHeight);
+            
+    // Change thumbnail size
+    $(".thumbnail img").css("width",newThumbWidth);
+    $(".thumbnail img").css("height",newThumbHeight);
+            
+    // Change margin top of buttons
+    var buttonHeight = $(".buttonInstall").first().height();
+    var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
+    $(".buttonInstall").css("margin-top",newButtonTop);
+    $(".buttonUnInstall").css("margin-top",newButtonTop);
+    $(".buttonUpdate").css("margin-top",newButtonTop);
+            
+    // Change margin top of version control indicator
+    $(".versionControl").css("margin-top",newButtonTop+3);
+            
+    // Reduce width of theme text (by 30px) to retain space for update button
+    $("[id^=ThemeText]").width(newThemeTextWidth);
+            
+    // Send a message to the bash script to record thumbnail width
+    macgap.app.launch("CTM_thumbSize@" + newThumbWidth + " " + newThumbHeight);
+}
+
+//-------------------------------------------------------------------------------------
 function GetShowHideButtonStateAndUpdateUI()
 {
     var showHideState=$("[id='ShowHideToggleButton']").text();
@@ -725,7 +752,6 @@ function GetShowHideButtonStateAndUpdateUI()
     }
     ShowHideUnInstalledThemes(showHideState,expandCollapseState);
 }
-
 
 //-------------------------------------------------------------------------------------
 function FindLineInString(CompleteString,SearchString)

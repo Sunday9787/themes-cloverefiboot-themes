@@ -841,8 +841,6 @@ GetLatestIndexAndEnsureThemeHtml()
         WriteToLog "Cloning bare repo index.git"
         git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
         WriteToLog "Checking out index.git"
-        #git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout .
-        #git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout HEAD --
         git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force
     }
     
@@ -1039,6 +1037,11 @@ ReadPrefsFile()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Resetting internal theme arrays"
         ResetInternalThemeArrays
         
+        local tmp=$( defaults read "$gUserPrefsFile".plist Thumbnail )
+        gThumbSizeX="${tmp% *}"
+        gThumbSizeY="${tmp#* }"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
+        
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
         local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
@@ -1121,7 +1124,7 @@ SendInternalThemeArraysToLogFile()
 }
 
 # ---------------------------------------------------------------------------------------
-SendUIThemePathThemeListAndFreeSpace()
+SendUIInitData()
 {
     # This is called once when the app is loaded.
     
@@ -1158,6 +1161,12 @@ SendUIThemePathThemeListAndFreeSpace()
     else
         WriteToLog "Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
+    fi
+    
+    # Send thumbnail size
+    if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
+        SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
     fi
 }
 
@@ -1682,6 +1691,8 @@ uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
 gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
 remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
 debugIndent="    "
+gThumbSizeX=0
+gThumbSizeY=0
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1781,7 +1792,7 @@ else
     CreateDiskPartitionDropDownHtml
     ReadPrefsFile
     CleanInstalledThemesPrefEntries
-    SendUIThemePathThemeListAndFreeSpace
+    SendUIInitData
 
     # Write string to mark the end of init file.
     # The Javascript looks for this to signify initialisation is complete.
@@ -1862,6 +1873,16 @@ else
             ClearMessageLog "$logJsToBash"
             WriteToLog "User chose to set nvram theme."
             SetNvramTheme "$uiReturn"
+            
+        # Has user changed the thumbnail size?
+        elif grep "CTM_thumbSize" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            # parse message
+            # remove everything up until, and including, the first @
+            thumbSize="${uiReturn#*@}"
+            UpdatePrefsKey "Thumbnail" "$thumbSize"
+            WriteToLog "User changed thumbnail size to $thumbSize"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.
