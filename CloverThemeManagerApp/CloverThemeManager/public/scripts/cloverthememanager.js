@@ -737,7 +737,8 @@ function ChangeThumbnailSize(action)
     $("[id^=ThemeText]").width(newThemeTextWidth);
             
     // Send a message to the bash script to record thumbnail width
-    macgap.app.launch("CTM_thumbSize@" + newThumbWidth + " " + newThumbHeight);
+    if (newThumbWidth >= 100 && newThumbWidth <= 200)
+        macgap.app.launch("CTM_thumbSize@" + newThumbWidth + " " + newThumbHeight);
 }
 
 //-------------------------------------------------------------------------------------
