@@ -129,6 +129,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetThumbnailSize(firstLineSplit[1],firstLineSplit[2]);
                 break;
+            case "UnInstalledView":
+                // Bash sends: "UnInstalledView@${gUISettingViewUnInstalled}@"
+                macgap.app.removeMessage(firstLine);
+                SetShowHideButton(firstLineSplit[1]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -641,18 +646,15 @@ $(function()
         // Change text of button
         var textState = $(this).text();
         if (textState.indexOf("Hide") >= 0) {
-            $(this).text("Show All");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
-            $(this).css("border","1px solid #000");
-            $(this).css("color","#7cf8f0");
+            SetShowHideButton("Hide");
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_showUninstalled");
         }
-        if (textState.indexOf("Show") >= 0) {           
-            $(this).text("Hide UnInstalled");
-            $(this).css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
-            $(this).css("border","1px solid #282828");
-            $(this).css("color","#FFF");
+        if (textState.indexOf("Show") >= 0) {     
+            SetShowHideButton("Show");   
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_hideUninstalled");
         }
-        GetShowHideButtonStateAndUpdateUI();
     });
     
     //-----------------------------------------------------
@@ -687,6 +689,24 @@ $(function()
         }
     });
 });
+
+//-------------------------------------------------------------------------------------
+function SetShowHideButton(state)
+{
+    if(state == "Hide") {
+        $("#ShowHideToggleButton").text("Show All");
+        $("#ShowHideToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
+        $("#ShowHideToggleButton").css("border","1px solid #000");
+        $("#ShowHideToggleButton").css("color","#7cf8f0");
+        GetShowHideButtonStateAndUpdateUI();
+    } else if (state == "Show") {
+        $("#ShowHideToggleButton").text("Hide UnInstalled");
+        $("#ShowHideToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
+        $("#ShowHideToggleButton").css("border","1px solid #282828");
+        $("#ShowHideToggleButton").css("color","#FFF");
+        GetShowHideButtonStateAndUpdateUI();
+    }
+}
 
 //-------------------------------------------------------------------------------------
 function ChangeThumbnailSize(action)

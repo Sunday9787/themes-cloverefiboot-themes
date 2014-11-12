@@ -1042,6 +1042,9 @@ ReadPrefsFile()
         gThumbSizeY="${tmp#* }"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
         
+        gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile".plist UnInstalledButton )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
+        
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
         local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
@@ -1168,6 +1171,11 @@ SendUIInitData()
         SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
     fi
+    
+    # Send UI view choice for UnInstalled themes
+    SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
+    
 }
 
 
@@ -1693,6 +1701,7 @@ remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
 debugIndent="    "
 gThumbSizeX=0
 gThumbSizeY=0
+gUISettingViewUnInstalled="Show"
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1883,6 +1892,20 @@ else
             thumbSize="${uiReturn#*@}"
             UpdatePrefsKey "Thumbnail" "$thumbSize"
             WriteToLog "User changed thumbnail size to $thumbSize"
+            
+        # Has user chosen to hide uninstalled themes?
+        elif grep "CTM_hideUninstalled" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "UnInstalledButton" "Show"
+            WriteToLog "User chose to hide uninstalled themes"
+            
+        # Has user chosen to show uninstalled themes?
+        elif grep "CTM_showUninstalled" "$logJsToBash" ; then
+            uiReturn=$(cat "$logJsToBash")
+            ClearMessageLog "$logJsToBash"
+            UpdatePrefsKey "UnInstalledButton" "Hide"
+            WriteToLog "User chose to show uninstalled themes"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.
