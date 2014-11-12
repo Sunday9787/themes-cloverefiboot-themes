@@ -334,12 +334,13 @@ UpdatePrefsKey()
 }
 
 # ---------------------------------------------------------------------------------------
-ClearMessageLog()
+ClearTopOfMessageLog()
 {
-    local logToClear="$1"
-    if [ -f "$logToClear" ]; then
-        > "$logToClear"
-    fi
+    #local logToClear="$1"
+    #if [ -f "$logToClear" ]; then
+    #    > "$logToClear"
+    #fi
+    local log=$(tail -n +2 "$1"); > "$1" && if [ "$log" != "" ]; then echo "$log" > "$1"; fi
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1824,9 +1825,7 @@ else
     # Write string to mark the end of init file.
     # The Javascript looks for this to signify initialisation is complete.
     WriteToLog "Complete!"
-
-    ClearMessageLog "$logJsToBash"
-
+    
     # Check for any updates to this app
     # Not function set for this yet
 
@@ -1852,38 +1851,34 @@ else
         # Main Message Loop for responding to UI feedback
         #===============================================================
 
+        # Read first line of log file
+        logLine=$(head -n 1 "$logJsToBash")
+        
         # Has user selected partition for an /EFI/Clover/themes directory?
-        if grep "CTM_selectedPartition@" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")  
-            ClearMessageLog "$logJsToBash"
+        #if grep "CTM_selectedPartition@" "$logLine" ; then
+        if [[ "$logLine" == *CTM_selectedPartition* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             
             # Check path,
             # find and send list of installed themes,
             # then check for any updates to those themes.
-            RespondToUserDeviceSelection "$uiReturn"
+            RespondToUserDeviceSelection "$logLine"
     
         # Has the user clicked the OpenPath button?
-        elif grep "OpenPath" "$logJsToBash" ; then
+        #elif grep "OpenPath" "$logLine" ; then
+        elif [[ "$logLine" == *OpenPath* ]]; then
             if [ ! "$TARGET_THEME_DIR" == "-" ]; then
                 Open "$TARGET_THEME_DIR"
             fi
-            ClearMessageLog "$logJsToBash"
+            ClearTopOfMessageLog "$logJsToBash"
             WriteToLog "User selected to open $TARGET_THEME_DIR"
-    
-        # Has the UI read the last message sent to it?
-        # if yes, clear the log
-        elif grep "CTM_received" "$logJsToBash" ; then
-            ClearMessageLog "$logJsToBash"
-            ClearMessageLog "$logBashToJs"
-            WriteToLog "UI received message"
 
         # Has the user pressed a theme button to install, uninstall or update?
-        elif grep "CTM_ThemeAction" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
-
+        #elif grep "CTM_ThemeAction" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             # Perform the requested user action.
-            RespondToUserThemeAction "$uiReturn"
+            RespondToUserThemeAction "$logLine"
             returnValue=$?
             if [ ${returnValue} -eq 0 ]; then
                 # Operation was successful
@@ -1895,74 +1890,80 @@ else
             fi 
 
         # Has user selected a theme for NVRAM variable?
-        elif grep "CTM_chosenNvramTheme" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_chosenNvramTheme" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_chosenNvramTheme* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             WriteToLog "User chose to set nvram theme."
-            SetNvramTheme "$uiReturn"
+            SetNvramTheme "$logLine"
             
         # Has user changed the thumbnail size?
-        elif grep "CTM_thumbSize" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_thumbSize" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_thumbSize* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             # parse message
             # remove everything up until, and including, the first @
-            thumbSize="${uiReturn#*@}"
+            thumbSize="${logLine#*@}"
             UpdatePrefsKey "Thumbnail" "$thumbSize"
             WriteToLog "User changed thumbnail size to $thumbSize"
             
         # Has user chosen to hide uninstalled themes?
-        elif grep "CTM_hideUninstalled" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_hideUninstalled" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "UnInstalledButton" "Show"
             WriteToLog "User chose to hide uninstalled themes"
             
         # Has user chosen to show uninstalled themes?
-        elif grep "CTM_showUninstalled" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_showUninstalled" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
+WriteToLog "Found $logLine"
+            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "UnInstalledButton" "Hide"
             WriteToLog "User chose to show uninstalled themes"
             
         # Has user chosen to hide thumbnails?
-        elif grep "CTM_hideThumbails" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_hideThumbails" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_hideThumbails* ]]; then
+WriteToLog "Found $logLine"
+           ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Show"
             WriteToLog "User chose to hide thumbnails"
             
         # Has user chosen to show thumbnails?
-        elif grep "CTM_showThumbails" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_showThumbails" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_showThumbails* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Hide"
             WriteToLog "User chose to show thumbnails"
             
         # Has user chosen to hide previews?
-        elif grep "CTM_hidePreviews" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_hidePreviews" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_hidePreviews* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ShowPreviewsButton" "Hide"
             WriteToLog "User chose to hide previews"
             
         # Has user chosen to show preview?
-        elif grep "CTM_showPreviews" "$logJsToBash" ; then
-            uiReturn=$(cat "$logJsToBash")
-            ClearMessageLog "$logJsToBash"
+        #elif grep "CTM_showPreviews" "$logLine" ; then
+        elif [[ "$logLine" == *CTM_showPreviews* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ShowPreviewsButton" "Show"
             WriteToLog "User chose to show previews"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.
-        elif grep "ReloadToPreviousState" "$logJsToBash" ; then
-            ClearMessageLog "$logJsToBash"
+        #elif grep "ReloadToPreviousState" "$logLine" ; then
+        elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"
             SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordOrphanedThemesAndSendToUI
             CheckForAnyUpdatesStoredInPrefsAndSendToUI
             ReadAndSendCurrentNvramTheme
+            
+        elif [[ "$logLine" == *started* ]]; then
+            ClearTopOfMessageLog "$logJsToBash"     
         fi
 
         # Get process ID of parent

@@ -20,7 +20,7 @@ var gLogBashToJs = "bashToJs";
 //-------------------------------------------------------------------------------------
 // On initial load
 $(document).ready(function() {    
-    macgap.app.launch("started");
+    //macgap.app.launch("started");
     disableInterface();
     hideButtons();
     HideProgressBar();
