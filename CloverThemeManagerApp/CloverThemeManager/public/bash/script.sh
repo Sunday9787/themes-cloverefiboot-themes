@@ -33,7 +33,7 @@ DEBUG=0
 
 
 # ---------------------------------------------------------------------------------------
-CreateSymbolicLink() {
+CreateSymbolicLinks() {
     # Create symbolic link to local images
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
     ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR"
@@ -41,7 +41,6 @@ CreateSymbolicLink() {
     # Create symbolic link to local help page
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
     ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR"
-    
 }
 
 # ---------------------------------------------------------------------------------------
@@ -66,7 +65,6 @@ WriteLinesToLog() {
 SendToUI() {
     echo "${1}" >> "$logBashToJs"
 }
-
 
 # ---------------------------------------------------------------------------------------
 SendToUIUVersionedDir() {
@@ -307,12 +305,12 @@ MaintainInstalledThemeListInPrefs()
     fi
     
     # Delete existing and write new InstalledThemes prefs key
-    #WriteToLog "Removing previous InstalledThemes array from prefs file"
+    [[ DEBUG -eq 1 ]] && WriteToLog "Removing previous InstalledThemes array from prefs file"
     defaults delete "$gUserPrefsFile" "InstalledThemes"
     
     # Only add back if there's something to write.
     if [ "$lastAddedThemeName" != "" ]; then
-        #WriteToLog "Inserting InstalledThemes array in to prefs file"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Inserting InstalledThemes array in to prefs file"
         defaults write "$gUserPrefsFile" InstalledThemes -array "$openDict$arrayString$closeDict"
     fi
     
@@ -326,7 +324,7 @@ UpdatePrefsKey()
     local passedValue="$2"
     if [ -f "$gUserPrefsFile".plist ]; then
         defaults delete "$gUserPrefsFile" "$passedKey"
-        [[ DEBUG -eq 1 ]] & WriteToLog "${debugIndent}Writing prefs key $passedKey = $passedValue"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing prefs key $passedKey = $passedValue"
         defaults write "$gUserPrefsFile" "$passedKey" "$passedValue"
     else
         WriteToLog "Error! ${gUserPrefsFile}.plist not found."
@@ -336,10 +334,7 @@ UpdatePrefsKey()
 # ---------------------------------------------------------------------------------------
 ClearTopOfMessageLog()
 {
-    #local logToClear="$1"
-    #if [ -f "$logToClear" ]; then
-    #    > "$logToClear"
-    #fi
+    # removes the first line of the log file.
     local log=$(tail -n +2 "$1"); > "$1" && if [ "$log" != "" ]; then echo "$log" > "$1"; fi
 }
 
@@ -602,8 +597,6 @@ InsertThemeListHtmlInToManageThemes()
     if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
         rm "${PUBLIC_DIR}"/managethemes.htmle
     fi
-
-    WriteLinesToLog
 }
 
 
@@ -745,7 +738,7 @@ EnsureLocalSupportDir()
 }
 
 # ---------------------------------------------------------------------------------------
-EnsureSymlink()
+EnsureSymlinks()
 {
     # Rather than check if a valid one exists, it's quicker to simply re-create it.
     if [ -h "$ASSETS_DIR"/images ]; then
@@ -756,7 +749,7 @@ EnsureSymlink()
         rm "$PUBLIC_DIR"/add_theme.html
     fi
     
-    CreateSymbolicLink
+    CreateSymbolicLinks
     WriteLinesToLog
 }
 
@@ -1789,8 +1782,6 @@ else
     declare -a installedThemePathDevice
     declare -a installedThemeVolumeUUID
     declare -a installedThemeUpdateAvailable
-    
-    tmp_dir=$(mktemp -d -t theme_manager)
 
     # Globals for newly installed theme before adding to prefs
     ResetNewlyInstalledThemeVars
@@ -1807,13 +1798,14 @@ else
     # Not working in this version
     declare -a repositoryUrls
     declare -a repositoryThemes
+    tmp_dir=$(mktemp -d -t theme_manager)
     ReadRepoUrlList
 
     # Begin
     RefreshHtmlTemplates "managethemes.html"
     #IsRepositoryLive
     EnsureLocalSupportDir
-    EnsureSymlink
+    EnsureSymlinks
     GetLatestIndexAndEnsureThemeHtml
     GetListOfMountedDevices
     BuildDiskUtilStringArrays
@@ -1823,7 +1815,7 @@ else
     SendUIInitData
 
     # Write string to mark the end of init file.
-    # The Javascript looks for this to signify initialisation is complete.
+    # initialise.js looks for this to signify initialisation is complete.
     WriteToLog "Complete!"
     
     # Check for any updates to this app
@@ -1855,29 +1847,19 @@ else
         logLine=$(head -n 1 "$logJsToBash")
         
         # Has user selected partition for an /EFI/Clover/themes directory?
-        #if grep "CTM_selectedPartition@" "$logLine" ; then
         if [[ "$logLine" == *CTM_selectedPartition* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
-            
-            # Check path,
-            # find and send list of installed themes,
-            # then check for any updates to those themes.
             RespondToUserDeviceSelection "$logLine"
     
         # Has the user clicked the OpenPath button?
-        #elif grep "OpenPath" "$logLine" ; then
         elif [[ "$logLine" == *OpenPath* ]]; then
-            if [ ! "$TARGET_THEME_DIR" == "-" ]; then
-                Open "$TARGET_THEME_DIR"
-            fi
+            [[ ! "$TARGET_THEME_DIR" == "-" ]] && Open "$TARGET_THEME_DIR"
             ClearTopOfMessageLog "$logJsToBash"
             WriteToLog "User selected to open $TARGET_THEME_DIR"
 
         # Has the user pressed a theme button to install, uninstall or update?
-        #elif grep "CTM_ThemeAction" "$logLine" ; then
         elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
-            # Perform the requested user action.
             RespondToUserThemeAction "$logLine"
             returnValue=$?
             if [ ${returnValue} -eq 0 ]; then
@@ -1890,14 +1872,12 @@ else
             fi 
 
         # Has user selected a theme for NVRAM variable?
-        #elif grep "CTM_chosenNvramTheme" "$logLine" ; then
         elif [[ "$logLine" == *CTM_chosenNvramTheme* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             WriteToLog "User chose to set nvram theme."
             SetNvramTheme "$logLine"
             
         # Has user changed the thumbnail size?
-        #elif grep "CTM_thumbSize" "$logLine" ; then
         elif [[ "$logLine" == *CTM_thumbSize* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             # parse message
@@ -1907,44 +1887,36 @@ else
             WriteToLog "User changed thumbnail size to $thumbSize"
             
         # Has user chosen to hide uninstalled themes?
-        #elif grep "CTM_hideUninstalled" "$logLine" ; then
         elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "UnInstalledButton" "Show"
             WriteToLog "User chose to hide uninstalled themes"
             
         # Has user chosen to show uninstalled themes?
-        #elif grep "CTM_showUninstalled" "$logLine" ; then
         elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
-WriteToLog "Found $logLine"
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "UnInstalledButton" "Hide"
             WriteToLog "User chose to show uninstalled themes"
             
         # Has user chosen to hide thumbnails?
-        #elif grep "CTM_hideThumbails" "$logLine" ; then
         elif [[ "$logLine" == *CTM_hideThumbails* ]]; then
-WriteToLog "Found $logLine"
            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Show"
             WriteToLog "User chose to hide thumbnails"
             
         # Has user chosen to show thumbnails?
-        #elif grep "CTM_showThumbails" "$logLine" ; then
         elif [[ "$logLine" == *CTM_showThumbails* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Hide"
             WriteToLog "User chose to show thumbnails"
             
         # Has user chosen to hide previews?
-        #elif grep "CTM_hidePreviews" "$logLine" ; then
         elif [[ "$logLine" == *CTM_hidePreviews* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ShowPreviewsButton" "Hide"
             WriteToLog "User chose to hide previews"
             
         # Has user chosen to show preview?
-        #elif grep "CTM_showPreviews" "$logLine" ; then
         elif [[ "$logLine" == *CTM_showPreviews* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ShowPreviewsButton" "Show"
@@ -1952,7 +1924,6 @@ WriteToLog "Found $logLine"
             
         # Has user returned back from help page?
         # Send back what's needed to restore state.
-        #elif grep "ReloadToPreviousState" "$logLine" ; then
         elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
