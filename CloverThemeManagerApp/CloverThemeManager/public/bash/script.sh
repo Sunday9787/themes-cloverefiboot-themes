@@ -33,14 +33,24 @@ DEBUG=0
 
 
 # ---------------------------------------------------------------------------------------
-CreateSymbolicLinks() {
+CreateSymbolicLinks()
+{
+    local check=1
+    
     # Create symbolic link to local images
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR"
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR" && check=0
     
     # Create symbolic link to local help page
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR"
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR" && check=0
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ check -eq 0 ]; then
+        WriteToLog "CTM_SymbolicLinksOK"
+    else
+        WriteToLog "CTM_SymbolicLinksFail"
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
@@ -561,12 +571,14 @@ CreateThemeListHtml()
     \
     "
         done
+        WriteToLog "CTM_ThemeListOK"
     else
         WriteToLog "Error: Title(${#themeTitle[@]}), Author(${#themeAuthor[@]}), Description(${#themeDescription[@]}) mismatch."
         for ((n=0; n<${#themeTitle[@]}; n++ ));
         do
             WriteToLog "$n : ${themeTitle[$n]} | ${themeDescription[$n]} | ${themeAuthor[$n]}"
         done
+        WriteToLog "CTM_ThemeListFail"
     fi
     WriteLinesToLog
 }
@@ -575,6 +587,7 @@ CreateThemeListHtml()
 InsertThemeListHtmlInToManageThemes()
 {
     local passedOptionalCommand="$1"
+    local check=1
         
     if [ "$passedOptionalCommand" == "file" ]; then
         # Read previously saved file
@@ -591,11 +604,18 @@ InsertThemeListHtmlInToManageThemes()
 
     # Insert Html in to placeholder
     WriteToLog "Inserting HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html
+    LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
 
     # Clean up
     if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
         rm "${PUBLIC_DIR}"/managethemes.htmle
+    fi
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ check -eq 0 ]; then
+        WriteToLog "CTM_InsertHtmlOK"
+    else
+        WriteToLog "CTM_InsertHtmlFail"
     fi
 }
 
@@ -680,19 +700,27 @@ ReadRepoUrlList()
 RefreshHtmlTemplates()
 {
     passedTemplate="$1"
+    local check=1
     
     # For now remove previous managethemes.html and copy template
     if [ -f "${PUBLIC_DIR}"/$passedTemplate ]; then
         if [ -f "${PUBLIC_DIR}"/$passedTemplate.template ]; then
             WriteToLog "Setting $passedTemplate to default."
             rm "${PUBLIC_DIR}"/$passedTemplate
-            cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate
+            cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
         else
             WriteToLog "Error: missing ${PUBLIC_DIR}/$passedTemplate.template"
         fi
     else
         WriteToLog "Creating: $passedTemplate"
-        cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate
+        cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
+    fi
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ check -eq 0 ]; then
+        WriteToLog "CTM_HTMLTemplateOK"
+    else
+        WriteToLog "CTM_HTMLTemplateOKFail"
     fi
     
     WriteLinesToLog
@@ -701,39 +729,44 @@ RefreshHtmlTemplates()
 # ---------------------------------------------------------------------------------------
 IsRepositoryLive()
 {
-    # This needs updating for the Clover themes git repo on Sourceforge.
-    
-    #if [ -f /usr/bin/curl ]; then
-    #    httpRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/svn:/http:/' )
-    #    WriteToLog "Checking for response from $httpRepositoryUrl"
-    #    local testConnection=$( /usr/bin/curl --silent --head $httpRepositoryUrl | egrep "OK"  )
-    #    WriteToLog "Response: $testConnection"
-    #    if [ ! "$testConnection" ]; then
-    #        # Repository not alive.
-    #        WriteToLog "RepositoryError: No response from Repository ${remoteRepositoryUrl}/"
-    #        # The initialise.js should pick this up, notify the user, then quit.
-    #        exit 1
-    #    fi
-    #fi
-    #WriteLinesToLog
-    echo "Nothing here"
+    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+    [[ DEBUG -eq 1 ]] && WriteToLog "$gitRepositoryUrl"
+    local testConnection=$( git ls-remote ${gitRepositoryUrl}themes )
+    [[ DEBUG -eq 1 ]] && WriteToLog "$testConnection"
+    if [ ! "$testConnection" ]; then
+        # Repository not alive.
+        WriteToLog "CTM_RepositoryError: No response from Repository ${gitRepositoryUrl}/themes"
+        # The initialise.js should pick this up, notify the user, then quit.
+        exit 1
+    else
+        WriteToLog "CTM_RepositorySuccess"
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
 EnsureLocalSupportDir()
 {
+    local check=1
+    
     # Check for local support directory
     local pathToCreate="${WORKING_PATH}/${APP_DIR_NAME}"
     if [ ! -d "$pathToCreate" ]; then
         WriteToLog "Creating $pathToCreate"
-        mkdir -p "$pathToCreate"
+        mkdir -p "$pathToCreate" && check=0
     fi
     
     # Create unpacking directory for checking out cloned bare theme repo's
     # from clover repo. This is because the themes checkout as:
     # /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
     if [ ! -d "$UNPACKDIR" ]; then
-        mkdir "$UNPACKDIR"
+        mkdir "$UNPACKDIR" && check=0
+    fi
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ check -eq 0 ]; then
+        WriteToLog "CTM_SupportDirOK"
+    else
+        WriteToLog "CTM_SupportDirFail"
     fi
 }
 
@@ -812,6 +845,8 @@ GetLatestIndexAndEnsureThemeHtml()
     
     CloneAndCheckoutIndex()
     {
+        local check=1
+        
         # Remove index.git from a previous run
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
             WriteToLog "Removing previous index.git"
@@ -832,10 +867,18 @@ GetLatestIndexAndEnsureThemeHtml()
     
         # Get new index.git from CloverRepo
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
+        WriteToLog "CTM_IndexCloneAndCheckout"
         WriteToLog "Cloning bare repo index.git"
         git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
         WriteToLog "Checking out index.git"
-        git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force
+        git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force && check=0
+        
+        # Add messages in to log for initialise.js to detect.
+        if [ check -eq 0 ]; then
+            WriteToLog "CTM_IndexOK"
+        else
+            WriteToLog "CTM_IndexFail"
+        fi
     }
     
     if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
@@ -969,13 +1012,18 @@ BuildDiskUtilStringArrays()
     if [ ${#duVolumeName[@]} -ne $recordAdded ] || [ ${#duVolumeUuid[@]} -ne $recordAdded ] || [ ${#duIdentifier[@]} -ne $recordAdded ]; then
         WriteToLog "Error- Disk Utility string arrays are not equal lengths!"
         WriteToLog "records=$recordAdded V=${#duVolumeName[@]} C=${#duVolumeUuid[@]} I=${#duIdentifier[@]}"
+        WriteToLog "CTM_ThemeDirsFail"
         exit 1
     fi
+    
+    WriteToLog "CTM_ThemeDirsOK"
 }
 
 # ---------------------------------------------------------------------------------------
 CreateDiskPartitionDropDownHtml()
 {
+    local check=1
+    
     RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}/dropdown_html"
     
     # Create html for drop-down menu
@@ -1002,11 +1050,18 @@ CreateDiskPartitionDropDownHtml()
     WriteLinesToLog
     # Insert dropdown Html in to placeholder
     WriteToLog "Inserting dropdown HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_MENU_OPTIONS_HERE-->/${htmlDropDown}/g" "${PUBLIC_DIR}"/managethemes.html
+    LANG=C sed -ie "s/<!--INSERT_MENU_OPTIONS_HERE-->/${htmlDropDown}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
 
     # Clean up
     if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
         rm "${PUBLIC_DIR}"/managethemes.htmle
+    fi
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ check -eq 0 ]; then
+        WriteToLog "CTM_DropDownListOK"
+    else
+        WriteToLog "CTM_DropDownListFail"
     fi
     
     WriteLinesToLog
@@ -1090,6 +1145,8 @@ ReadPrefsFile()
             TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
         fi
         
+        WriteToLog "CTM_ReadPrefsOK"
+        
     else
         WriteToLog "Preferences file not found."
         WriteLog "Creating initial prefs file: $gUserPrefsFile"
@@ -1099,6 +1156,8 @@ ReadPrefsFile()
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_VOLUMEUUID="-"
+        
+        WriteToLog "CTM_ReadPrefsCreate"
     fi
     
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
@@ -1186,6 +1245,8 @@ SendUIInitData()
     # Send UI view choice for Previews
     SendToUI "PreviewView@${gUISettingViewPreviews}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
+    
+    WriteToLog "CTM_InitInterface"
 }
 
 
@@ -1450,10 +1511,12 @@ ReadAndSendCurrentNvramTheme()
         WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@${themeName}@"
         SendToUI "Nvram@${themeName}@"
+        WriteToLog ="CTM_NvramFound"
     else
         WriteToLog "Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
+        WriteToLog ="CTM_NvramNotFound"
     fi
 }
 
@@ -1798,12 +1861,12 @@ else
     # Not working in this version
     declare -a repositoryUrls
     declare -a repositoryThemes
-    tmp_dir=$(mktemp -d -t theme_manager)
+    #tmp_dir=$(mktemp -d -t theme_manager)
     ReadRepoUrlList
 
     # Begin
     RefreshHtmlTemplates "managethemes.html"
-    #IsRepositoryLive
+    IsRepositoryLive
     EnsureLocalSupportDir
     EnsureSymlinks
     GetLatestIndexAndEnsureThemeHtml
