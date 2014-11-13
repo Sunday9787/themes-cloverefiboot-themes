@@ -781,7 +781,7 @@ function ChangeThumbnailSize(action)
     $(".thumbnail img").css("height",newThumbHeight);
             
     // Change margin top of buttons
-    var buttonHeight = $(".buttonInstall").first().height();
+    var buttonHeight = $(".buttonInstall").first().outerHeight();
     var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
     $(".buttonInstall").css("margin-top",newButtonTop);
     $(".buttonUnInstall").css("margin-top",newButtonTop);

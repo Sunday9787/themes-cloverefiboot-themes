@@ -38,6 +38,25 @@ p {
     background-image: -webkit-linear-gradient(top, #737075, #59565b);
 }
 
+#StatusArea {
+    margin: 40px 0px 0px 248px;
+}
+
+.statusLine {
+    color: #555;
+    font-family: Helvetica;
+    font-size: 18px;
+    line-height: 130%;
+}
+
+.checkMark {
+    color: #33FF33;
+    font-family: Helvetica;
+    font-size: 18px;
+    float:right;
+    margin-right: 240px;
+}
+
 #TopOfHelpPage {
     position: fixed;
     width: 100%;
@@ -149,10 +168,10 @@ select.custom-dropdown:hover {
 
 #LogoHeader {
     width:100%;
-    height:440px;
-    background: url(../assets/init_page_image.png); background-repeat: no-repeat;
+    height:128px;
+    background: url(../assets/cloverthememanagericon_128px.png); background-repeat: no-repeat;
     background-position:center;
-    margin-top: 0px;
+    margin-top: 16px;
 }
 
 #homePageProgressBar {
@@ -208,14 +227,14 @@ select.custom-dropdown:hover {
 }
 
 #WelcomeMessage {
-    margin:74px 0px 0px 0px;
+    margin:12px 0px 0px 0px;
     /*padding:0px 8px 0px 8px;*/
     line-height: 2px;
 }
 
 .textHeading {
     font-family: Helvetica;
-    font-size: 28px;
+    font-size: 18px;
     font-weight:bold;
     color: #FFF;
     text-align:center;
@@ -223,10 +242,10 @@ select.custom-dropdown:hover {
 
 .textSubHeading {
     font-family: Helvetica;
-    font-size: 24px;
-    color: #33FF33;
+    font-size: 16px;
+    color: #a7a7a7;
     text-align:center;
-    margin-top: 32px;
+    margin-top: 22px;
 }
 
 .textSubSubHeading {
@@ -334,7 +353,7 @@ a:hover {
 }
 
 #ThemeBand {
-    height: 72px;
+    height: 70px;
     border-top: 1px solid #cbcbcb;
     border-bottom: 1px solid #878787;
     clear: both;
@@ -371,7 +390,7 @@ a:hover {
 }
 
 .thumbnail {
-    margin: 8px 16px 0px 30px;
+    margin: 7px 16px 0px 30px;
     float: left;
     cursor:pointer;
 }

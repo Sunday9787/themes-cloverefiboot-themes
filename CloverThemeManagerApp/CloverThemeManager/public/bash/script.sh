@@ -35,18 +35,18 @@ DEBUG=0
 # ---------------------------------------------------------------------------------------
 CreateSymbolicLinks()
 {
-    local check=1
+    local checkCount=0
     
     # Create symbolic link to local images
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR" && check=0
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR" && ((checkCount++))
     
     # Create symbolic link to local help page
     WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR" && check=0
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR" && ((checkCount++))
     
     # Add messages in to log for initialise.js to detect.
-    if [ check -eq 0 ]; then
+    if [ $checkCount -eq 2 ]; then
         WriteToLog "CTM_SymbolicLinksOK"
     else
         WriteToLog "CTM_SymbolicLinksFail"
@@ -612,7 +612,7 @@ InsertThemeListHtmlInToManageThemes()
     fi
     
     # Add messages in to log for initialise.js to detect.
-    if [ check -eq 0 ]; then
+    if [ $check -eq 0 ]; then
         WriteToLog "CTM_InsertHtmlOK"
     else
         WriteToLog "CTM_InsertHtmlFail"
@@ -716,11 +716,11 @@ RefreshHtmlTemplates()
         cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
     fi
     
-    # Add messages in to log for initialise.js to detect.
-    if [ check -eq 0 ]; then
+    # Add message in to log for initialise.js to detect.
+    if [ $check -eq 0 ]; then
         WriteToLog "CTM_HTMLTemplateOK"
     else
-        WriteToLog "CTM_HTMLTemplateOKFail"
+        WriteToLog "CTM_HTMLTemplateFail"
     fi
     
     WriteLinesToLog
@@ -745,25 +745,23 @@ IsRepositoryLive()
 
 # ---------------------------------------------------------------------------------------
 EnsureLocalSupportDir()
-{
-    local check=1
-    
+{    
     # Check for local support directory
     local pathToCreate="${WORKING_PATH}/${APP_DIR_NAME}"
     if [ ! -d "$pathToCreate" ]; then
         WriteToLog "Creating $pathToCreate"
-        mkdir -p "$pathToCreate" && check=0
+        mkdir -p "$pathToCreate"
     fi
     
     # Create unpacking directory for checking out cloned bare theme repo's
     # from clover repo. This is because the themes checkout as:
     # /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
     if [ ! -d "$UNPACKDIR" ]; then
-        mkdir "$UNPACKDIR" && check=0
+        mkdir "$UNPACKDIR"
     fi
     
-    # Add messages in to log for initialise.js to detect.
-    if [ check -eq 0 ]; then
+    # Add message in to log for initialise.js to detect.
+    if [ -d "$pathToCreate" ] && [ -d "$UNPACKDIR" ]; then
         WriteToLog "CTM_SupportDirOK"
     else
         WriteToLog "CTM_SupportDirFail"
@@ -774,11 +772,11 @@ EnsureLocalSupportDir()
 EnsureSymlinks()
 {
     # Rather than check if a valid one exists, it's quicker to simply re-create it.
-    if [ -h "$ASSETS_DIR"/images ]; then
-        rm "$ASSETS_DIR"/images
+    if [ -h "$ASSETS_DIR"/themes ] || [ -L "$ASSETS_DIR"/themes ]; then
+        rm "$ASSETS_DIR"/themes
     fi
     
-    if [ -h "$PUBLIC_DIR"/add_theme.html ]; then
+    if [ -h "$PUBLIC_DIR"/add_theme.html ] || [ -L "$PUBLIC_DIR"/add_theme.html ]; then
         rm "$PUBLIC_DIR"/add_theme.html
     fi
     
@@ -873,8 +871,8 @@ GetLatestIndexAndEnsureThemeHtml()
         WriteToLog "Checking out index.git"
         git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force && check=0
         
-        # Add messages in to log for initialise.js to detect.
-        if [ check -eq 0 ]; then
+        # Add message in to log for initialise.js to detect.
+        if [ $check -eq 0 ]; then
             WriteToLog "CTM_IndexOK"
         else
             WriteToLog "CTM_IndexFail"
@@ -899,9 +897,11 @@ GetLatestIndexAndEnsureThemeHtml()
             InsertThemeListHtmlInToManageThemes
         else
             WriteToLog "No updates to index.git"
+            WriteToLog "CTM_IndexOK"
             
             # Use previously saved theme.html
             if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
+                WriteToLog "CTM_ThemeListOK"
                 InsertThemeListHtmlInToManageThemes "file"
             else
                 WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
@@ -1057,8 +1057,8 @@ CreateDiskPartitionDropDownHtml()
         rm "${PUBLIC_DIR}"/managethemes.htmle
     fi
     
-    # Add messages in to log for initialise.js to detect.
-    if [ check -eq 0 ]; then
+    # Add message in to log for initialise.js to detect.
+    if [ $check -eq 0 ]; then
         WriteToLog "CTM_DropDownListOK"
     else
         WriteToLog "CTM_DropDownListFail"
@@ -1145,7 +1145,8 @@ ReadPrefsFile()
             TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
         fi
         
-        WriteToLog "CTM_ReadPrefsOK"
+        # Add message in to log for initialise.js to detect.
+        [[ $gFirstRun -eq 0 ]] && WriteToLog "CTM_ReadPrefsOK" && gFirstRun=1
         
     else
         WriteToLog "Preferences file not found."
@@ -1157,6 +1158,7 @@ ReadPrefsFile()
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_VOLUMEUUID="-"
         
+        # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_ReadPrefsCreate"
     fi
     
@@ -1191,7 +1193,7 @@ SendInternalThemeArraysToLogFile()
 # ---------------------------------------------------------------------------------------
 SendUIInitData()
 {
-    # This is called once when the app is loaded.
+    # This is called once after much of the initialisation routines have run.
     
     if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "" ] ; then
 
@@ -1222,7 +1224,7 @@ SendUIInitData()
         CheckForAnyUpdatesStoredInPrefsAndSendToUI
 
         # Set redirect from initial page
-        WriteToLog "Redirect managethemes.html"
+        #WriteToLog "Redirect managethemes.html"
     else
         WriteToLog "Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
@@ -1246,6 +1248,7 @@ SendUIInitData()
     SendToUI "PreviewView@${gUISettingViewPreviews}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
     
+    # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
 }
 
@@ -1511,12 +1514,14 @@ ReadAndSendCurrentNvramTheme()
         WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@${themeName}@"
         SendToUI "Nvram@${themeName}@"
-        WriteToLog ="CTM_NvramFound"
+        # Add message in to log for initialise.js to detect.
+        WriteToLog "CTM_NvramFound"
     else
         WriteToLog "Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
-        WriteToLog ="CTM_NvramNotFound"
+        # Add message in to log for initialise.js to detect.
+        WriteToLog "CTM_NvramNotFound"
     fi
 }
 
@@ -1777,6 +1782,7 @@ gThumbSizeY=0
 gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
+gFirstRun=0
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1877,15 +1883,16 @@ else
     CleanInstalledThemesPrefEntries
     SendUIInitData
 
-    # Write string to mark the end of init file.
-    # initialise.js looks for this to signify initialisation is complete.
-    WriteToLog "Complete!"
-    
     # Check for any updates to this app
     # Not function set for this yet
 
     # Read current Clover.Theme Nvram variable and send to UI.
     ReadAndSendCurrentNvramTheme
+    
+    # Write string to mark the end of init file.
+    # initialise.js looks for this to signify initialisation is complete.
+    # At which point it then redirects to the main UI page.
+    WriteToLog "Complete!"
 
     # Feedback for command line
     echo "Initialisation complete. Entering loop."

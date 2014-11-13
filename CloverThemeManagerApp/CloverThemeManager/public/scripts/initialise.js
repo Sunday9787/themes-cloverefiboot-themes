@@ -25,7 +25,6 @@ var eof=0;
 // On initial load
 $(document).ready(function() {    
     macgap.app.launch("started")
-    
     printLogtoScreen();
 });
 
@@ -52,20 +51,19 @@ function GetFileContents(filename)
     }
 }
 
-// Read /tmp/CloverThemeManager/CloverThemeManagerLog.txt and print each line to screen.
-// This was added to show the user that a process is happening and the app is not stuck
-// at the initialisation screen.
-// It also serves a purpose to include messages in the log for this function to interpret.
-// Messages currently looked for are:
-// - Complete!
-// - CTM_Version
-// - RepositoryError:
+//-------------------------------------------------------------------------------------
+function redirectToMainPage()
+{
+    var redirect="managethemes.html"
+    window.location = (redirect);
+}
 
+// Read /tmp/CloverThemeManager/CloverThemeManagerLog.txt looking for embedded 
+// messages for showing the initialisation process.
 //-------------------------------------------------------------------------------------
 function printLogtoScreen()
 {
     eof=0;
-    var redirect="managethemes.html"
     var splitContent="";
     fileContent=GetFileContents("CloverThemeManagerLog.txt");
     
@@ -84,16 +82,83 @@ function printLogtoScreen()
                     version = splitContent[i].substring(splitContent[i].indexOf("CTM_Version") + 11);
                     // append version to title.
                     $("#textHeading").append("<span class=\"textVersion\"> v" + version + "</span>");
-                } else if (/RepositoryError: /i.test(splitContent[i])) {
-                    // This indicates the remote repository is not contactable.
-                    // We should notify the user and exit
-                    alert("Remote theme repository is not responding. This app cannot continue.");
-                    terminate();
-                } else {      
-                    // Write line to log
-                    if (typeof splitContent[i] !== "undefined" && typeof splitContent[i] !== "null" && splitContent[i].length > 1) {
-                        $("#logToBeFilled").append(splitContent[i] + '<br>' );
-                    }
+                    
+                } else if (/CTM_HTMLTemplateOK/i.test(splitContent[i])) {
+                           $("#check_HtmlTemplate").append( "  \u2713" );
+                           $("#status_HtmlTemplate").css("color","#FFF"); 
+                } else if (/CTM_HTMLTemplateFail/i.test(splitContent[i])) {
+                           $("#status_HtmlTemplate").css("color","#DD171B");
+                           
+                } else if (/CTM_RepositorySuccess/i.test(splitContent[i])) {
+                           $("#check_Repository").append( "  \u2713" );
+                           $("#status_Repository").css("color","#FFF"); 
+                } else if (/CTM_RepositoryError/i.test(splitContent[i])) {
+                           $("#status_Repository").css("color","#DD171B");
+                           alert("Remote theme repository is not responding. This app cannot continue.");
+                           terminate();
+                           
+                } else if (/CTM_SupportDirOK/i.test(splitContent[i])) {
+                           $("#check_SupportDir").append( "  \u2713" );
+                           $("#status_SupportDir").css("color","#FFF"); 
+                } else if (/CTM_SupportDirFail/i.test(splitContent[i])) {
+                           $("#status_SupportDir").css("color","#DD171B");
+                           
+                } else if (/CTM_SymbolicLinksOK/i.test(splitContent[i])) {
+                           $("#check_SymbolicLink").append( "  \u2713" );
+                           $("#status_SymbolicLink").css("color","#FFF"); 
+                } else if (/CTM_SymbolicLinksFail/i.test(splitContent[i])) {
+                           $("#status_SymbolicLink").css("color","#DD171B");
+                           
+                } else if (/CTM_IndexCloneAndCheckout/i.test(splitContent[i])) {
+                           $("#status_Index").text( 'Cloning index.git' ).append( '<span class="checkMark" id="check_Index"></span>' );
+                           $("#status_Index").css("color","#FFAE40"); 
+                } else if (/CTM_IndexOK/i.test(splitContent[i])) {
+                           $("#check_Index").append( "  \u2713" );
+                           $("#status_Index").css("color","#FFF"); 
+                } else if (/CTM_IndexFail/i.test(splitContent[i])) {
+                           $("#status_Index").css("color","#DD171B");
+                           
+                } else if (/CTM_ThemeListOK/i.test(splitContent[i])) {
+                           $("#check_ThemeList").append( "  \u2713" );
+                           $("#status_ThemeList").css("color","#FFF"); 
+                } else if (/CTM_ThemeListFail/i.test(splitContent[i])) {
+                           $("#status_ThemeList").css("color","#DD171B");
+                           
+                } else if (/CTM_InsertHtmlOK/i.test(splitContent[i])) {
+                           $("#check_InsertHtml").append( "  \u2713" );
+                           $("#status_InsertHtml").css("color","#FFF"); 
+                } else if (/CTM_InsertHtmlFail/i.test(splitContent[i])) {
+                           $("#status_InsertHtml").css("color","#DD171B");
+                           
+                } else if (/CTM_ThemeDirsOK/i.test(splitContent[i])) {
+                           $("#check_ThemeDirs").append( "  \u2713" );
+                           $("#status_ThemeDirs").css("color","#FFF"); 
+                } else if (/CTM_ThemeDirsFail/i.test(splitContent[i])) {
+                           $("#status_ThemeDirs").css("color","#DD171B");
+                           
+                } else if (/CTM_DropDownListOK/i.test(splitContent[i])) {
+                           $("#check_Dropdown").append( "  \u2713" );
+                           $("#status_Dropdown").css("color","#FFF"); 
+                } else if (/CTM_DropDownListFail/i.test(splitContent[i])) {
+                           $("#status_Dropdown").css("color","#DD171B");
+                           
+                } else if (/CTM_ReadPrefsOK/i.test(splitContent[i])) {
+                           $("#check_ReadPrefs").append( "  \u2713" );
+                           $("#status_ReadPrefs").css("color","#FFF"); 
+                } else if (/CTM_ReadPrefsCreate/i.test(splitContent[i])) {
+                           $("#check_ReadPrefs").append( "  \u2713" );
+                           $("#status_ReadPrefs").text("Created Prefs");
+                           $("#status_ReadPrefs").css("color","#FFF");
+                           
+                } else if (/CTM_InitInterface/i.test(splitContent[i])) {
+                           $("#check_InitMainUI").append( "  \u2713" );
+                           $("#status_InitMainUI").css("color","#FFF"); 
+
+                } else if (/CTM_NvramFound/i.test(splitContent[i])) {
+                           $("#check_NvramVar").append( "  \u2713" );
+                           $("#status_NvramVar").css("color","#FFF"); 
+                } else if (/CTM_NvramNotFound/i.test(splitContent[i])) {
+                           $("#status_NvramVar").css("color","#DD171B");
                 }
             }
             prevLastLineCount=splitContent.length-2;
@@ -107,8 +172,9 @@ function printLogtoScreen()
             clearTimeout(timerCheckEof);
             eof=1;
             
-            //Redirect
-            window.location = (redirect);
+            //Redirect after 1 second
+            timerReadMessageFile = setTimeout(redirectToMainPage, 1000);
+
 
         } else {
             // recursively call function providing we haven't completed.
@@ -123,3 +189,4 @@ function printLogtoScreen()
             timerCheckEof = setTimeout(printLogtoScreen, 250);
     }
 }
+
