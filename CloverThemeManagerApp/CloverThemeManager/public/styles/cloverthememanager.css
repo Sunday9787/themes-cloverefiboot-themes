@@ -3,8 +3,10 @@ html, body {
     margin: 0;
     height: 100%;
     overflow: auto;
-    /* -webkit-user-select: none; */
-    background-color: #333;
+}
+
+body {
+   background: #333 url(../assets/cog_356px_20pc.png) no-repeat right bottom;
 }
 
 p {
