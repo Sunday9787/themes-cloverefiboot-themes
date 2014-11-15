@@ -23,7 +23,7 @@
 
 VERS="0.68"
 
-DEBUG=0
+DEBUG=1
 #set -x
 
 # =======================================================================================
@@ -303,7 +303,7 @@ MaintainInstalledThemeListInPrefs()
     # Did the newly installed theme get appended? If not then it needs adding at end.
     if [ "$gNewInstalledThemeName" != "" ]; then
         # Write new theme key
-        arrayString="${arrayString}<key>$gNewInstalledThemeName</key>"
+        arrayString="${arrayString}<key>${gNewInstalledThemeName}</key>"
         # open array
         arrayString="${arrayString}$openArray"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Append still hasn't completed. Appending $gNewInstalledThemeName now."
@@ -1129,7 +1129,7 @@ ReadPrefsFile()
             # Look for an open parenthesis to indicate start of array entry
             if [[ "${readVar[$x]}" == *\(* ]]; then
                 themeName="${readVar[$x]% =*}"                      # Remove all after ' ='    
-                themeName=$( echo "$themeName" | sed 's/^[ \t]*//') # Remove leading whitespace  
+                themeName=$( echo "$themeName" | sed 's/^ *//') # Remove leading whitespace  
                 themeName=$( echo "$themeName" | sed 's/\"//g' )    # Remove any quotes
                 foundThemeName=1
             fi
@@ -1313,6 +1313,7 @@ RespondToUserDeviceSelection()
         CheckAndRecordOrphanedThemesAndSendToUI
         CheckForAnyUpdatesStoredInPrefsAndSendToUI
         CheckAndRemoveBareClonesNoLongerNeeded
+        ReadAndSendCurrentNvramTheme
         CheckForUpdatesInTheBackground &
     else
         WriteToLog "User de-selected device pointing to theme path"
@@ -1417,7 +1418,7 @@ CheckForAnyUpdatesStoredInPrefsAndSendToUI()
         updateAvailThemeStr="${updateAvailThemeStr#?}"
     fi
     
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending to UI: UpdateAvailThemes@${updateAvailThemeStr}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
     SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
 }
 

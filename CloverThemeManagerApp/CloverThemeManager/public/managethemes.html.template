@@ -71,7 +71,7 @@
         <div id="ThemeListSpacerBottom">&nbsp;</div>
     </div> <!-- End ThemeList -->     
      
-    <div id="AboveFooter">
+    <div id="AboveFooter" class="nvramFillNone">
     
         <div id="NvramInfo">
             <span class="textBody" id="currentNVRAMvar">NVRAM theme:</span>

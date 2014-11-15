@@ -327,14 +327,14 @@ function actOnNvramThemeVar(nvramThemeVar)
             // Print message
             $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
             // Change background colour to green
-            $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(81,199,56,1) 0%,rgba(28,127,42,1) 100%)");
+            $("#AboveFooter").attr('class', 'nvramFillInstalled');
             // Change nvram dropdown option to match nvram var
             $("#installedThemeDropDown").val(nvramThemeVar);
         } else {
             // Print message
             $("#currentNVRAMMessage").text("Not Installed on this volume"); 
             // Change background colour to red
-            $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(193,34,20,1) 0%,rgba(117,2,4,1) 100%)");
+            $("#AboveFooter").attr('class', 'nvramFillNotInstalled');
             // Change nvram dropdown option to "-"
             $("#installedThemeDropDown").val("-");
         }
@@ -634,7 +634,7 @@ function SetShowHidePreviews(state)
         $("#preview_Toggle_Button").text("Collapse Previews");
         $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
         $("#preview_Toggle_Button").css("border","1px solid #000");
-        $("#preview_Toggle_Button").css("color","#7cf8f0");
+        $("#preview_Toggle_Button").css("color","#82f3ff");
     } else if (state == "Hide") {
         if (accordionBandState) {
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
@@ -656,7 +656,7 @@ function SetShowHideButton(state)
         $("#ShowHideToggleButton").text("Show All");
         $("#ShowHideToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
         $("#ShowHideToggleButton").css("border","1px solid #000");
-        $("#ShowHideToggleButton").css("color","#7cf8f0");
+        $("#ShowHideToggleButton").css("color","#82f3ff");
         GetShowHideButtonStateAndUpdateUI();
     } else if (state == "Show") {
         $("#ShowHideToggleButton").text("Hide UnInstalled");
@@ -700,7 +700,7 @@ function SetThemeBandHeight(setting)
             // Set background colour to indicate its selected
             $("#BandsHeightToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
             $("#BandsHeightToggleButton").css("border","1px solid #000");
-            $("#BandsHeightToggleButton").css("color","#7cf8f0");
+            $("#BandsHeightToggleButton").css("color","#82f3ff");
             
     } else if (setting == "Show") {
 
