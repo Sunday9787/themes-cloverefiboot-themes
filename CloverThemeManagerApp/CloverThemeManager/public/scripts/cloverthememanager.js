@@ -675,6 +675,8 @@ function SetThemeBandHeight(setting)
             // Hide + and - buttons
             $("#thumbSizeSmaller").css("display","none");
             $("#thumbSizeLarger").css("display","none");
+            // Show spacer sml buttons to retain spacing of other buttons
+            $(".spacerButtonSml").css("display","block");
             // Move theme titles up
             $("[id=ThemeText]").css("top","74%");
             // Hide all theme descriptions
@@ -691,7 +693,7 @@ function SetThemeBandHeight(setting)
             $(".buttonInstall").css("margin-top","6px");
             $(".buttonUnInstall").css("margin-top","6px");
             $(".buttonUpdate").css("margin-top","6px");
-            // Reduce margin top of Unversioned Themes Indicatpor
+            // Reduce margin top of Unversioned Themes Indicator
             $(".versionControl").css("margin-top","9px");
             // Add margin left to theme titles
             $("[id=ThemeText]").css("margin-left","32px");
@@ -707,6 +709,8 @@ function SetThemeBandHeight(setting)
             // Show + and - buttons
             $("#thumbSizeSmaller").css("display","block");
             $("#thumbSizeLarger").css("display","block");
+            // Hide spacer sml buttons to retain spacing of other buttons
+            $(".spacerButtonSml").css("display","none");
             // Revert theme titles margin top
             $("[id=ThemeText]").css("top","50%");
             // Show all theme descriptions
@@ -758,7 +762,6 @@ function ChangeThumbnailSize(action)
     var currentThumbHeight = $(".thumbnail img").first().height();
     var currentAccordionHeight = $(".accordion").first().height();
     var currentThemeTextWidth = $("#ThemeText").first().width();
-
     if (action=='larger' && currentThumbWidth <= 175) {
         var newAccordionHeight=(currentAccordionHeight+14);
         var newThumbWidth=(currentThumbWidth+25);
@@ -769,8 +772,12 @@ function ChangeThumbnailSize(action)
         var newThumbWidth=(currentThumbWidth-25);
         var newThumbHeight=(currentThumbHeight-14);
         var newThemeTextWidth=(currentThemeTextWidth+30);
+    } else {
+        newThemeTextWidth=currentThemeTextWidth;
     }
-            
+    
+    //alert(currentThumbWidth+","+action+","+currentThemeTextWidth+","+newThemeTextWidth);     
+           
     // Adjust height of theme bands
     $(".accordion").css("height",newAccordionHeight);
     $(".accordionInstalled").css("height",newAccordionHeight);
@@ -1015,6 +1022,7 @@ function ResetButtonsAndBandsToDefault()
     
     // Remove any unVersioned indicators
     $("[id^=indicator_]").html("&nbsp;&nbsp;&nbsp;");
+    $("[id^=indicator_]").css("pointer-events","none");
 }
 
 //-------------------------------------------------------------------------------------
@@ -1048,6 +1056,10 @@ function ChangeButtonAndBandToUpdate(themeName)
         RespondToButtonPress(pressedButton,currentStatus);
     }).insertAfter("[id='button_" + themeName + "']");
     $("[id='button_Update_" + themeName + "']").html("Update");
+    
+    // set the vertical position to match the uninstall button
+    var uninstallButtonTop=$("[id='button_" + themeName + "']").css("margin-top");
+    $("[id='button_Update_" + themeName + "']").css("margin-top",uninstallButtonTop);
 }
 
 //-------------------------------------------------------------------------------------
@@ -1064,6 +1076,7 @@ function SetUnVersionedControlIndicator(themeName)
 
     // Display indicator to show theme is unversioned
     $("[id='indicator_" + themeName + "']").html("\u2715");
+    $("[id='indicator_" + themeName + "']").css("pointer-events","auto");
 }
 
 //-------------------------------------------------------------------------------------

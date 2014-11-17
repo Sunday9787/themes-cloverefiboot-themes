@@ -37,7 +37,6 @@ p {
     border-bottom: 2px solid #333;
     padding: 16px 0 8px 28px;
     background-color: #737075;
-    background-image: -moz-linear-gradient(center top , #737075, #59565b);
     background-image: -webkit-linear-gradient(top, #737075, #59565b);
 }
 
@@ -210,7 +209,7 @@ select.custom-dropdown:hover {
 #HeaderBar {
     height: 24px;
     background-image: -webkit-linear-gradient(top, rgba(111,111,111,1) 0%,rgba(0,0,0,1) 100%); 
-    padding: 5px 5px 5px 20px;
+    padding: 5px 20px 5px 20px;
     font-family: Helvetica;
     font-size: 12px;
     line-height: 0px;
@@ -388,14 +387,16 @@ a:hover {
     font-size: 10px;
     font-weight: bold;
     line-height: 18px;
-    color:#666;
+    color:#FFF;
     cursor: pointer;
+    -webkit-user-select: none;
 }
 
 .thumbnail {
     margin: 7px 16px 0px 30px;
     float: left;
     cursor:pointer;
+    -webkit-user-select: none;
 }
 
 .thumbnail img {
@@ -410,16 +411,18 @@ a:hover {
 
 .themeTitle {
     font-family: 'Roboto Condensed', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     color: #edf2f6;
+    -webkit-user-select: none;
 }
 
 .themeDescription {
     font-family: 'Roboto Condensed', sans-serif;
     font-size: 11px;
     font-weight: 400;
-    color: #b2c8d8;
+    color: #edf2f6;
+    -webkit-user-select: none;
 }
 
 .themeAuthor {
@@ -428,6 +431,7 @@ a:hover {
     font-weight: 300;
     font-style: italic;
     color: #dbeaef;
+    -webkit-user-select: none;
 }
 
 .buttonInstall {
@@ -435,9 +439,9 @@ a:hover {
     background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
     border: 1px solid #414245;
     border-radius: 4px;
-    color: #ffffff;
+    color: #fff;
     float: right;
-    font-family: helvetica;
+    font-family: 'Roboto Condensed', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -448,6 +452,7 @@ a:hover {
     text-align: center;
     line-height: 20px;
     cursor: pointer;
+    -webkit-user-select: none;
 }
 
 .buttonInstall:hover {
@@ -457,9 +462,9 @@ a:hover {
 }
 
 .buttonInstall:active {
-    background-color: #caecfa;
-    background-image: -webkit-linear-gradient(top, #caecfa, #c3e7f6);
-    border: 1px solid #bee7f9;
+    background-color: #8cc670;
+    background-image: -webkit-linear-gradient(top, #8cc670, #6d955b);
+    border: 1px solid #687956;
 }
 
 .buttonUnInstall {
@@ -467,9 +472,9 @@ a:hover {
     background-image: -webkit-linear-gradient(top, #4b4f52, #2f3134);
     border: 1px solid #424344;
     border-radius: 4px;
-    color: #ffffff;
+    color: #fff;
     float: right;
-    font-family: helvetica;
+    font-family: 'Roboto Condensed', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -480,6 +485,7 @@ a:hover {
     text-align: center;
     line-height: 20px;
     cursor: pointer;
+    -webkit-user-select: none;
 }
 
 .buttonUnInstall:hover {
@@ -489,20 +495,19 @@ a:hover {
 }
 
 .buttonUnInstall:active {
-    background-color: #dfb6c0;
-    background-image: -webkit-linear-gradient(top, #dfb6c0, #d0b4ba);
-    border: 1px solid #d1b4bb;
+    background-color: #bd6568;
+    background-image: -webkit-linear-gradient(top, #bd6568, #905558);
+    border: 1px solid #7d5558;
 }
 
 .buttonUpdate {
     background-color: #a198e2;
-    background-image: -moz-linear-gradient(center top , #a198e2, #9488d6);
-    background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
-    border: 1px solid #9686dd;
+    background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
+    border: 1px solid #414245;
     border-radius: 4px;
-    color: #ffffff;
+    color: #fff;
     float: right;
-    font-family: helvetica;
+    font-family: 'Roboto Condensed', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -513,24 +518,29 @@ a:hover {
     text-align: center;
     line-height: 20px;
     cursor: pointer;
+    -webkit-user-select: none;
 }
 
 .buttonUpdate:hover {
-    background-color: #c7c1ee;
-    background-image: -moz-linear-gradient(center top , #c7c1ee, #bfb8e6);
-    background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
-    border: 1px solid #c0b6eb;
+    background-color: #bbdbf5;
+    background-image: -webkit-linear-gradient(top, #5ea55c, #3d6c3c);
+    border: 1px solid #3b4e2f;
+}
+
+.buttonUpdate:active {
+    background-color: #8cc670;
+    background-image: -webkit-linear-gradient(top, #8cc670, #6d955b);
+    border: 1px solid #687956;
 }
 
 .feedbackButton {
     background-color: #a198e2;
-    background-image: -moz-linear-gradient(center top , #a198e2, #9488d6);
     background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
     border: 1px solid #9686dd;
     border-radius: 4px;
     color: #ffffff;
     float: right;
-    font-family: helvetica;
+    font-family: 'Roboto Condensed', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -553,12 +563,11 @@ a:hover {
 .spacerButton {
     color: #FFF;
     float: right;
-    font-family: helvetica;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
     margin: 1px 40px 0px 0px;
-    width: 110px;
+    width: 64px;
     text-align: center;
     line-height: 20px;
     -webkit-user-select: none;
@@ -570,11 +579,10 @@ a:hover {
     border-radius: 4px;
     color: #FFF;
     float: right;
-    font-family: helvetica;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
-    margin: 1px 30px 0px 0px;
+    margin: 1px 12px 0px 0px;
     width: 120px;
     text-align: center;
     line-height: 20px;
@@ -590,17 +598,29 @@ a:hover {
     background: #888 !important;
 }
 
+.spacerButtonSml {
+    float: right;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 12px 0px 0px;
+    width: 40px;
+    text-align: center;
+    line-height: 20px;
+    -webkit-user-select: none;
+    display: none;
+}
+
 .toggleButtonSml {
     background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
     border: 1px solid #282828;
     border-radius: 4px;
     color: #FFF;
-    float: left;
-    font-family: helvetica;
+    float: right;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
-    margin: 1px 0px 0px 12px;
+    margin: 1px 12px 0px 0px;
     width: 40px;
     text-align: center;
     line-height: 20px;
@@ -626,7 +646,7 @@ a:hover {
 }
 
 .accordionUpdate {
-    background-image: -webkit-linear-gradient(top, #daf0ff, #bfedf5);
+    background-image: -webkit-linear-gradient(top, #6ec0eb, #55abeb);
 }
 
 .accordionContent {	

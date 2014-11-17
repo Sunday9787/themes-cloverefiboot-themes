@@ -1484,7 +1484,7 @@ CheckAndRecordOrphanedThemesAndSendToUI()
                 fi
             done
         else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
+            #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
             # Match - theme dir in users theme path that also has a parent bare clone in app support dir.
             # Double check this is also in user prefs file.
             CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
@@ -1969,17 +1969,17 @@ else
             UpdatePrefsKey "UnInstalledButton" "Hide"
             WriteToLog "User chose to show uninstalled themes"
             
-        # Has user chosen to hide thumbnails?
+        # Has user chosen to show thumbnails?
         elif [[ "$logLine" == *CTM_hideThumbails* ]]; then
            ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Show"
-            WriteToLog "User chose to hide thumbnails"
+            WriteToLog "User chose to show thumbnails"
             
-        # Has user chosen to show thumbnails?
+        # Has user chosen to hide thumbnails?
         elif [[ "$logLine" == *CTM_showThumbails* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
             UpdatePrefsKey "ViewThumbnails" "Hide"
-            WriteToLog "User chose to show thumbnails"
+            WriteToLog "User chose to hide thumbnails"
             
         # Has user chosen to hide previews?
         elif [[ "$logLine" == *CTM_hidePreviews* ]]; then

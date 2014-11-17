@@ -57,9 +57,12 @@
             <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
             <div class="spacerButton"">&nbsp;</div>
             <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
-            <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
-            <div class="toggleButtonSml" id="thumbSizeSmaller">-</div>
+            <div class="spacerButton"">&nbsp;</div>
             <div class="toggleButtonSml" id="thumbSizeLarger">+</div>
+            <div class="toggleButtonSml" id="thumbSizeSmaller">-</div>
+            <div class="spacerButtonSml"">&nbsp;</div>
+            <div class="spacerButtonSml"">&nbsp;</div>
+            <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
         </div>
     </div> <!-- End TopOfPage -->  
 
