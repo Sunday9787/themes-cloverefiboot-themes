@@ -20,8 +20,9 @@
 # Thanks to SoThOr for helping with svn communications
 # Thanks to apianti for setting up the Clover git theme repository.
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
+# Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.68"
+VERS="0.69"
 
 DEBUG=1
 #set -x
@@ -1137,12 +1138,18 @@ ReadPrefsFile()
         
         if [ "$gLastSelectedPath" != "" ]; then
             TARGET_THEME_DIR="$gLastSelectedPath"
+        else
+            TARGET_THEME_DIR="-"
         fi
         if [ "$gLastSelectedPathDevice" != "" ]; then
             TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
+        else
+            TARGET_THEME_DIR_DEVICE="-"
         fi
         if [ "$gLastSelectedVolumeUUID" != "" ]; then
             TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
+        else
+            TARGET_THEME_VOLUMEUUID="-"
         fi
         
         # Add message in to log for initialise.js to detect.
