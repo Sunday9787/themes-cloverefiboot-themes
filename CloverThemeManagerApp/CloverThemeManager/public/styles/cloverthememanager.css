@@ -100,7 +100,7 @@ select.custom-dropdown {
     -webkit-border-radius: 4px;
     border-radius: 4px;
     font-size: 12px;
-    padding: 2px 2px 2px 10px;
+    padding: 2px 24px 2px 10px;
     cursor: pointer;
     background: #555 url(../assets/dropdown_arrow.png) no-repeat right center;
     background-size: 19px 19px;

@@ -72,7 +72,7 @@ function readBashToJsMessageFile()
         // match command against known ones.
         switch(firstLineCommand) {
             case "Target":
-                // Bash sends: "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+                // Bash sends: "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
                 macgap.app.removeMessage(firstLine);
                 setTargetThemePath(firstLineSplit[1],firstLineSplit[2]);
                 break;
@@ -161,10 +161,10 @@ function readBashToJsMessageFile()
 }
 
 //-------------------------------------------------------------------------------------
-function setTargetThemePath(device,path)
+function setTargetThemePath(uuid,path)
 {
-    $('#partitionSelect').val(device + "@" + path);
-    if (device != "-" && path != "-") {
+    $('#partitionSelect').val(uuid + "@" + path);
+    if (uuid != "-" && path != "-") {
         showButtons();
         // Show open button beside device dropdown
         $("#OpenPathButton").css("display","block");

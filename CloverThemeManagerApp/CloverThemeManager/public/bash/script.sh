@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.69"
+VERS="0.70"
 
 DEBUG=1
 #set -x
@@ -1036,7 +1036,7 @@ CreateDiskPartitionDropDownHtml()
             WriteToLog "${duIdentifier[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
 
             # Append paths to drop-down menu
-            htmlDropDown="${htmlDropDown}<option value=\"${duIdentifier[$a]}@${themeDirPaths[$a]}\">${themeDirPaths[$a]} [${duIdentifier[$a]}]</option>"
+            htmlDropDown="${htmlDropDown}<option value=\"${duVolumeUuid[$a]}@${themeDirPaths[$a]}\">${themeDirPaths[$a]} [${duVolumeUuid[$a]}]</option>"
         else
             WriteLog "must be blank or empty"
         fi
@@ -1202,28 +1202,29 @@ SendUIInitData()
 {
     # This is called once after much of the initialisation routines have run.
     
-    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "" ] ; then
+    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_VOLUMEUUID" == "" ] ; then
 
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
 
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
-            SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
+            SendToUI "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
 
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
                         
         elif [ $retVal -eq 1 ]; then
-            if [ ! "$TARGET_THEME_DIR" == "-" ] && [ ! "$TARGET_THEME_DIR_DEVICE" == "-" ] ; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
-                SendToUI "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+            if [ ! "$TARGET_THEME_DIR" == "-" ] && [ ! "$TARGET_THEME_VOLUMEUUID" == "-" ] ; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
+                SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
             else
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
                 SendToUI "NoPathSelected@@"
             fi
             TARGET_THEME_DIR="-"
             TARGET_THEME_DIR_DEVICE="-"
+            TARGET_THEME_VOLUMEUUID="-"
         fi
         
         # Run these regardless of path chosen as JS is waiting to hear it. 
@@ -1290,19 +1291,19 @@ RespondToUserDeviceSelection()
 
     # parse message
     # remove everything up until, and including, the first @
-    messageFromUi="${messageFromUi#*@}"
-    selectedDevice="${messageFromUi%%@*}"
-    selectedVolumePath="${messageFromUi##*@}"
+    local messageFromUi="${messageFromUi#*@}"
+    local selectedDeviceUuid="${messageFromUi%%@*}"
+    local selectedVolumePath="${messageFromUi##*@}"
     
     # Check user did actually change from default
-    if [ ! "$selectedDevice" == "-" ] && [ ! "$selectedVolumePath" == "-" ]; then
+    if [ ! "$selectedDeviceUuid" == "-" ] && [ ! "$selectedVolumePath" == "-" ]; then
 
-        WriteToLog "User selected volume: $selectedDevice with theme path: $selectedVolumePath" 
+        WriteToLog "User selected path: $selectedVolumePath on device UUID $selectedDeviceUuid" 
 
         # Check against previously discovered file paths
-        for (( s=0; s<${#duIdentifier[@]}; s++ ))
+        for (( s=0; s<${#duVolumeUuid[@]}; s++ ))
         do
-            if [[ "${duIdentifier[$s]}" == "$selectedDevice" ]]; then
+            if [[ "${duVolumeUuid[$s]}" == "$selectedDeviceUuid" ]]; then
                 TARGET_THEME_DIR="${themeDirPaths[$s]}"
                 TARGET_THEME_DIR_DEVICE="${duIdentifier[$s]}"
                 TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$s]}"
