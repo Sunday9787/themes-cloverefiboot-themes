@@ -1756,18 +1756,12 @@ CleanInstalledThemesPrefEntries()
 # ---------------------------------------------------------------------------------------
 IsGitInstalled()
 {
-    # Simple check for git
-    if [ ! -f "/Applications/Xcode.app/Contents/Developer/usr/bin/git" ]; then
-        if [ -f /usr/local/git/bin/git ]; then
-            gitCmd="/usr/local/git/bin/git"
-            WriteToLog "CTM_GitOK"
-        else
-            # Alert user in UI
-            WriteToLog "CTM_GitFail"
-            exit 1
-        fi
+    if [ $( which -s git) ]; then 
+        # Alert user in UI
+        WriteToLog "CTM_GitFail"
+        exit 1
     else
-        gitCmd="/Applications/Xcode.app/Contents/Developer/usr/bin/git"
+        gitCmd=$( which git )
         WriteToLog "CTM_GitOK"
     fi
 }
@@ -2032,6 +2026,7 @@ else
         # Send back what's needed to restore state.
         elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
             SendToUI "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
