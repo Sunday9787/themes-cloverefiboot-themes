@@ -172,11 +172,11 @@ function setTargetThemePath(uuid,path)
 }
 
 //-------------------------------------------------------------------------------------
-function presentNotExistsDialog(device,path)
+function presentNotExistsDialog(uuid,path)
 {
-    if (device != "" & path != "") {
+    if (uuid != "" & path != "") {
         ChangeMessageBoxHeaderColour("red");
-        SetMessageBoxText("Attention:" , "Previous path " + path + " on device " + device + " is no longer mounted. Please choose a theme path.")
+        SetMessageBoxText("Attention:" , "Previous path " + path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
         ShowMessageBox();
     }
 }

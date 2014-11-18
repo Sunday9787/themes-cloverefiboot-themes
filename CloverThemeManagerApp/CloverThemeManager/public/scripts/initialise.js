@@ -58,6 +58,80 @@ function redirectToMainPage()
     window.location = (redirect);
 }
 
+//-------------------------------------------------------------------------------------
+function SetMessageBoxText(title,message)
+{
+    $(".box h1").html(title);
+    $(".box p").html(message);
+}
+
+//-------------------------------------------------------------------------------------
+function HideMessageBoxClose()
+{
+    $("a.boxclose").css("display","none");
+}
+
+//-------------------------------------------------------------------------------------
+function ShowMessageBoxClose()
+{
+    $("a.boxclose").css("display","block");
+}
+
+//-------------------------------------------------------------------------------------
+function ShowMessageBox()
+{
+    // Read position of box and only fade in if at default off screen position.
+    var position = $('#box').position();
+    if (position.top = -300) {   // starting position = should match .box top in css
+        $('#overlay').fadeIn('fast',function(){
+             $('#box').animate({'top':'150px'},500); // move box from current position so top=150px
+        });
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function CloseMessageBox()
+{
+    // Read position of box and only fade out if at calculated top position is 150px which is set in ShowMessageBox()
+    var position = $('#box').position();
+    if (position.top = 150) {
+        $('#box').animate({'top':'-300px'},500,function(){  // starting position = should match .box top in css
+            $('#overlay').fadeOut('fast');
+        });
+    }
+}
+
+//-------------------------------------------------------------------------------------
+$(function()
+{
+    //-----------------------------------------------------
+    // On clicking the message box close button
+    $('#boxclose').click(function(){
+        CloseMessageBox();
+        macgap.app.terminate();
+    });
+});
+
+
+//-------------------------------------------------------------------------------------
+function ChangeMessageBoxHeaderColour(colour)
+{
+    if(colour == "blue") {
+        $("#box h1").css("background-color","#1e8ec6");
+        $("#box h1").css("color","#c4e0ee");
+    }
+        
+    if(colour == "red") {
+        $("#box h1").css("background-color","#b43239");
+        $("#box h1").css("color","#f2d6d8");
+    }
+        
+    if(colour == "green") {
+        $("#box h1").css("background-color","#8db035");
+        $("#box h1").css("color","#e4ecce");
+    }
+}
+
 // Read /tmp/CloverThemeManager/CloverThemeManagerLog.txt looking for embedded 
 // messages for showing the initialisation process.
 //-------------------------------------------------------------------------------------
@@ -82,7 +156,16 @@ function printLogtoScreen()
                     version = splitContent[i].substring(splitContent[i].indexOf("CTM_Version") + 11);
                     // append version to title.
                     $("#textHeading").append("<span class=\"textVersion\"> v" + version + "</span>");
-                    
+                
+                } else if (/CTM_GitOK/i.test(splitContent[i])) {
+                           $("#check_GitInstalled").append( "  \u2713" );
+                           $("#status_GitInstalled").css("color","#FFF");  
+                } else if (/CTM_GitFail/i.test(splitContent[i])) {
+                           $("#status_GitInstalled").css("color","#DD171B");
+                           ChangeMessageBoxHeaderColour("red");
+                           SetMessageBoxText('Attention: git is not installed' , 'git is a requirement for this app and it cannot continue without it.<br><br>To install only git, you can download an installer from <a href="http://git-scm.com" target="_blank">http://git-scm.com</a>, double click the .dmg and run the .pkg.<br><br>Alternatively you can install the Xcode command line developer tools by loading up Terminal and typing <b>xcode-select --install</b><br><br>This app will quit once you close this box.');
+                           $("#AnimatedBar").css("display","none");
+                           ShowMessageBox();
                 } else if (/CTM_HTMLTemplateOK/i.test(splitContent[i])) {
                            $("#check_HtmlTemplate").append( "  \u2713" );
                            $("#status_HtmlTemplate").css("color","#FFF"); 

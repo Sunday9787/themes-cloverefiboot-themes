@@ -813,6 +813,14 @@ a.boxclose {
     -webkit-border-top-right-radius: 10px;
 }
 
+.box p a:link {
+    color: #3333FF;
+}
+
+.box p a:hover {
+    text-decoration: underline;
+}
+
 /* Using progress bars originally by Chris Coyier
 /* http://css-tricks.com/css3-progress-bars/ */
 

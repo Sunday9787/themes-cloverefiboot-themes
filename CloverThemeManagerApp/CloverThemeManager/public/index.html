@@ -20,6 +20,21 @@
 <div id="Container">
 
     <!-- <div id="LogoHeader"></div> -->
+    
+    <!-- overlay is used with the message box. -->
+    <div class="overlay" id="overlay" style="display:none;"></div>
+    
+    <!-- Message box which starts positioned off the page by css. -->
+    <!-- It's then animated in to view when required. -->
+    <div class="box" id="box">
+         <a class="boxclose" id="boxclose"></a>
+         <h1>Title</h1>
+         <p>Replace message here</p>
+         <div id="FeedbackButtons"></div>
+         <!-- Display a constantly animated progress bar. -->
+         <!-- Javascript will show or hide this when necessary. -->
+         <div id="AnimatedBar" class="meter"><span style="width: 100%"></span></div>
+    </div>
 
     <div id="WelcomeMessage">
         <p class="textHeading" id="textHeading">Clover Theme Manager</p>
@@ -32,6 +47,7 @@
     </div> -->
     
     <div id="StatusArea">
+        <div class="statusLine" id="status_GitInstalled">git Installed       <span class="checkMark" id="check_GitInstalled"></span></div>
         <div class="statusLine" id="status_HtmlTemplate">Prepare template    <span class="checkMark" id="check_HtmlTemplate"></span></div>
         <div class="statusLine" id="status_Repository">Repository Online     <span class="checkMark" id="check_Repository"></span></div>
         <div class="statusLine" id="status_SupportDir">Support Directory     <span class="checkMark" id="check_SupportDir"></span></div>

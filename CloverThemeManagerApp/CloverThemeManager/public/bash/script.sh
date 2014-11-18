@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.70"
+VERS="0.71"
 
 DEBUG=1
 #set -x
@@ -370,7 +370,7 @@ RunThemeAction()
                                 local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/g' )
 
                                 cd "${WORKING_PATH}/${APP_DIR_NAME}"
-                                feedbackCheck=$(git clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
+                                feedbackCheck=$("$gitCmd" clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Install git clone: $feedbackCheck"
                                 
                             else
@@ -385,9 +385,9 @@ RunThemeAction()
                                 # So checkout to a directory for unpacking first.
                                 if [ -d "$UNPACKDIR" ]; then
                                     cd "${WORKING_PATH}/${APP_DIR_NAME}"
-                                    feedbackCheck=$(git --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout . 2>&1 )
+                                    feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout . 2>&1 )
                                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout .: $feedbackCheck"
-                                    feedbackCheck=$(git --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout HEAD -- 2>&1 ) && successFlag=0
+                                    feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout HEAD -- 2>&1 ) && successFlag=0
                                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout HEAD --: $feedbackCheck"
                                 else
                                     WriteToLog "Error. UnPack dir does not exist."
@@ -457,7 +457,7 @@ RunThemeAction()
 
                                 WriteToLog "Force checking out bare git clone of ${themeTitleToActOn}."
                                 cd "${WORKING_PATH}/${APP_DIR_NAME}"
-                                feedbackCheck=$(git --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout --force 2>&1) && successFlag=0
+                                feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout --force 2>&1) && successFlag=0
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout git clone: $feedbackCheck"
                                 
                                 if [ $successFlag -eq 0 ]; then 
@@ -732,7 +732,7 @@ IsRepositoryLive()
 {
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     [[ DEBUG -eq 1 ]] && WriteToLog "$gitRepositoryUrl"
-    local testConnection=$( git ls-remote ${gitRepositoryUrl}themes )
+    local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
     [[ DEBUG -eq 1 ]] && WriteToLog "$testConnection"
     if [ ! "$testConnection" ]; then
         # Repository not alive.
@@ -868,9 +868,9 @@ GetLatestIndexAndEnsureThemeHtml()
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
         WriteToLog "CTM_IndexCloneAndCheckout"
         WriteToLog "Cloning bare repo index.git"
-        git clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
+        "$gitCmd" clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
         WriteToLog "Checking out index.git"
-        git --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force && check=0
+        "$gitCmd" --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force && check=0
         
         # Add message in to log for initialise.js to detect.
         if [ $check -eq 0 ]; then
@@ -889,7 +889,7 @@ GetLatestIndexAndEnsureThemeHtml()
         # Check for updates to index.git
         WriteToLog "Checking for update to index.git"
         cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
-        local updateCheck=$( git fetch --progress origin master:master 2>&1 )
+        local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
         if [[ "$updateCheck" == *done.*  ]]; then
             WriteToLog "index.git has been updated. Re-downloading"
             CloneAndCheckoutIndex
@@ -1412,18 +1412,21 @@ CheckForAnyUpdatesStoredInPrefsAndSendToUI()
     # checking for 'Yes', but only for the currently selected volume.
     # Send the list of available updates to the UI.
 
-    ReadPrefsFile
     updateAvailThemeStr=""
-    for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
-    do
-        if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
-            updateAvailThemeStr="${updateAvailThemeStr},${installedThemeName[$n]}"
-        fi
-    done
     
-    if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
-        # Remove leading comma from string
-        updateAvailThemeStr="${updateAvailThemeStr#?}"
+    if [ ! "$TARGET_THEME_DIR" == "-" ]; then
+        ReadPrefsFile
+        for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
+        do
+            if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
+                updateAvailThemeStr="${updateAvailThemeStr},${installedThemeName[$n]}"
+            fi
+        done
+    
+        if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
+            # Remove leading comma from string
+            updateAvailThemeStr="${updateAvailThemeStr#?}"
+        fi
     fi
     
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
@@ -1470,45 +1473,47 @@ CheckAndRecordOrphanedThemesAndSendToUI()
     #       Create list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
     # Send the list to the UI so a cross is drawn to the right of the 'UnInstall' button.
     
-    WriteToLog "Checking $TARGET_THEME_DIR for any orphaned themes (without a bare clone)."
-    unversionedThemeStr=""
-    local prefsNeedUpdating=0
-    for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
-    do
-        if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-            WriteToLog "! ${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
-            # Append to list of themes that cannot be checked for updates
-            unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
+    if [ ! "$TARGET_THEME_DIR" == "-" ]; then
+        WriteToLog "Checking $TARGET_THEME_DIR for any orphaned themes (without a bare clone)."
+        unversionedThemeStr=""
+        local prefsNeedUpdating=0
+        for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+        do
+            if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
+                WriteToLog "! ${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
+                # Append to list of themes that cannot be checked for updates
+                unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
             
-            # Remove any pref entry for this theme
-            for ((d=0; d<${#installedThemeName[@]}; d++))
-            do
-                if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && [ "${installedThemePath[$d]}" == "${TARGET_THEME_DIR}" ]; then
-                    # Doing this will effectively delete the theme from prefs as it 
-                    # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
-                    WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} in $TARGET_THEME_DIR"
-                    prefsNeedUpdating=1
-                    installedThemeName[$d]="-"
-                fi
-            done
-        else
-            #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
-            # Match - theme dir in users theme path that also has a parent bare clone in app support dir.
-            # Double check this is also in user prefs file.
-            CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
+                # Remove any pref entry for this theme
+                for ((d=0; d<${#installedThemeName[@]}; d++))
+                do
+                    if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && [ "${installedThemePath[$d]}" == "${TARGET_THEME_DIR}" ]; then
+                        # Doing this will effectively delete the theme from prefs as it 
+                        # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
+                        WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} in $TARGET_THEME_DIR"
+                        prefsNeedUpdating=1
+                        installedThemeName[$d]="-"
+                    fi
+                done
+            else
+                #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
+                # Match - theme dir in users theme path that also has a parent bare clone in app support dir.
+                # Double check this is also in user prefs file.
+                CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
+            fi
+        done
+    
+        # Run routine to update prefs file.
+        if [ $prefsNeedUpdating -eq 1 ]; then
+            MaintainInstalledThemeListInPrefs  
         fi
-    done
     
-    # Run routine to update prefs file.
-    if [ $prefsNeedUpdating -eq 1 ]; then
-        MaintainInstalledThemeListInPrefs  
+        # Remove leading comma from string
+        unversionedThemeStr="${unversionedThemeStr#?}"
+    
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+        SendToUI "UnversionedThemes@${unversionedThemeStr}@"
     fi
-    
-    # Remove leading comma from string
-    unversionedThemeStr="${unversionedThemeStr#?}"
-    
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
-    SendToUI "UnversionedThemes@${unversionedThemeStr}@"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1621,7 +1626,7 @@ CheckForUpdatesInTheBackground()
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking for update to ${installedThemesOnCurrentVolume[$t]}"
             cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
-            local updateCheck=$( git fetch --progress origin master:master 2>&1 )
+            local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
             if [[ "$updateCheck" == *done.* ]]; then
                 # Theme was updated.
                 WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
@@ -1656,62 +1661,64 @@ CheckAndRemoveBareClonesNoLongerNeeded()
     # manually removed it?), then remove entry from prefs.
     # Also check to see if the bare clone in support dir can be deleted.
     
-    foundCloneToDelete=0
-    prefsNeedUpdating=0
-    # Loop through themes installed in prefs file
-    for ((n=0; n<${#installedThemeName[@]}; n++ ));
-    do
+    if [ ! "$TARGET_THEME_DIR" == "-" ]; then
     
-        # Check current path in prefs matches current theme dir
-        if [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
+        foundCloneToDelete=0
+        prefsNeedUpdating=0
+        # Loop through themes installed in prefs file
+        for ((n=0; n<${#installedThemeName[@]}; n++ ));
+        do
+            # Check current path in prefs matches current theme dir
+            if [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
         
-            # Is theme installed in current theme dir?
-            local themeIsInDir=0
-            for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
-            do
-                if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
-                    themeIsInDir=1
-                fi
-            done
-            if [ $themeIsInDir -eq 0 ]; then
-                WriteToLog "Housekeeping: ${installedThemeName[$n]} exists in prefs for $TARGET_THEME_DIR but it's not installed!"
-                foundCloneToDelete=1
-
-                # if bare clone exists in support dir then there's a chance it could be deleted.
-                if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${installedThemeName[$n]}".git ]; then
-
-                    # Need to check the bare clone is not needed for a different volume though..
-                    for ((x=0; x<${#installedThemeName[@]}; x++ ));
-                    do
-                        if [ "${installedThemeName[$n]}" == "${installedThemeName[$x]}" ]; then
-                            if [ "${installedThemePath[$n]}" != "${installedThemePath[$x]}" ]; then
-                               foundCloneToDelete=0
-                            fi
-                        fi
-                    done
-
-                    if [ $foundCloneToDelete -eq 1 ]; then
-                        WriteToLog "Housekeeping: Deleting bare clone ${installedThemeName[$n]}.git"
-                        cd "${WORKING_PATH}/${APP_DIR_NAME}"
-                        rm -rf "${installedThemeName[$n]}".git
-                    else
-                        WriteToLog "Housekeeping: Keeping bare clone ${installedThemeName[$n]}.git as it's used on another volume."
+                # Is theme installed in current theme dir?
+                local themeIsInDir=0
+                for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+                do
+                    if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+                        themeIsInDir=1
                     fi
-                fi
+                done
+                if [ $themeIsInDir -eq 0 ]; then
+                    WriteToLog "Housekeeping: ${installedThemeName[$n]} exists in prefs for $TARGET_THEME_DIR but it's not installed!"
+                    foundCloneToDelete=1
+
+                    # if bare clone exists in support dir then there's a chance it could be deleted.
+                    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${installedThemeName[$n]}".git ]; then
+
+                        # Need to check the bare clone is not needed for a different volume though..
+                        for ((x=0; x<${#installedThemeName[@]}; x++ ));
+                        do
+                            if [ "${installedThemeName[$n]}" == "${installedThemeName[$x]}" ]; then
+                                if [ "${installedThemePath[$n]}" != "${installedThemePath[$x]}" ]; then
+                                   foundCloneToDelete=0
+                                fi
+                            fi
+                        done
+
+                        if [ $foundCloneToDelete -eq 1 ]; then
+                            WriteToLog "Housekeeping: Deleting bare clone ${installedThemeName[$n]}.git"
+                            cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                            rm -rf "${installedThemeName[$n]}".git
+                        else
+                            WriteToLog "Housekeeping: Keeping bare clone ${installedThemeName[$n]}.git as it's used on another volume."
+                        fi
+                    fi
                 
-                # Set theme name to -
-                # Doing this will effectively delete the theme from prefs as it 
-                # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
-                WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$n]} in $TARGET_THEME_DIR"
-                prefsNeedUpdating=1
-                installedThemeName[$n]="-"
+                    # Set theme name to -
+                    # Doing this will effectively delete the theme from prefs as it 
+                    # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
+                    WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$n]} in $TARGET_THEME_DIR"
+                    prefsNeedUpdating=1
+                    installedThemeName[$n]="-"
+                fi
             fi
-        fi
-    done
+        done
     
-    # Run routine to update prefs file.
-    if [ $foundCloneToDelete -eq 1 ] || [ $prefsNeedUpdating -eq 1 ]; then
-        MaintainInstalledThemeListInPrefs  
+        # Run routine to update prefs file.
+        if [ $foundCloneToDelete -eq 1 ] || [ $prefsNeedUpdating -eq 1 ]; then
+            MaintainInstalledThemeListInPrefs  
+        fi
     fi
 }
 
@@ -1744,9 +1751,26 @@ CleanInstalledThemesPrefEntries()
     if [ $foundEntryToDelete -eq 1 ]; then
         MaintainInstalledThemeListInPrefs  
     fi
-    
 }
 
+# ---------------------------------------------------------------------------------------
+IsGitInstalled()
+{
+    # Simple check for git
+    if [ ! -f "/Applications/Xcode.app/Contents/Developer/usr/bin/git" ]; then
+        if [ -f /usr/local/git/bin/git ]; then
+            gitCmd="/usr/local/git/bin/git"
+            WriteToLog "CTM_GitOK"
+        else
+            # Alert user in UI
+            WriteToLog "CTM_GitFail"
+            exit 1
+        fi
+    else
+        gitCmd="/Applications/Xcode.app/Contents/Developer/usr/bin/git"
+        WriteToLog "CTM_GitOK"
+    fi
+}
 
 #===============================================================
 # Main
@@ -1792,6 +1816,16 @@ gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
 gFirstRun=0
+gitCmd=""
+
+# Begin log file
+RemoveFile "$logFile"
+WriteToLog "CTM_Version${VERS}"
+WriteToLog "Started Clover Theme Manager script"
+WriteLinesToLog
+WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
+    
+IsGitInstalled
 
 # Was this script called from a script or the command line
 identityCallerCheck=`ps -o stat= -p $$`
@@ -1864,13 +1898,6 @@ else
     # Globals for newly installed theme before adding to prefs
     ResetNewlyInstalledThemeVars
     ResetUnInstalledThemeVars
-
-    # Begin log file
-    RemoveFile "$logFile"
-    WriteToLog "CTM_Version${VERS}"
-    WriteToLog "Started Clover Theme Manager script"
-    WriteLinesToLog
-    WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
 
     # For using additional theme repositories.
     # Not working in this version
