@@ -535,7 +535,7 @@ $(function()
     });
     
     //-----------------------------------------------------
-    // On clicking the Hide UnInstalled / Show All button
+    // On clicking the Hide / Show Thumbnails button
     $("#BandsHeightToggleButton").on('click', function() {
     
         var textState = $(this).text();
@@ -777,32 +777,35 @@ function ChangeThumbnailSize(action)
     }
     
     //alert(currentThumbWidth+","+action+","+currentThemeTextWidth+","+newThemeTextWidth);     
-           
-    // Adjust height of theme bands
-    $(".accordion").css("height",newAccordionHeight);
-    $(".accordionInstalled").css("height",newAccordionHeight);
-    $(".accordionUpdate").css("height",newAccordionHeight);
+    
+    // Only make changes if thumbnail width has changed
+    if (newThumbWidth != currentThumbWidth) {
+        // Adjust height of theme bands
+        $(".accordion").css("height",newAccordionHeight);
+        $(".accordionInstalled").css("height",newAccordionHeight);
+        $(".accordionUpdate").css("height",newAccordionHeight);
             
-    // Change thumbnail size
-    $(".thumbnail img").css("width",newThumbWidth);
-    $(".thumbnail img").css("height",newThumbHeight);
+        // Change thumbnail size
+        $(".thumbnail img").css("width",newThumbWidth);
+        $(".thumbnail img").css("height",newThumbHeight);
             
-    // Change margin top of buttons
-    var buttonHeight = $(".buttonInstall").first().outerHeight();
-    var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
-    $(".buttonInstall").css("margin-top",newButtonTop);
-    $(".buttonUnInstall").css("margin-top",newButtonTop);
-    $(".buttonUpdate").css("margin-top",newButtonTop);
+        // Change margin top of buttons
+        var buttonHeight = $(".buttonInstall").first().outerHeight();
+        var newButtonTop = ((newAccordionHeight-buttonHeight)/2);
+        $(".buttonInstall").css("margin-top",newButtonTop);
+        $(".buttonUnInstall").css("margin-top",newButtonTop);
+        $(".buttonUpdate").css("margin-top",newButtonTop);
             
-    // Change margin top of version control indicator
-    $(".versionControl").css("margin-top",newButtonTop+3);
+        // Change margin top of version control indicator
+        $(".versionControl").css("margin-top",newButtonTop+3);
             
-    // Reduce width of theme text (by 30px) to retain space for update button
-    $("[id^=ThemeText]").width(newThemeTextWidth);
+        // Reduce width of theme text (by 30px) to retain space for update button
+        $("[id^=ThemeText]").width(newThemeTextWidth);
             
-    // Send a message to the bash script to record thumbnail width
-    if (newThumbWidth >= 100 && newThumbWidth <= 200)
-        macgap.app.launch("CTM_thumbSize@" + newThumbWidth + " " + newThumbHeight);
+        // Send a message to the bash script to record thumbnail width
+        if (newThumbWidth >= 100 && newThumbWidth <= 200)
+            macgap.app.launch("CTM_thumbSize@" + newThumbWidth + " " + newThumbHeight);
+    }
 }
 
 //-------------------------------------------------------------------------------------
