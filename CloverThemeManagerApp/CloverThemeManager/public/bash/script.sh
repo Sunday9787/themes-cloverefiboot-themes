@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.71"
+VERS="0.72"
 
 DEBUG=1
 #set -x
@@ -2032,7 +2032,7 @@ else
         # Send back what's needed to restore state.
         elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
-            SendToUI "Target@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+            SendToUI "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordOrphanedThemesAndSendToUI
