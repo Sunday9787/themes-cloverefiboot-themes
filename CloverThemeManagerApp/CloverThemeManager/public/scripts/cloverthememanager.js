@@ -193,6 +193,13 @@ function updateBandsWithInstalledThemes(themeList)
             for (var t = 0; t < splitThemeList.length; t++) {
                 ChangeButtonAndBandToUnInstall(splitThemeList[t]);
             }
+            
+            // Has the user chosen to view only installed themes?
+            var readButton = $("#ShowHideToggleButton").text();
+            if (readButton.indexOf("Show") >= 0) {
+                // Hide previews of uninstalled themes
+                ClosePreviewsForUninstalledThemes();
+            }
 
             // Update number of installed themes
             if (splitThemeList != ",") { // This check needs verifying!! - is a single comma possible?
@@ -578,6 +585,8 @@ $(function()
             SetShowHideButton("Hide");
             // Send a message to the bash script to record user choice in prefs
             macgap.app.launch("CTM_showUninstalled");
+            // Close all preview images for UnInstalled themes
+            ClosePreviewsForUninstalledThemes();
         }
         if (textState.indexOf("Show") >= 0) {     
             SetShowHideButton("Show");   
@@ -1182,4 +1191,11 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
             $(".accordion").next('[class="accordionContent"]').css("display","block");
         }   
     }
+}
+
+//-------------------------------------------------------------------------------------
+function ClosePreviewsForUninstalledThemes()
+{
+    // Close all preview images for UnInstalled themes
+    $('.buttonInstall').closest("#ThemeBand").next('[class="accordionContent"]').slideUp('normal');
 }
