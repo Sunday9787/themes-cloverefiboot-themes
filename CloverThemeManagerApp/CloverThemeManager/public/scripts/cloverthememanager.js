@@ -72,9 +72,9 @@ function readBashToJsMessageFile()
         // match command against known ones.
         switch(firstLineCommand) {
             case "Target":
-                // Bash sends: "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
+                // Bash sends: "Target@$entry"
                 macgap.app.removeMessage(firstLine);
-                setTargetThemePath(firstLineSplit[1],firstLineSplit[2]);
+                setTargetThemePath(firstLineSplit[1]);
                 break;
             case "NotExist":
                 // Bash Sends: "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
@@ -161,10 +161,10 @@ function readBashToJsMessageFile()
 }
 
 //-------------------------------------------------------------------------------------
-function setTargetThemePath(uuid,path)
+function setTargetThemePath(entry)
 {
-    $('#partitionSelect').val(uuid + "@" + path);
-    if (uuid != "-" && path != "-") {
+    $('#partitionSelect').val(entry);
+    if (entry != "-") {
         showButtons();
         // Show open button beside device dropdown
         $("#OpenPathButton").css("display","block");
@@ -460,7 +460,7 @@ $(function()
     // On changing the 'partitionSelect' dropdown menu.
     $("#partitionSelect").change(function() {
         var selectedPartition=$("#partitionSelect").val();
-        
+
         // Send massage to bash script to notify change of path.
         // The bash script will get, and return, a list of installed themes for this path.
         // The bash script will then check if any of the themes have available updates.
@@ -475,7 +475,7 @@ $(function()
         // These will be picked up by function readBashToJsMessageFile()
 
         // As long as the user did not select the 'Please Choose' menu option.
-        if (selectedPartition != "-@-") {
+        if (selectedPartition != "-") {
         
             // Show Overlay Box to stop user interacting with buttons
             disableInterface(); // it's re-enabled by actOnUpdates()

@@ -668,6 +668,23 @@ CheckPathIsWriteable()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+FindArrayIdFromTarget()
+{
+    local passedVolumeName="$1"
+    local success=0
+    
+    for ((a=0; a<${#duIdentifier[@]}; a++))
+    do
+        if [ "${duIdentifier[$a]}" == "${TARGET_THEME_DIR_DEVICE}" ] && [ "${duVolumeUuid[$a]}" == "${TARGET_THEME_VOLUMEUUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
+            echo $a
+            success=1
+            break
+        fi 
+    done
+    
+    [[ $success -eq 0 ]] && echo 0
+}
 
 
 # =======================================================================================
@@ -679,7 +696,7 @@ CheckPathIsWriteable()
 # ---------------------------------------------------------------------------------------
 ReadRepoUrlList()
 {
-    WriteToLog "Looking for URL list."
+    WriteToLog "Looking for URL list"
     if [ -f "$gThemeRepoUrlFile" ]; then
         WriteToLog "Reading URL list"
         oIFS="$IFS"; IFS=$'\n'
@@ -951,7 +968,8 @@ BuildDiskUtilStringArrays()
         local typeToFind="$2"
         declare -a plistToRead=("${!3}")
         local foundSection=0
-
+        
+        #oIFS="$IFS"; IFS=$'\r\n'
         for (( n=0; n<${#plistToRead[@]}; n++ ))
         do
             [[ "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=1
@@ -960,12 +978,13 @@ BuildDiskUtilStringArrays()
                 if [[ "${plistToRead[$n]}" == *"$typeToFind"* ]]; then
                     tmp=$( echo "${plistToRead[$n]#*>}" )
                     tmp=$( echo "${tmp%<*}" )
-                    tmpArray+=("$tmp")
+                    #tmpArray+=("$tmp")
                     echo "$tmp" # return to caller
                     break
                 fi
             fi
         done
+        #IFS="$oIFS"
     }
     
     local recordAdded=0
@@ -983,24 +1002,32 @@ BuildDiskUtilStringArrays()
     for (( s=0; s<${#dfMounts[@]}; s++ ))
     do
         if [[ "${dfMounts[$s]}" == *disk* ]]; then
-
             unset diskUtilSliceInfo
-            diskUtilSliceInfo=( $( diskutil info -plist /dev/${dfMounts[$s]} ))
-            tmp=$( FindMatchInSlicePlist "VolumeName" "string" "diskUtilSliceInfo[@]" )
 
+            oIFS="$IFS"; IFS=$'\r\n'
+            diskUtilSliceInfo=( $( diskutil info -plist /dev/${dfMounts[$s]} ))
+            IFS="$oIFS"
+            
+            local tmp=$( FindMatchInSlicePlist "VolumeName" "string" "diskUtilSliceInfo[@]" )        
+            local tmpMP=$( FindMatchInSlicePlist "MountPoint" "string" "diskUtilSliceInfo[@]" )
+            
             # Does this device contain /efi/clover/themes directory?
-            themeDir=$( find /Volumes/"$tmp"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
+            themeDir=$( find "$tmpMP"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
             if [ "$themeDir" ]; then
      
                 WriteToLog "Volume $tmp contains $themeDir" 
                 # Save VolumeName
                 duVolumeName+=( "${tmp}" )
+                # Save Mount Point
+                duVolumeMountPoint+=( "${tmpMP}" )
                 # Save device
                 duIdentifier+=("${dfMounts[$s]}")
                 # Read and save Volume UUID
                 unset diskUtilSliceInfo
                 diskUtilSliceInfo=( $( diskutil info -plist /dev/"${dfMounts[$s]}" ))
                 tmp=$( FindMatchInSlicePlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" )
+                # Any FAT format volumes will not have UUID's so fill with zeros
+                [[ $tmp == "" ]] && tmp="00000000-0000-0000-0000-000000000000"
                 duVolumeUuid+=("$tmp")
                 # Save path to theme directory 
                 themeDirPaths+=("$themeDir")
@@ -1028,15 +1055,15 @@ CreateDiskPartitionDropDownHtml()
     RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}/dropdown_html"
     
     # Create html for drop-down menu
-    htmlDropDown="<option value=\"-@-\">Select your target theme directory:</option>"
+    htmlDropDown="<option value=\"-\">Select your target theme directory:</option>"
 
     for ((a=0; a<${#duVolumeName[@]}; a++))
     do
         if [ ! "${duVolumeName[$a]}" == "" ] && [[ ! "${duVolumeName[$a]}" =~ ^\ +$ ]]; then
-            WriteToLog "${duIdentifier[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
+            WriteToLog "${duIdentifier[$a]} | ${duVolumeMountPoint[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
 
             # Append paths to drop-down menu
-            htmlDropDown="${htmlDropDown}<option value=\"${duVolumeUuid[$a]}@${themeDirPaths[$a]}\">${themeDirPaths[$a]} [${duVolumeUuid[$a]}]</option>"
+            htmlDropDown="${htmlDropDown}<option value=\"${a}\">${themeDirPaths[$a]} [${duIdentifier[$a]}] [${duVolumeUuid[$a]}]</option>"
         else
             WriteLog "must be blank or empty"
         fi
@@ -1113,10 +1140,10 @@ ReadPrefsFile()
         do
             if [ $foundThemeName -eq 1 ] || [[ "${readVar[$x]}" == *ThemePath* ]]; then
                 local tmpOption="${readVar[$x]%=*}"
-                tmpOption="${tmpOption//[[:space:]]}"        # Remove whitespace
+                tmpOption="${tmpOption//[[:space:]]}"           # Remove whitespace
                 local tmpValue="${readVar[$x]#*=}"
-                tmpValue="${tmpValue//[[:space:]]}"          # Remove whitespace
-                tmpValue=$( echo "$tmpValue" | tr -d '";' )  # Remove quotes and semicolon from the string
+                tmpValue=$( echo "$tmpValue" | sed 's/^ *//')   # Remove leading whitespace  
+                tmpValue=$( echo "$tmpValue" | tr -d '";' )     # Remove quotes and semicolon from the string
                 case "$tmpOption" in
                            "ThemePath"       )   installedThemeName+=( "$themeName" )
                                                  installedThemePath+=("$tmpValue") ;;
@@ -1130,7 +1157,7 @@ ReadPrefsFile()
             # Look for an open parenthesis to indicate start of array entry
             if [[ "${readVar[$x]}" == *\(* ]]; then
                 themeName="${readVar[$x]% =*}"                      # Remove all after ' ='    
-                themeName=$( echo "$themeName" | sed 's/^ *//') # Remove leading whitespace  
+                themeName=$( echo "$themeName" | sed 's/^ *//')     # Remove leading whitespace  
                 themeName=$( echo "$themeName" | sed 's/\"//g' )    # Remove any quotes
                 foundThemeName=1
             fi
@@ -1202,14 +1229,16 @@ SendUIInitData()
 {
     # This is called once after much of the initialisation routines have run.
     
-    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_VOLUMEUUID" == "" ] ; then
+    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
+
+        local entry=$( FindArrayIdFromTarget )
 
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
 
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
-            SendToUI "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+            SendToUI "Target@$entry"
 
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
@@ -1236,6 +1265,11 @@ SendUIInitData()
     else
         WriteToLog "Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
+        
+        # Send list of updated themes to UI otherwise the UI interface will not be enabled.
+        # This is normally done in CheckForAnyUpdatesStoredInPrefsAndSendToUI()
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@@"
+        SendToUI "UpdateAvailThemes@@"
     fi
     
     # Send thumbnail size
@@ -1286,31 +1320,26 @@ RespondToUserDeviceSelection()
     # 2 - to check for any updates to those theme directories.
         
     local messageFromUi="$1"
-        
+
     WriteLinesToLog
 
     # parse message
     # remove everything up until, and including, the first @
     local messageFromUi="${messageFromUi#*@}"
-    local selectedDeviceUuid="${messageFromUi%%@*}"
-    local selectedVolumePath="${messageFromUi##*@}"
-    
+    local pathOption="${messageFromUi##*@}"
+
     # Check user did actually change from default
-    if [ ! "$selectedDeviceUuid" == "-" ] && [ ! "$selectedVolumePath" == "-" ]; then
+    if [ ! "$pathOption" == "-" ]; then
 
-        WriteToLog "User selected path: $selectedVolumePath on device UUID $selectedDeviceUuid" 
+        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with UUID ${duVolumeUuid[$pathOption]}" 
 
-        # Check against previously discovered file paths
-        for (( s=0; s<${#duVolumeUuid[@]}; s++ ))
-        do
-            if [[ "${duVolumeUuid[$s]}" == "$selectedDeviceUuid" ]]; then
-                TARGET_THEME_DIR="${themeDirPaths[$s]}"
-                TARGET_THEME_DIR_DEVICE="${duIdentifier[$s]}"
-                TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$s]}"
-            fi
-        done
+        TARGET_THEME_DIR="${themeDirPaths[$pathOption]}"
+        TARGET_THEME_DIR_DEVICE="${duIdentifier[$pathOption]}"
+        TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$pathOption]}"
 
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme path: $TARGET_THEME_DIR on device $TARGET_THEME_DIR_DEVICE with UUID $TARGET_THEME_VOLUMEUUID"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
         
         UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"
         UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
@@ -1756,14 +1785,69 @@ CleanInstalledThemesPrefEntries()
 # ---------------------------------------------------------------------------------------
 IsGitInstalled()
 {
+    WriteLinesToLog
+    local tmp=$( which -a git )
+    local num=$( which -a git | wc -l )
+    WriteToLog "Number of git installations: ${num##* }"
+    WriteToLog "git installations: $tmp"
+    
     if [ $( which -s git) ]; then 
         # Alert user in UI
         WriteToLog "CTM_GitFail"
         exit 1
     else
+        # git is installed which is good.
         gitCmd=$( which git )
+        
+        # Are there any other git installations?
+        # For example, installed from http://git-scm.com
+        
+        # The users local command line returns different results to
+        # what's returned from the command line when launched from a GUI app.
+        # This could be a Yosemite? bug but any adjusted $PATH from say
+        # a users ~/.bash_profile does not get presented to script from GUI. 
+            
+        # For example from the users local command line:
+        # $ which -a git
+        # /usr/local/git/bin/git    <-- $PATH entry added in ~/.bash_profile
+        # /usr/bin/git
+
+        # But from script launched from app
+        # $ which -a git
+        # /usr/bin/git              <-- $PATH entry (above) is missing
+        
+        # Also....
+        # File /usr/bin/git exists by default from virgin OS X install.
+        # But this is not the actual git executable that's installed
+        # with Xcode command line tools.
+        # /usr/bin/xcrun can find and return true location.
+        
+        # $ /usr/bin/xcrun --find git
+        # Applications/Xcode.app/Contents/Developer/usr/bin/git
+        
+        # If user has not installed the Xcode command line developer tools
+        # then trying to run /usr/bin/git will result in the following message:
+        # xcode-select: note: no developer tools were found at
+        # '/Applications/Xcode.app', requesting  install. Choose an option
+        # in the dialog to download the command line developer tools.
+
+        # Now - how to find out if the user has actually run it?
+        # Maybe check for /Library/Developer/CommandLineTools ?
+        # Not sure if this is location for 10.7 -> 10.10 ?
+        # Maybe check inside /Applications/Xcode.app ?
+
+        # For now I’ll do a manual check below.
+
+        # Manual check for installed git from http://git-scm.com
+        if [ -f /usr/local/git/bin/git ]; then
+            gitCmd="/usr/local/git/bin/git"
+        fi
+        
+        WriteToLog "using git at:$gitCmd"
+        WriteToLog "$( $gitCmd --version )"
         WriteToLog "CTM_GitOK"
     fi
+    WriteLinesToLog
 }
 
 #===============================================================
@@ -1818,7 +1902,8 @@ WriteToLog "CTM_Version${VERS}"
 WriteToLog "Started Clover Theme Manager script"
 WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
-    
+WriteLinesToLog
+WriteToLog "PATH=$PATH"
 IsGitInstalled
 
 # Was this script called from a script or the command line
@@ -1876,6 +1961,7 @@ else
     declare -a duVolumeName
     declare -a duIdentifier
     declare -a duVolumeUuid
+    declare -a duVolumeMountPoint
     
     # Arrays for theme
     declare -a themeDirPaths
@@ -1895,10 +1981,10 @@ else
 
     # For using additional theme repositories.
     # Not working in this version
-    declare -a repositoryUrls
-    declare -a repositoryThemes
+    #declare -a repositoryUrls
+    #declare -a repositoryThemes
     #tmp_dir=$(mktemp -d -t theme_manager)
-    ReadRepoUrlList
+    #ReadRepoUrlList
 
     # Begin
     RefreshHtmlTemplates "managethemes.html"
@@ -1949,6 +2035,8 @@ else
         # Has user selected partition for an /EFI/Clover/themes directory?
         if [[ "$logLine" == *CTM_selectedPartition* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
+            # js sends "CTM_selectedPartition@" + selectedPartition
+            # where selectedPartition is the array element id of 
             RespondToUserDeviceSelection "$logLine"
     
         # Has the user clicked the OpenPath button?
@@ -2026,8 +2114,9 @@ else
         # Send back what's needed to restore state.
         elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
             ClearTopOfMessageLog "$logJsToBash"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
-            SendToUI "Target@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
+            entry=$( FindArrayIdFromTarget )
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+            SendToUI "Target@entry"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordOrphanedThemesAndSendToUI
