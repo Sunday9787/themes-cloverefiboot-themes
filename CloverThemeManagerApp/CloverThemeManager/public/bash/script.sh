@@ -2116,7 +2116,7 @@ else
             ClearTopOfMessageLog "$logJsToBash"
             entry=$( FindArrayIdFromTarget )
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-            SendToUI "Target@entry"
+            SendToUI "Target@$entry"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordOrphanedThemesAndSendToUI
