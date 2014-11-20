@@ -636,9 +636,11 @@ function SetShowHidePreviews(state)
     if(state == "Show") {
         if (accordionBandState) {
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
         }
         $("#preview_Toggle_Button").text("Collapse Previews");
         $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
@@ -647,9 +649,11 @@ function SetShowHidePreviews(state)
     } else if (state == "Hide") {
         if (accordionBandState) {
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
         }
         $("#preview_Toggle_Button").text("Expand Previews");
         $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
