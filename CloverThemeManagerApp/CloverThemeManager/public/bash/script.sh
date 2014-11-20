@@ -234,9 +234,7 @@ MaintainInstalledThemeListInPrefs()
         # Loop though array of installed themes to find ID of theme to remove.
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
-            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && /
-               [ "${installedThemePath[$n]}" == "$gUnInstalledThemePath" ] && /
-               [ "${installedThemeVolumeUUID[$n]}" == "$gUnInstalledThemeVolumeUUID" ]; then
+            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && [ "${installedThemePath[$n]}" == "$gUnInstalledThemePath" ] && [ "${installedThemeVolumeUUID[$n]}" == "$gUnInstalledThemeVolumeUUID" ]; then
                 WriteToLog "Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemeVolumeUUID[$n]}"
                 dontReAddThemeId=$n
                 ResetUnInstalledThemeVars
