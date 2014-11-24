@@ -187,13 +187,21 @@ function updateBandsWithInstalledThemes(themeList)
     if (themeList != "") {
         splitThemeList = (themeList).split(',');
         if (splitThemeList != "-") {
-        
+
             showButtons();
+            var unknownThemeCount=0;
             // Update only installed themes with uninstall buttons
             for (var t = 0; t < splitThemeList.length; t++) {
+
+                // Does theme actually exist?
+                // User could have their own theme installed which is not in the repo.
+                if (!$("[id='button_" + splitThemeList[t] + "']").length) {
+                    //alert(splitThemeList[t] + " does not exist in the repo");
+                    unknownThemeCount++;
+                }
                 ChangeButtonAndBandToUnInstall(splitThemeList[t]);
             }
-            
+
             // Has the user chosen to view only installed themes?
             var readButton = $("#ShowHideToggleButton").text();
             if (readButton.indexOf("Show") >= 0) {
@@ -204,6 +212,14 @@ function updateBandsWithInstalledThemes(themeList)
             // Update number of installed themes
             if (splitThemeList != ",") { // This check needs verifying!! - is a single comma possible?
                 $("#NumInstalledThemes").html(splitThemeList.length + "/" + $('div[id^=ThemeBand]').length);
+                if (unknownThemeCount > 0){
+                    // Change colour of textThemeCount class to orange
+                    $("#NumInstalledThemes").css("color","#FFA500");
+                    $("#NumInstalledThemesQuery").css("display","inline");
+                } else {
+                    $("#NumInstalledThemes").css("color","#FFF");
+                    $("#NumInstalledThemesQuery").css("display","none");
+                }
             } else {
                 $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
             }
@@ -215,11 +231,17 @@ function updateBandsWithInstalledThemes(themeList)
                     
             // Update number of installed themes
             $("#NumInstalledThemes").html("-/" + $('div[id^=ThemeBand]').length);
+            // Reset colours and question mark incase previously shown.
+            $("#NumInstalledThemes").css("color","#FFF");
+            $("#NumInstalledThemesQuery").css("display","none");
         }
     } else {
         showButtons();
         // No themes installed on this volume
         $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
+        // Reset colours and question mark incase previously shown.
+        $("#NumInstalledThemes").css("color","#FFF");
+        $("#NumInstalledThemesQuery").css("display","none");
     }
 }
 
@@ -613,6 +635,16 @@ $(function()
         // Show a message to the user
         ChangeMessageBoxHeaderColour("blue");                            
         SetMessageBoxText("Untracked Theme","This theme has no bare git clone in the app support dir. This means you will not be notified of any updates for this theme unless you UnInstall and then re-install it.");
+        ShowMessageBoxClose();
+        ShowMessageBox();
+    });
+    
+    //-----------------------------------------------------
+    // On clicking the theme count question mark
+    $("#NumInstalledThemesQuery").on('click', function() {
+        // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue");                            
+        SetMessageBoxText("Unknown Theme Detected","There is a theme in this path with a name that does not match any in the Clover repository. This is not a problem, just be aware the number of installed themes shown in the main list will not match the counter.");
         ShowMessageBoxClose();
         ShowMessageBox();
     });

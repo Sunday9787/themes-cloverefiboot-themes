@@ -46,11 +46,11 @@
         </div> <!-- End OpenButton -->
         
         <div id="ThemeCount">
-            <span class="textHeaderSmall">Installed Themes:</span>&nbsp<span class="textThemeCount" id="NumInstalledThemes">-</span>
+            <span class="textHeaderSmall">Installed Themes:</span>&nbsp;<span class="textThemeCount" id="NumInstalledThemes">-</span><span class="textThemeCountQuery" id="NumInstalledThemesQuery">?</span>
         </div> <!-- End ThemeCount -->
         
         <div id="FreeSpace">
-            <span class="textHeaderSmall">Free Space:</span>&nbsp<span class="textFreeSpace">-</span>
+            <span class="textHeaderSmall">Free Space:</span>&nbsp;<span class="textFreeSpace">-</span>
         </div> <!-- End FreeSpace -->        
         
         <div id="HeaderBar">

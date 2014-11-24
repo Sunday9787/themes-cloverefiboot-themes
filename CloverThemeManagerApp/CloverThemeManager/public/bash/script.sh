@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.73"
+VERS="0.74"
 
 DEBUG=1
 #set -x
