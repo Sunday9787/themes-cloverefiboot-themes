@@ -1792,15 +1792,42 @@ IsGitInstalled()
     if [ $( which -s git) ]; then 
         # Alert user in UI
         WriteToLog "CTM_GitFail"
-        exit 1
     else
-        # git is installed which is good.
+        # a git file exists which is a start.
         gitCmd=$( which git )
+           
+        # However....
+        # File /usr/bin/git exists by default from virgin OS X install.
+        # But this is not the actual git executable that's installed
+        # with Xcode command line tools.
+        # /usr/bin/xcrun can find and return true location.
         
-        # Are there any other git installations?
-        # For example, installed from http://git-scm.com
+        # $ /usr/bin/xcrun --find git
+        # Applications/Xcode.app/Contents/Developer/usr/bin/git
         
-        # The users local command line returns different results to
+        # But....
+        # If user has not installed the Xcode command line developer tools
+        # then trying to run /usr/bin/git or /usr/bin/xcrun will result in a
+        # dialog in the Finder and also the following command line message:
+        #     xcode-select: note: no developer tools were found at
+        #     '/Applications/Xcode.app', requesting  install. Choose an option
+        #     in the dialog to download the command line developer tools.
+        # Thing is, we don't want to see a dialog box pop up in the Finder,
+        # well not yet anyway.
+        
+        # Also, user may not want to install full Xcode command line tools.
+        # They have the option to just install git from http://git-scm.com
+        # If they install only git then we can use that.
+        # Note: git installer creates:
+        #       directory /usr/local/git contain git files.
+        #       file /etc/paths.d/git containing /usr/local/git/bin
+        #       file /etc/manpaths.d/git containing /usr/local/git/bin/share/man
+        # The paths.d entry appends /usr/local/git/bin to the end of $PATH
+        # So we can't call git using just 'git' or /usr/bin/git gets called.
+        
+        # Also.... 
+        # We can't prepend /usr/local/git/bin to $PATH because
+        # the users local command line returns different results to
         # what's returned from the command line when launched from a GUI app.
         # This could be a Yosemite? bug but any adjusted $PATH from say
         # a users ~/.bash_profile does not get presented to script from GUI. 
@@ -1814,38 +1841,50 @@ IsGitInstalled()
         # $ which -a git
         # /usr/bin/git              <-- $PATH entry (above) is missing
         
-        # Also....
-        # File /usr/bin/git exists by default from virgin OS X install.
-        # But this is not the actual git executable that's installed
-        # with Xcode command line tools.
-        # /usr/bin/xcrun can find and return true location.
-        
-        # $ /usr/bin/xcrun --find git
-        # Applications/Xcode.app/Contents/Developer/usr/bin/git
-        
-        # If user has not installed the Xcode command line developer tools
-        # then trying to run /usr/bin/git will result in the following message:
-        # xcode-select: note: no developer tools were found at
-        # '/Applications/Xcode.app', requesting  install. Choose an option
-        # in the dialog to download the command line developer tools.
-
-        # Now - how to find out if the user has actually run it?
-        # Maybe check for /Library/Developer/CommandLineTools ?
-        # Not sure if this is location for 10.7 -> 10.10 ?
-        # Maybe check inside /Applications/Xcode.app ?
-
-        # For now I’ll do a manual check below.
-
-        # Manual check for installed git from http://git-scm.com
+        # So let's check for the full path and use that (if present).
+        # Check for installed git from http://git-scm.com
         if [ -f /usr/local/git/bin/git ]; then
             gitCmd="/usr/local/git/bin/git"
+        else
+            # Nope..
+            # Time to actually run /usr/bin/git and see if Xcode developer
+            # tools have been installed. If not a dialog will show in Finder.
+            if [ "$gitCmd" == "/usr/bin/git" ]; then
+                local catchReturn=$( /usr/bin/git 2>&1)
+                if [[ "$catchReturn" == *"no developer tools were found"* ]]; then
+                    WriteToLog "CTM_GitFail"
+                    gitCmd=""
+                else
+                    gitCmd="/usr/bin/git"
+                fi
+            fi
         fi
         
-        WriteToLog "using git at:$gitCmd"
-        WriteToLog "$( $gitCmd --version )"
-        WriteToLog "CTM_GitOK"
+        if [ "$gitCmd" != "" ]; then
+            WriteToLog "using git at:$gitCmd"
+            WriteToLog "$( $gitCmd --version )"
+            WriteToLog "CTM_GitOK"
+        fi
     fi
     WriteLinesToLog
+}
+
+# ---------------------------------------------------------------------------------------
+CleanUp()
+{
+    RemoveFile "$logJsToBash"
+    RemoveFile "$logFile"
+    RemoveFile "$logBashToJs"
+    
+    if [ -d "$tmp_dir" ]; then
+        rm -rf "$tmp_dir"
+    fi
+    if [ -d "/tmp/CloverThemeManager" ]; then
+        rmdir "/tmp/CloverThemeManager"
+    fi
+    if [ -f "${PUBLIC_DIR}"/managethemes.html ]; then
+        rm "${PUBLIC_DIR}"/managethemes.html
+    fi
 }
 
 #===============================================================
@@ -1904,249 +1943,241 @@ WriteLinesToLog
 WriteToLog "PATH=$PATH"
 IsGitInstalled
 
-# Was this script called from a script or the command line
-identityCallerCheck=`ps -o stat= -p $$`
-if [ "${identityCallerCheck:1:1}" == "+" ]; then
-    # Called from command line so interpret arguments.
-
-    # Will expect 2 arguments
-    # 1 - The install path
-    # 2 - The theme name
-
-    if [ "$#" -eq 2 ]; then
-	    TARGET_THEME_DIR="$1"
-	    themeToInstall="$2"
-    else
-	    echo "Error - wrong number of arguments passed."
-	    echo "Expects 1st as full target path. 2nd Theme name"
-	    exit 1
-    fi
-
-    # Redirect all log file output to stdout
-    COMMANDLINE=1
-
-    # Should we be checking the theme exists on the repo?
-    # Currently this does not happen.
-    
-    # Does theme path exist?
-    if [ -d "$TARGET_THEME_DIR" ]; then
-        RunThemeAction "Install" "$themeToInstall"
-        returnValue=$?
-        if [ ${returnValue} -eq 0 ]; then
-            # Operation was successful
-            echo "Theme $themeToInstall was successfully installed to $TARGET_THEME_DIR"
-            exit 0
-        else
-            echo "Error - Theme $themeToInstall failed to be installed to $TARGET_THEME_DIR"
-            exit 1
-        fi
-    else
-        echo "Error - Target path $TARGET_THEME_DIR does not exist."
-        exit 1
-    fi
-    
-else
-    # Called from Clover Theme Manager.app
-
-    declare -a themeList
-    declare -a themeTitle
-    declare -a themeAuthor
-    declare -a themeDescription
-    declare -a dfMounts
-    declare -a tmpArray
-    
-    # Arrays for saving volume info
-    declare -a duVolumeName
-    declare -a duIdentifier
-    declare -a duVolumeUuid
-    declare -a duVolumeMountPoint
-    
-    # Arrays for theme
-    declare -a themeDirPaths
-    declare -a installedThemesOnCurrentVolume
-    declare -a installedThemesFoundAfterSearch
-    
-    # Arrays for list of what themes are installed where.
-    declare -a installedThemeName
-    declare -a installedThemePath
-    declare -a installedThemePathDevice
-    declare -a installedThemeVolumeUUID
-    declare -a installedThemeUpdateAvailable
-
-    # Globals for newly installed theme before adding to prefs
-    ResetNewlyInstalledThemeVars
-    ResetUnInstalledThemeVars
-
-    # For using additional theme repositories.
-    # Not working in this version
-    #declare -a repositoryUrls
-    #declare -a repositoryThemes
-    #tmp_dir=$(mktemp -d -t theme_manager)
-    #ReadRepoUrlList
-
-    # Begin
-    RefreshHtmlTemplates "managethemes.html"
-    IsRepositoryLive
-    EnsureLocalSupportDir
-    EnsureSymlinks
-    GetLatestIndexAndEnsureThemeHtml
-    GetListOfMountedDevices
-    BuildDiskUtilStringArrays
-    CreateDiskPartitionDropDownHtml
-    ReadPrefsFile
-    CleanInstalledThemesPrefEntries
-    SendUIInitData
-
-    # Check for any updates to this app
-    # Not function set for this yet
-
-    # Read current Clover.Theme Nvram variable and send to UI.
-    ReadAndSendCurrentNvramTheme
-    
-    # Write string to mark the end of init file.
-    # initialise.js looks for this to signify initialisation is complete.
-    # At which point it then redirects to the main UI page.
-    WriteToLog "Complete!"
-
-    # Feedback for command line
-    echo "Initialisation complete. Entering loop."
-
-    # Remember parent process id
-    parentId=$appPid
-
-    CheckAndRemoveBareClonesNoLongerNeeded
-    CheckForUpdatesInTheBackground &
-
-    # The messaging system is event driven and quite simple.
-    # Run a loop for as long as the parent process ID still exists
-    while [ "$appPid" == "$parentId" ];
-    do
-        sleep 0.25  # Check every 1/4 second.
-    
-        #===============================================================
-        # Main Message Loop for responding to UI feedback
-        #===============================================================
-
-        # Read first line of log file
-        logLine=$(head -n 1 "$logJsToBash")
+# Only continue if git is installed
+if [ "$gitCmd" != "" ]; then
         
-        # Has user selected partition for an /EFI/Clover/themes directory?
-        if [[ "$logLine" == *CTM_selectedPartition* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            # js sends "CTM_selectedPartition@" + selectedPartition
-            # where selectedPartition is the array element id of 
-            RespondToUserDeviceSelection "$logLine"
-    
-        # Has the user clicked the OpenPath button?
-        elif [[ "$logLine" == *OpenPath* ]]; then
-            [[ ! "$TARGET_THEME_DIR" == "-" ]] && Open "$TARGET_THEME_DIR"
-            ClearTopOfMessageLog "$logJsToBash"
-            WriteToLog "User selected to open $TARGET_THEME_DIR"
+    # Was this script called from a script or the command line
+    identityCallerCheck=`ps -o stat= -p $$`
+    if [ "${identityCallerCheck:1:1}" == "+" ]; then
+        # Called from command line so interpret arguments.
 
-        # Has the user pressed a theme button to install, uninstall or update?
-        elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            RespondToUserThemeAction "$logLine"
+        # Will expect 2 arguments
+        # 1 - The install path
+        # 2 - The theme name
+
+        if [ "$#" -eq 2 ]; then
+	        TARGET_THEME_DIR="$1"
+	        themeToInstall="$2"
+        else
+	        echo "Error - wrong number of arguments passed."
+	        echo "Expects 1st as full target path. 2nd Theme name"
+	        exit 1
+        fi
+
+        # Redirect all log file output to stdout
+        COMMANDLINE=1
+
+        # Should we be checking the theme exists on the repo?
+        # Currently this does not happen.
+    
+        # Does theme path exist?
+        if [ -d "$TARGET_THEME_DIR" ]; then
+            RunThemeAction "Install" "$themeToInstall"
             returnValue=$?
             if [ ${returnValue} -eq 0 ]; then
                 # Operation was successful
+                echo "Theme $themeToInstall was successfully installed to $TARGET_THEME_DIR"
+                exit 0
+            else
+                echo "Error - Theme $themeToInstall failed to be installed to $TARGET_THEME_DIR"
+                exit 1
+            fi
+        else
+            echo "Error - Target path $TARGET_THEME_DIR does not exist."
+            exit 1
+        fi
+    
+    else
+        # Called from Clover Theme Manager.app
+
+        declare -a themeList
+        declare -a themeTitle
+        declare -a themeAuthor
+        declare -a themeDescription
+        declare -a dfMounts
+        declare -a tmpArray
+    
+        # Arrays for saving volume info
+        declare -a duVolumeName
+        declare -a duIdentifier
+        declare -a duVolumeUuid
+        declare -a duVolumeMountPoint
+    
+        # Arrays for theme
+        declare -a themeDirPaths
+        declare -a installedThemesOnCurrentVolume
+        declare -a installedThemesFoundAfterSearch
+    
+        # Arrays for list of what themes are installed where.
+        declare -a installedThemeName
+        declare -a installedThemePath
+        declare -a installedThemePathDevice
+        declare -a installedThemeVolumeUUID
+        declare -a installedThemeUpdateAvailable
+
+        # Globals for newly installed theme before adding to prefs
+        ResetNewlyInstalledThemeVars
+        ResetUnInstalledThemeVars
+
+        # For using additional theme repositories.
+        # Not working in this version
+        #declare -a repositoryUrls
+        #declare -a repositoryThemes
+        #tmp_dir=$(mktemp -d -t theme_manager)
+        #ReadRepoUrlList
+
+        # Begin
+        RefreshHtmlTemplates "managethemes.html"
+        IsRepositoryLive
+        EnsureLocalSupportDir
+        EnsureSymlinks
+        GetLatestIndexAndEnsureThemeHtml
+        GetListOfMountedDevices
+        BuildDiskUtilStringArrays
+        CreateDiskPartitionDropDownHtml
+        ReadPrefsFile
+        CleanInstalledThemesPrefEntries
+        SendUIInitData
+
+        # Check for any updates to this app
+        # Not function set for this yet
+
+        # Read current Clover.Theme Nvram variable and send to UI.
+        ReadAndSendCurrentNvramTheme
+    
+        # Write string to mark the end of init file.
+        # initialise.js looks for this to signify initialisation is complete.
+        # At which point it then redirects to the main UI page.
+        WriteToLog "Complete!"
+
+        # Feedback for command line
+        echo "Initialisation complete. Entering loop."
+
+        # Remember parent process id
+        parentId=$appPid
+
+        CheckAndRemoveBareClonesNoLongerNeeded
+        CheckForUpdatesInTheBackground &
+
+        # The messaging system is event driven and quite simple.
+        # Run a loop for as long as the parent process ID still exists
+        while [ "$appPid" == "$parentId" ];
+        do
+            sleep 0.25  # Check every 1/4 second.
+    
+            #===============================================================
+            # Main Message Loop for responding to UI feedback
+            #===============================================================
+
+            # Read first line of log file
+            logLine=$(head -n 1 "$logJsToBash")
+        
+            # Has user selected partition for an /EFI/Clover/themes directory?
+            if [[ "$logLine" == *CTM_selectedPartition* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                # js sends "CTM_selectedPartition@" + selectedPartition
+                # where selectedPartition is the array element id of 
+                RespondToUserDeviceSelection "$logLine"
+    
+            # Has the user clicked the OpenPath button?
+            elif [[ "$logLine" == *OpenPath* ]]; then
+                [[ ! "$TARGET_THEME_DIR" == "-" ]] && Open "$TARGET_THEME_DIR"
+                ClearTopOfMessageLog "$logJsToBash"
+                WriteToLog "User selected to open $TARGET_THEME_DIR"
+
+            # Has the user pressed a theme button to install, uninstall or update?
+            elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                RespondToUserThemeAction "$logLine"
+                returnValue=$?
+                if [ ${returnValue} -eq 0 ]; then
+                    # Operation was successful
+                    GetListOfInstalledThemesAndSendToUI
+                    GetFreeSpaceOfTargetDeviceAndSendToUI
+                    CheckAndRecordOrphanedThemesAndSendToUI
+                    CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                    ReadAndSendCurrentNvramTheme
+                fi 
+
+            # Has user selected a theme for NVRAM variable?
+            elif [[ "$logLine" == *CTM_chosenNvramTheme* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                WriteToLog "User chose to set nvram theme."
+                SetNvramTheme "$logLine"
+            
+            # Has user changed the thumbnail size?
+            elif [[ "$logLine" == *CTM_thumbSize* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                # parse message
+                # remove everything up until, and including, the first @
+                thumbSize="${logLine#*@}"
+                UpdatePrefsKey "Thumbnail" "$thumbSize"
+                WriteToLog "User changed thumbnail size to $thumbSize"
+            
+            # Has user chosen to hide uninstalled themes?
+            elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "UnInstalledButton" "Show"
+                WriteToLog "User chose to hide uninstalled themes"
+            
+            # Has user chosen to show uninstalled themes?
+            elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "UnInstalledButton" "Hide"
+                WriteToLog "User chose to show uninstalled themes"
+            
+            # Has user chosen to show thumbnails?
+            elif [[ "$logLine" == *CTM_hideThumbails* ]]; then
+               ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "ViewThumbnails" "Show"
+                WriteToLog "User chose to show thumbnails"
+            
+            # Has user chosen to hide thumbnails?
+            elif [[ "$logLine" == *CTM_showThumbails* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "ViewThumbnails" "Hide"
+                WriteToLog "User chose to hide thumbnails"
+            
+            # Has user chosen to hide previews?
+            elif [[ "$logLine" == *CTM_hidePreviews* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "ShowPreviewsButton" "Hide"
+                WriteToLog "User chose to hide previews"
+            
+            # Has user chosen to show preview?
+            elif [[ "$logLine" == *CTM_showPreviews* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                UpdatePrefsKey "ShowPreviewsButton" "Show"
+                WriteToLog "User chose to show previews"
+            
+            # Has user returned back from help page?
+            # Send back what's needed to restore state.
+            elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                entry=$( FindArrayIdFromTarget )
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+                SendToUI "Target@$entry"
                 GetListOfInstalledThemesAndSendToUI
                 GetFreeSpaceOfTargetDeviceAndSendToUI
                 CheckAndRecordOrphanedThemesAndSendToUI
                 CheckForAnyUpdatesStoredInPrefsAndSendToUI
                 ReadAndSendCurrentNvramTheme
-            fi 
+                SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+                SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
+                SendToUI "PreviewView@${gUISettingViewPreviews}@"
 
-        # Has user selected a theme for NVRAM variable?
-        elif [[ "$logLine" == *CTM_chosenNvramTheme* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            WriteToLog "User chose to set nvram theme."
-            SetNvramTheme "$logLine"
-            
-        # Has user changed the thumbnail size?
-        elif [[ "$logLine" == *CTM_thumbSize* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            # parse message
-            # remove everything up until, and including, the first @
-            thumbSize="${logLine#*@}"
-            UpdatePrefsKey "Thumbnail" "$thumbSize"
-            WriteToLog "User changed thumbnail size to $thumbSize"
-            
-        # Has user chosen to hide uninstalled themes?
-        elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "UnInstalledButton" "Show"
-            WriteToLog "User chose to hide uninstalled themes"
-            
-        # Has user chosen to show uninstalled themes?
-        elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "UnInstalledButton" "Hide"
-            WriteToLog "User chose to show uninstalled themes"
-            
-        # Has user chosen to show thumbnails?
-        elif [[ "$logLine" == *CTM_hideThumbails* ]]; then
-           ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "ViewThumbnails" "Show"
-            WriteToLog "User chose to show thumbnails"
-            
-        # Has user chosen to hide thumbnails?
-        elif [[ "$logLine" == *CTM_showThumbails* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "ViewThumbnails" "Hide"
-            WriteToLog "User chose to hide thumbnails"
-            
-        # Has user chosen to hide previews?
-        elif [[ "$logLine" == *CTM_hidePreviews* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "ShowPreviewsButton" "Hide"
-            WriteToLog "User chose to hide previews"
-            
-        # Has user chosen to show preview?
-        elif [[ "$logLine" == *CTM_showPreviews* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            UpdatePrefsKey "ShowPreviewsButton" "Show"
-            WriteToLog "User chose to show previews"
-            
-        # Has user returned back from help page?
-        # Send back what's needed to restore state.
-        elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"
-            entry=$( FindArrayIdFromTarget )
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-            SendToUI "Target@$entry"
-            GetListOfInstalledThemesAndSendToUI
-            GetFreeSpaceOfTargetDeviceAndSendToUI
-            CheckAndRecordOrphanedThemesAndSendToUI
-            CheckForAnyUpdatesStoredInPrefsAndSendToUI
-            ReadAndSendCurrentNvramTheme
-            SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
-            SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
-            SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
-            SendToUI "PreviewView@${gUISettingViewPreviews}@"
+            elif [[ "$logLine" == *started* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"     
+            fi
 
-        elif [[ "$logLine" == *started* ]]; then
-            ClearTopOfMessageLog "$logJsToBash"     
-        fi
-
-        # Get process ID of parent
-        appPid=$( ps -p ${pid:-$$} -o ppid= )
-    done
-
-    # Clean up
-    RemoveFile "$logJsToBash"
-    RemoveFile "$logFile"
-    RemoveFile "$logBashToJs"
-    
-    if [ -d "$tmp_dir" ]; then
-        rm -rf "$tmp_dir"
+            # Get process ID of parent
+            appPid=$( ps -p ${pid:-$$} -o ppid= )
+        done
+        CleanUp    
+        exit 0
     fi
-    if [ -d "/tmp/CloverThemeManager" ]; then
-        rmdir "/tmp/CloverThemeManager"
-    fi
-    if [ -f "${PUBLIC_DIR}"/managethemes.html ]; then
-        rm "${PUBLIC_DIR}"/managethemes.html
-    fi
-    
-    exit 0
+else
+    WriteToLog "CTM_GitFail"
+    exit 1
 fi
