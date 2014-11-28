@@ -1,4 +1,4 @@
 themes/*/theme.plist
 themes/*/screenshot.png
 CloverThemeManagerApp/help/add_theme.html
-CloverThemeManagerApp/CloverThemeManager/styles/*
+CloverThemeManagerApp/CloverThemeManager/public/*
