@@ -996,10 +996,13 @@ CheckAndRecordAppUpdates()
 
         done
     fi
-
     if [ "$updateAvailAppStr" != "" ] && [ "${updateAvailAppStr:0:1}" == "," ]; then
         # Remove leading comma from string
         updateAvailAppStr="${updateAvailAppStr#?}"
+    else
+        # No app update in the downloaded files. Can remove
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No app updates. Deleting $pathToDownloadedPublicDir" 
+        rm -rf "$pathToDownloadedPublicDir"
     fi
 
     # Add message in to log for initialise.js to detect.
@@ -1097,7 +1100,6 @@ GetLatestIndexAndEnsureThemeHtml()
         else
             WriteToLog "No updates to index.git"
             WriteToLog "CTM_IndexOK"
- CheckAndRecordAppUpdates
             WriteToLog "No App updates"
             WriteToLog "CTM_UpdatesOK"
             
