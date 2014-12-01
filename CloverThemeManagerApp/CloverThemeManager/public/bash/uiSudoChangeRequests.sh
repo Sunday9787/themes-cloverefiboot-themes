@@ -107,6 +107,24 @@ SetNVRAMVariable()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+UpdateApp()
+{
+    local successFlag=1
+    
+    # Remove existing theme dir on target.
+    if [ -f "$scriptToRun" ]; then
+        "$scriptToRun" && successFlag=0
+    fi
+        
+    if [ $successFlag -eq 0 ]; then
+        exit 0
+    else
+        exit 1
+    fi
+}
+
+
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------
@@ -135,6 +153,9 @@ case "$whichFunction" in
                                     ;;
      "SetNVRAMVar"                ) themeName="$2"
                                     SetNVRAMVariable
+                                    ;;
+     "UpdateApp"                  ) scriptToRun="$2"
+                                    UpdateApp
                                     ;;
 esac
 

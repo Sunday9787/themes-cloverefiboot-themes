@@ -145,6 +145,12 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetShowHidePreviews(firstLineSplit[1]);
                 break;
+            case "UpdateAvailApp":
+                // Bash sends: "UpdateAvailApp@${updateAvailAppStr}@"
+                // where $updateAvailThemeStr is a comma separated string.
+                macgap.app.removeMessage(firstLine);
+                DisplayAppUpdates(firstLineSplit[1]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -286,12 +292,45 @@ function actOnFreeSpace(availableSpace)
 }
 
 //-------------------------------------------------------------------------------------
+function DisplayAppUpdates(fileList)
+{    
+    if (fileList != "") {
+        disableInterface();
+        appUpdateFileList = (fileList).split(',');
+        if (appUpdateFileList != "") {
+        
+            var printString="";
+        
+            // Update only installed themes with uninstall buttons
+            for (var t = 0; t < appUpdateFileList.length; t++) {
+                    
+                // Here we change any installed themes to have an uninstall button.
+                ChangeButtonAndBandToUpdate(appUpdateFileList[t]);
+                        
+                // Prepare text for pretty print
+                printString=(printString + appUpdateFileList[t] + "<br>");
+            }
+                    
+            // Show a message to the user
+            ChangeMessageBoxHeaderColour("blue");                            
+            SetMessageBoxText("Application Update Available:",printString + "<br>Do you wish to update the app?");
+            HideMessageBoxClose();
+            AddYesNoButtons();
+            ShowMessageBox();
+        }
+    }
+    // re-enable UI
+    // This must be unconditional as the UI is disabled when user changes volume
+    enableInterface(); 
+}
+
+//-------------------------------------------------------------------------------------
 function actOnUpdates(themeList)
 {    
     if (themeList != "") {
         disableInterface();
         localThemeUpdates = (themeList).split(',');
-        if (splitThemeList != "") {
+        if (localThemeUpdates != "") {
         
             var printString=("<br>");
         
@@ -322,7 +361,7 @@ function displayUnversionedThemes(themeList)
 {
     if (themeList != "") {
         unVersionedThemes = (themeList).split(',');
-        if (splitThemeList != "") {
+        if (unVersionedThemes != "") {
             for (var t = 0; t < unVersionedThemes.length; t++) {
                 SetUnVersionedControlIndicator(unVersionedThemes[t]);
             }
@@ -1165,7 +1204,7 @@ function AddYesNoButtons(){
     $( '<div class="feedbackButton" id="feedback_Button_No"></div>' ).on('click', function(e) {
         e.preventDefault();
         // Send message back to bash script to notify receipt
-        macgap.app.launch("CTM_versionAgree:No");
+        macgap.app.launch("CTM_updateApp:No");
         
         // Hide message box and reset
         CloseMessageBox();
@@ -1186,7 +1225,7 @@ function AddYesNoButtons(){
         CloseMessageBox();
         ShowMessageBoxClose();
         RemoveYesNoButtons();
-        macgap.app.launch("CTM_versionAgree:Yes");
+        macgap.app.launch("CTM_updateApp:Yes");
     }).insertAfter("[id='FeedbackButtons']");
     
     // Set button text

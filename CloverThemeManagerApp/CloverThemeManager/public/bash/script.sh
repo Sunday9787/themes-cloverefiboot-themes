@@ -834,6 +834,180 @@ CheckoutImages()
 }
 
 # ---------------------------------------------------------------------------------------
+RespondToUserUpdateApp()
+{
+    local messageFromUi="$1"
+
+    # remove everything up until, and including, the first @
+    messageFromUi="${messageFromUi#*@}"
+    chosenOption="${messageFromUi##*:}"
+
+    if [ ! "$chosenOption" == "" ]; then
+        WriteLinesToLog
+        if [ "$chosenOption" == "Yes" ]; then
+            WriteToLog "User chose to update app."
+            PerformUpdates
+        else
+            WriteToLog "User chose not to update app."
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+PerformUpdates()
+{
+    if [ -f "$updateScript" ]; then
+    
+        chmod 755 "$updateScript"
+        
+        # Check public directory is writeable
+        CheckPathIsWriteable "${PUBLIC_DIR}"
+        local isPathWriteable=$? # 1 = not writeable / 0 = writeable
+           
+        WriteToLog "Performing Updates"
+        local successFlag=1
+        if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+            WriteToLog "Public DIR is not writeable. Asking for password"
+
+            GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
+            returnValueRoot=$? # 1 = not root / 0 = root
+            if [ ${returnValueRoot} = 0 ]; then 
+                echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
+                returnValue=$?
+                if [ ${returnValue} -eq 0 ]; then
+                    successFlag=0
+                fi
+            fi
+        else
+            WriteToLog "Public DIR is writeable"
+            "$updateScript" && successFlag=0
+        fi
+    else
+        WriteToLog "$updateScript not found."
+    fi
+    
+    if [ $successFlag -eq 0 ]; then
+        WriteToLog "Updates were successful."
+        
+        # Remove update files
+        cd "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+        if [ -d "CloverThemeManager/public" ]; then
+            rm -rf "CloverThemeManager/public"
+        fi
+        
+        # Remove update script
+        if [ -f "$updateScript" ]; then
+            rm "$updateScript"
+        fi
+    else
+        WriteToLog "Updates failed."
+    fi
+    
+    WriteLinesToLog
+}
+
+# ---------------------------------------------------------------------------------------
+CheckAndRecordAppUpdates()
+{
+    AddCopyCommandToFile()
+    {
+        if [ "$1" == "" ]; then
+            local destination="$PUBLIC_DIR"
+        else
+            local destination="${PUBLIC_DIR}/${1}"
+        fi
+        # Escape any spaces
+        tmpA=$( echo "$2" | sed 's/ /\\ /g' )
+        tmpB=$( echo "$destination" | sed 's/ /\\ /g' )
+        printf "cp ${tmpA} ${tmpB}\n" >> "$updateScript"
+    }
+    
+    AddOrUpdateIfNewer()
+    {
+        local dirName="$1"
+        local fileName="${2##*/}"
+        
+        if [ "$dirName" == "" ]; then
+            local pathAndName="$fileName"
+        else
+            local pathAndName="${dirName}/${fileName}"
+        fi
+
+        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found File: ${pathAndName}"
+        if [ ! -f "${PUBLIC_DIR}/${pathAndName}" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}File $pathAndName is new. Adding"
+            AddCopyCommandToFile "$dirName" "$2"
+            echo 0
+        else
+            # file already exists. Is it different?
+            if [[ $(CalculateMd5 "${PUBLIC_DIR}/${pathAndName}") != $(CalculateMd5 "$2") ]]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}File $fileName has been updated."
+                AddCopyCommandToFile "$dirName" "$2"
+                echo 0
+            else
+                echo 2
+            fi
+        fi
+    }
+
+    local needUpdating=1
+    local updateAvailAppStr=""
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking App updates" 
+    local pathToDownloadedPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
+    if [ -d "$pathToDownloadedPublicDir" ]; then
+        # Check each item against current ones in app
+        
+        for item in "$pathToDownloadedPublicDir"/*
+        do
+            needUpdating=1
+            # Is this item a directory?
+            if [[ -d "$item" ]]; then
+                # if directory does not currently exist in app then add it.
+                local dirName="${item##*/}"
+                #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found Directory: $dirName" 
+                if [ ! -d "${PUBLIC_DIR}/${dirName}" ]; then
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Directory $dirName is new. Adding" 
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}cp $item $PUBLIC_DIR"
+                    tmpA=$( echo "$item" | sed 's/ /\\ /g' )
+                    tmpB=$( echo "$PUBLIC_DIR" | sed 's/ /\\ /g' )
+                    printf "cp -R ${tmpA} ${tmpB}\n" >> "$updateScript"
+                    updateAvailAppStr="${updateAvailAppStr},$dirName (New Directory)"
+                else
+                    # Directory already exists. Check each file for update.
+                    # Note: No plans here for sub directories
+                    for items in "$item"/*
+                    do
+                        if [[ -f "$items" ]]; then  
+                            needUpdating=$( AddOrUpdateIfNewer "$dirName" "$items" )
+                            if [ $needUpdating -eq 0 ]; then
+                                updateAvailAppStr="${updateAvailAppStr},${dirName}/${items##*/}"
+                            fi
+                        fi
+                    done
+                fi
+            
+            # Is this item a file?
+            elif [[ -f "$item" ]]; then
+                needUpdating=$( AddOrUpdateIfNewer "" "$item" )
+                if [ $needUpdating -eq 0 ]; then
+                    updateAvailAppStr="${updateAvailAppStr},${item##*/}"
+                fi
+            fi
+
+        done
+    fi
+
+    if [ "$updateAvailAppStr" != "" ] && [ "${updateAvailAppStr:0:1}" == "," ]; then
+        # Remove leading comma from string
+        updateAvailAppStr="${updateAvailAppStr#?}"
+    fi
+
+    # Add message in to log for initialise.js to detect.
+    WriteToLog "CTM_UpdatesOK"
+    SendToUI "UpdateAvailApp@${updateAvailAppStr}@"
+}
+
+# ---------------------------------------------------------------------------------------
 GetLatestIndexAndEnsureThemeHtml()
 {
     BuildThemeTextInformation()
@@ -878,6 +1052,12 @@ GetLatestIndexAndEnsureThemeHtml()
             WriteToLog "Removing previous index themes directory"
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/themes
         fi
+        
+        # Remove app files from a previous run
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
+            WriteToLog "Removing previous CloverThemeManagerApp directory"
+            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+        fi
     
         # Get new index.git from CloverRepo
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
@@ -893,6 +1073,9 @@ GetLatestIndexAndEnsureThemeHtml()
         else
             WriteToLog "CTM_IndexFail"
         fi
+        
+        # Check downloaded app files for update.
+        CheckAndRecordAppUpdates
     }
     
     if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
@@ -914,6 +1097,9 @@ GetLatestIndexAndEnsureThemeHtml()
         else
             WriteToLog "No updates to index.git"
             WriteToLog "CTM_IndexOK"
+ CheckAndRecordAppUpdates
+            WriteToLog "No App updates"
+            WriteToLog "CTM_UpdatesOK"
             
             # Use previously saved theme.html
             if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
@@ -927,7 +1113,7 @@ GetLatestIndexAndEnsureThemeHtml()
             fi 
         fi
     fi
-        
+
     WriteLinesToLog
 }
 
@@ -1875,6 +2061,7 @@ CleanUp()
     RemoveFile "$logJsToBash"
     RemoveFile "$logFile"
     RemoveFile "$logBashToJs"
+    RemoveFile "$updateScript"
     
     if [ -d "$tmp_dir" ]; then
         rm -rf "$tmp_dir"
@@ -1918,6 +2105,7 @@ COMMANDLINE=0
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
 logJsToBash="${TMPDIR}/jsToBash" # Note - this is created in AppDelegate.m
 logBashToJs="${TMPDIR}/bashToJs" # Note - this is created in AppDelegate.m
+updateScript="${TMPDIR}/updateScript.sh"
 gUserPrefsFileName="org.black.CloverThemeManager"
 gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
 gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
@@ -2149,6 +2337,11 @@ if [ "$gitCmd" != "" ]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "ShowPreviewsButton" "Show"
                 WriteToLog "User chose to show previews"
+            
+            # Has user chosen to show preview?
+            elif [[ "$logLine" == *CTM_updateApp* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                RespondToUserUpdateApp "$logLine"
             
             # Has user returned back from help page?
             # Send back what's needed to restore state.
