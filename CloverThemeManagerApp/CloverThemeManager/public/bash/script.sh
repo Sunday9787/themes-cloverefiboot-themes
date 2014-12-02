@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74"
+VERS="0.74.1"
 
 DEBUG=1
 #set -x
@@ -895,6 +895,7 @@ PerformUpdates()
     
     if [ $successFlag -eq 0 ]; then
         WriteToLog "Updates were successful."
+        SendToUI "UpdateAppFeedback@Success@"
         
         # Remove update files
         cd "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
@@ -908,6 +909,7 @@ PerformUpdates()
         fi
     else
         WriteToLog "Updates failed."
+        SendToUI "UpdateAppFeedback@Fail@"
     fi
     
     WriteLinesToLog

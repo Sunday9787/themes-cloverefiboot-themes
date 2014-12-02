@@ -151,6 +151,12 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 DisplayAppUpdates(firstLineSplit[1]);
                 break;
+            case "UpdateAppFeedback":
+                // Bash sends: "UpdateAppFeedback@Success@" or "UpdateAppFeedback@Fail@"
+                // where $updateAvailThemeStr is a comma separated string.
+                macgap.app.removeMessage(firstLine);
+                AppUpdateFeedback(firstLineSplit[1]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -319,9 +325,6 @@ function DisplayAppUpdates(fileList)
             ShowMessageBox();
         }
     }
-    // re-enable UI
-    // This must be unconditional as the UI is disabled when user changes volume
-    enableInterface(); 
 }
 
 //-------------------------------------------------------------------------------------
@@ -408,6 +411,36 @@ function actOnNvramThemeVar(nvramThemeVar)
         }
     }
 }
+
+//-------------------------------------------------------------------------------------
+function AppUpdateFeedback(state)
+{
+    if (state != "") {
+    
+        if (state == "Success") {
+        
+            // Present dialog to the user
+            ChangeMessageBoxHeaderColour("green");
+
+            // Print message
+            HideProgressBar();
+            SetMessageBoxText("Success:","The app updates completed successfully and will be operational next time you launch CloverThemeManager.");
+            
+        } else if (state == "Fail")  {
+        
+            // Present dialog to the user
+            ChangeMessageBoxHeaderColour("red");
+
+            // Print message
+            HideProgressBar();
+            SetMessageBoxText("Failed:","The app updates did not successfully complete.");
+        }
+        
+        ShowMessageBoxClose();
+        ShowMessageBox();
+    }
+}
+
 
 //-------------------------------------------------------------------------------------
 function themeActionSuccess(action,themeName)
@@ -698,7 +731,6 @@ $(function()
         }
     });
 });
-
 
 //-------------------------------------------------------------------------------------
 function SetShowHidePreviews(state)
@@ -1222,7 +1254,7 @@ function AddYesNoButtons(){
         // Send message back to bash script to notify receipt
         
         // Hide message box and reset
-        CloseMessageBox();
+        //CloseMessageBox();
         ShowMessageBoxClose();
         RemoveYesNoButtons();
         macgap.app.launch("CTM_updateApp:Yes");
