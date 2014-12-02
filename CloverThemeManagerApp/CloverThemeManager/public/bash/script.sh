@@ -860,7 +860,8 @@ PerformUpdates()
 
         # Check update script md5
         if [ $(CalculateMd5 "$updateScript") == $updateScriptChecksum ]; then
-    
+
+            WriteToLog "md5 matches."
             chmod 755 "$updateScript"
         
             # Check public directory is writeable

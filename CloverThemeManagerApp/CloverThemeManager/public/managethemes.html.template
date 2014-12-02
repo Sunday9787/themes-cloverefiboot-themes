@@ -8,6 +8,7 @@
     <meta name="author" content="Blackosx" />
     <meta name="copyright" content="Copyright 2014 org.black.CloverThemeManager. All rights reserved.">    
     <link rel="stylesheet" type="text/css" href="styles/cloverthememanager.css"/>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
 	<script src="scripts/jquery-2.1.1.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
 </head>

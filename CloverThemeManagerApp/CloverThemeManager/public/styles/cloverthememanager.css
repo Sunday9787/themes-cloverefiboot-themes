@@ -11,7 +11,7 @@ body {
 }
 
 p {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 #Container {
@@ -236,7 +236,7 @@ select.custom-dropdown:hover {
 }
 
 .textHeading {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 28px;
     font-weight:700;
     color: #FFF;
@@ -244,7 +244,7 @@ select.custom-dropdown:hover {
 }
 
 .textSubHeading {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 20px;
     color: #a7a7a7;
     text-align:center;
@@ -252,7 +252,7 @@ select.custom-dropdown:hover {
 }
 
 .textSubSubHeading {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 14px;
     color: #CCC;
     text-align:center;
@@ -260,7 +260,7 @@ select.custom-dropdown:hover {
 }
 
 .textVersion {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     color: #CCC;
     text-align:center;
@@ -422,27 +422,30 @@ a:hover {
 }
 
 .themeTitle {
-    font-family: 'Roboto Condensed', sans-serif;
-    font-size: 14px;
-    font-weight: 400;
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
     color: #edf2f6;
+    line-height: 120%;
     -webkit-user-select: none;
 }
 
 .themeDescription {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 11px;
     font-weight: 400;
     color: #edf2f6;
+    line-height: 120%;
     -webkit-user-select: none;
 }
 
 .themeAuthor {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: 300;
     font-style: italic;
     color: #dbeaef;
+    line-height: 120%;
     -webkit-user-select: none;
 }
 
@@ -453,7 +456,7 @@ a:hover {
     border-radius: 4px;
     color: #fff;
     float: right;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -486,7 +489,7 @@ a:hover {
     border-radius: 4px;
     color: #fff;
     float: right;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -519,7 +522,7 @@ a:hover {
     border-radius: 4px;
     color: #fff;
     float: right;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -552,7 +555,7 @@ a:hover {
     border-radius: 4px;
     color: #ffffff;
     float: right;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: bold;
     height: 20px;
@@ -817,7 +820,7 @@ a.boxclose {
     margin:-20px -20px 0px -20px;
     padding:10px 10px 10px 20px;
     background-color:#1e8ec6;
-    font-family: Helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 24px;
     color:#c4e0ee;
     -moz-border-radius:10px 10px 0px 0px;
