@@ -150,12 +150,12 @@ function printLogtoScreen()
         if (lastLine != prevLastLine) {
             for (i = prevLastLineCount; i <= splitContent.length; i++) {
  
-                // Does this line contain CTM_Version?
+                // Does this line contain CTM_AppVersion?
                 if (/CTM_Version/i.test(splitContent[i])) {
                     // remove anything before the 'CTM_Version' text.
                     version = splitContent[i].substring(splitContent[i].indexOf("CTM_Version") + 11);
                     // append version to title.
-                    $("#textHeading").append("<span class=\"textVersion\"> v" + version + "</span>");
+                    $("#textversions").text(version);
                 
                 } else if (/CTM_GitOK/i.test(splitContent[i])) {
                            $("#check_GitInstalled").append( "  \u2713" );

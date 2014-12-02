@@ -7,6 +7,7 @@ html, body {
 
 body {
    background: #000 url(../assets/758v3.png) no-repeat right top;
+   background-size: 100% 100%;
 }
 
 p {
@@ -230,7 +231,7 @@ select.custom-dropdown:hover {
 }
 
 #WelcomeMessage {
-    margin:128px 0px 0px 0px;
+    margin: 100px 0px 0px 0px;
     line-height: 2px;
 }
 
@@ -259,11 +260,11 @@ select.custom-dropdown:hover {
 }
 
 .textVersion {
-    font-family: Helvetica;
-    font-size: 16px;
-    color: #ccc;
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 12px;
+    color: #CCC;
     text-align:center;
-    margin-top: 32px;
+    margin-bottom: 28px;
 }
 
 .textBody {

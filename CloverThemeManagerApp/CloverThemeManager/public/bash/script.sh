@@ -857,30 +857,36 @@ RespondToUserUpdateApp()
 PerformUpdates()
 {
     if [ -f "$updateScript" ]; then
-    
-        chmod 755 "$updateScript"
-        
-        # Check public directory is writeable
-        CheckPathIsWriteable "${PUBLIC_DIR}"
-        local isPathWriteable=$? # 1 = not writeable / 0 = writeable
-           
-        WriteToLog "Performing Updates"
-        local successFlag=1
-        if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-            WriteToLog "Public DIR is not writeable. Asking for password"
 
-            GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
-            returnValueRoot=$? # 1 = not root / 0 = root
-            if [ ${returnValueRoot} = 0 ]; then 
-                echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
-                returnValue=$?
-                if [ ${returnValue} -eq 0 ]; then
-                    successFlag=0
+        # Check update script md5
+        if [ $(CalculateMd5 "$updateScript") == $updateScriptChecksum ]; then
+    
+            chmod 755 "$updateScript"
+        
+            # Check public directory is writeable
+            CheckPathIsWriteable "${PUBLIC_DIR}"
+            local isPathWriteable=$? # 1 = not writeable / 0 = writeable
+
+            WriteToLog "Performing Updates"
+            local successFlag=1
+            if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+                WriteToLog "Public DIR is not writeable. Asking for password"
+
+                GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
+                returnValueRoot=$? # 1 = not root / 0 = root
+                if [ ${returnValueRoot} = 0 ]; then 
+                    echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
+                    returnValue=$?
+                    if [ ${returnValue} -eq 0 ]; then
+                        successFlag=0
+                    fi
                 fi
+            else
+                WriteToLog "Public DIR is writeable"
+                "$updateScript" && successFlag=0
             fi
         else
-            WriteToLog "Public DIR is writeable"
-            "$updateScript" && successFlag=0
+            WriteToLog "Error. $updateScript has invalid md5. Update not done."
         fi
     else
         WriteToLog "$updateScript not found."
@@ -952,6 +958,10 @@ CheckAndRecordAppUpdates()
 
     local needUpdating=1
     local updateAvailAppStr=""
+    
+    # Delete any previous update script
+    RemoveFile "$updateScript"
+    
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking App updates" 
     local pathToDownloadedPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
     if [ -d "$pathToDownloadedPublicDir" ]; then
@@ -999,6 +1009,8 @@ CheckAndRecordAppUpdates()
     if [ "$updateAvailAppStr" != "" ] && [ "${updateAvailAppStr:0:1}" == "," ]; then
         # Remove leading comma from string
         updateAvailAppStr="${updateAvailAppStr#?}"
+        # Make note of scripts md5
+        updateScriptChecksum=$(CalculateMd5 "$updateScript")
     else
         # No app update in the downloaded files. Can remove
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No app updates. Deleting $pathToDownloadedPublicDir" 
@@ -2123,9 +2135,13 @@ gUISettingViewPreviews="Hide"
 gFirstRun=0
 gitCmd=""
 
+# Find version of main app.
+mainAppInfoFilePath="${SELF_PATH%Resources*}"
+mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$mainAppInfoFilePath"/Info.plist  )
+
 # Begin log file
 RemoveFile "$logFile"
-WriteToLog "CTM_Version${VERS}"
+WriteToLog "CTM_VersionApp ${mainAppVersion} / Script ${VERS}"
 WriteToLog "Started Clover Theme Manager script"
 WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
