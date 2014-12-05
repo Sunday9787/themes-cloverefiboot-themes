@@ -186,6 +186,7 @@ function readBashToJsMessageFile()
 function setTargetThemePath(entry)
 {
     $('#partitionSelect').val(entry);
+    ResetButtonsAndBandsToDefault();
     if (entry != "-") {
         showButtons();
         // Show open button beside device dropdown
@@ -193,7 +194,6 @@ function setTargetThemePath(entry)
     } else {
         //updateBandsWithInstalledThemes("-");
         $("#OpenPathButton").css("display","none");
-        ResetButtonsAndBandsToDefault();
         ShowMessageBoxClose();
         HideProgressBar();
     }
