@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.2"
+VERS="0.74.3"
 
 DEBUG=0
 #set -x
@@ -732,7 +732,7 @@ FindArrayIdFromTarget()
         fi 
     done
     
-    [[ $success -eq 0 ]] && echo 0
+    [[ $success -eq 0 ]] && echo -
 }
 
 
@@ -1420,15 +1420,24 @@ MountESPAndSearchThemesPath()
         
     # Set internal THEME vars to point to volume path..
     [ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting internal THEME vars to ID $entry"
-    local mountpoint=$( ResolveMountPointFromUUID "${installedThemeVolumeUUID[$entry]}" )
+    local mountpoint=$( ResolveMountPointFromUUID "${duVolumeUuid[$entry]}" )
     if [ "$mountpoint" != "" ]; then
         TARGET_THEME_DIR="$mountpoint"
+        TARGET_THEME_DIR_DEVICE="${duIdentifier[$entry]}"
+        TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$entry]}"
     else
-        TARGET_THEME_DIR="${installedThemePath[$entry]}"
+        if [ "${#duVolumeUuid[@]}" -eq 0 ]; then
+            WriteToLog "No /EFI/Clover/Theme paths exist"
+            TARGET_THEME_DIR="-"
+            TARGET_THEME_DIR_DEVICE="-"
+            TARGET_THEME_VOLUMEUUID="-"
+        else
+            TARGET_THEME_DIR="${duVolumeMountPoint[$entry]}"
+            TARGET_THEME_DIR_DEVICE="${duIdentifier[$entry]}"
+            TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$entry]}"
+        fi
     fi
-    TARGET_THEME_DIR_DEVICE="${installedThemePathDevice[$entry]}"
-    TARGET_THEME_VOLUMEUUID="${installedThemeVolumeUUID[$entry]}"
-    
+
     WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
     WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
     WriteToLog "TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
@@ -1439,8 +1448,10 @@ MountESPAndSearchThemesPath()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
     SendToUI "Target@$entry"
     
-    GetListOfInstalledThemesAndSendToUI
-    GetFreeSpaceOfTargetDeviceAndSendToUI
+    if [ "$TARGET_THEME_VOLUMEUUID" != "-" ]; then
+        GetListOfInstalledThemesAndSendToUI
+        GetFreeSpaceOfTargetDeviceAndSendToUI
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2102,36 +2113,39 @@ CheckForUpdatesInTheBackground()
     unversionedThemeStr=""
     local updateWasFound=0
     
-    WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    if [ "$TARGET_THEME_DIR" != "-" ]; then
     
-    for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
-    do
-        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking for update to ${installedThemesOnCurrentVolume[$t]}"
-            cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
-            local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
-            if [[ "$updateCheck" == *done.* ]]; then
-                # Theme was updated.
-                WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
-                updateWasFound=1
-                # Mark update as available for all instances of this theme.
-                # This will get written to prefs.
-                for ((n=0; n<${#installedThemeName[@]}; n++ ));
-                do
-                    if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting installedThemeUpdateAvailable[$n] to Yes"
-                        installedThemeUpdateAvailable[$n]="Yes" 
-                    fi
-                done
-            else
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No update found for ${installedThemesOnCurrentVolume[$t]}"
+        WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+    
+        for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+        do
+            if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking for update to ${installedThemesOnCurrentVolume[$t]}"
+                cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
+                local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
+                if [[ "$updateCheck" == *done.* ]]; then
+                    # Theme was updated.
+                    WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
+                    updateWasFound=1
+                    # Mark update as available for all instances of this theme.
+                    # This will get written to prefs.
+                    for ((n=0; n<${#installedThemeName[@]}; n++ ));
+                    do
+                        if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting installedThemeUpdateAvailable[$n] to Yes"
+                            installedThemeUpdateAvailable[$n]="Yes" 
+                        fi
+                    done
+                else
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No update found for ${installedThemesOnCurrentVolume[$t]}"
+                fi
             fi
-        fi
-    done
+        done
     
-    # Run routine to update prefs file.
-    if [ $updateWasFound -eq 1 ]; then
-        MaintainInstalledThemeListInPrefs  
+        # Run routine to update prefs file.
+        if [ $updateWasFound -eq 1 ]; then
+            MaintainInstalledThemeListInPrefs  
+        fi
     fi
 }
 
