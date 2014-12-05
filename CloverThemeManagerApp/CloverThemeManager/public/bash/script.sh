@@ -22,9 +22,9 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.1"
+VERS="0.74.2"
 
-DEBUG=1
+DEBUG=0
 #set -x
 
 # =======================================================================================
@@ -171,6 +171,21 @@ ClearUpdateFromPrefs()
 }
 
 # ---------------------------------------------------------------------------------------
+RenameInternalESPMountPointToEFI()
+{
+    # Rename internal ESP internal mountpoint in supplied path to EFI
+    if [[ "$1" == *"$gESPMountPrefix"* ]]; then
+        local tmpVolume="${1%/EFI*}"
+        local tmpPath="${1##*$tmpVolume}"
+        local finalPath="/Volumes/EFI${tmpPath}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "Renaming for UI $1 to $finalPath"
+    else
+        finalPath="$1"
+    fi
+    echo "$finalPath"
+}
+
+# ---------------------------------------------------------------------------------------
 MaintainInstalledThemeListInPrefs()
 {
     # This routine creates the InstalledThemes array which is
@@ -194,7 +209,10 @@ MaintainInstalledThemeListInPrefs()
         local passedDevice="$2"
         local passedUuid="$3"
         local passedUpdate="$4"
-
+        
+        # Rename any ESP internal mountpoint to EFI
+        passedPath=$( RenameInternalESPMountPointToEFI "$passedPath" )
+        
         # open dictionary
         arrayString="${arrayString}$openDict"
 
@@ -331,6 +349,12 @@ UpdatePrefsKey()
 {
     local passedKey="$1"
     local passedValue="$2"
+    
+    # Rename any ESP internal mountpoint to EFI
+    if [ "$passedKey" == "LastSelectedPath" ]; then
+        passedValue=$( RenameInternalESPMountPointToEFI "$passedValue" )
+    fi
+    
     if [ -f "$gUserPrefsFile".plist ]; then
         defaults delete "$gUserPrefsFile" "$passedKey"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing prefs key $passedKey = $passedValue"
@@ -358,7 +382,7 @@ RunThemeAction()
     local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
     case "$passedAction" in
-                "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}/"
+                "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}"
                             local successFlag=1
     
                             # Only clone the theme from the Clover repo if not already installed
@@ -501,7 +525,8 @@ RunThemeAction()
     # Was install operation a success?
     if [ $successFlag -eq 0 ]; then
         if [ $COMMANDLINE -eq 0 ]; then
-            WriteToLog "Success@${passedAction}@$themeTitleToActOn"
+            WriteToLog "$themeTitleToActOn : ${passedAction} : Success"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Success@${passedAction}@$themeTitleToActOn"
             SendToUI "Success@${passedAction}@$themeTitleToActOn"
             
             if [ "$passedAction" == "Install" ]; then
@@ -533,7 +558,8 @@ RunThemeAction()
         return 0
     else
         if [ $COMMANDLINE -eq 0 ]; then
-            WriteToLog "Fail@${passedAction}@$themeTitleToActOn"
+            WriteToLog "$themeTitleToActOn : ${passedAction} : Fail"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Fail@${passedAction}@$themeTitleToActOn"
             SendToUI "Fail@${passedAction}@$themeTitleToActOn"
         fi
         return 1
@@ -652,12 +678,37 @@ GetAndCheckUIPassword()
 }
 
 # ---------------------------------------------------------------------------------------
+ResolveMountPointFromUUID()
+{
+    # Resolve volume mountpoint from UUID
+    local mountpoint=""
+    
+    # MBR partition scheme does not use UUID's so check
+    if [ "$1" != "$zeroUUID" ]; then
+        for (( u=0; u<${#themeDirPaths[@]}; u++ ))
+        do
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Matching ${duVolumeUuid[$u]} : $1"
+            if [[ "${duVolumeUuid[$u]}" == "$1" ]]; then
+                mountpoint="${themeDirPaths[$u]}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match: Mountpoint=$mountpoint"
+                break
+            fi
+        done
+    else
+        mountpoint="${TARGET_THEME_DIR}"
+    fi
+    echo "$mountpoint"
+}
+    
+# ---------------------------------------------------------------------------------------
 CheckPathIsWriteable()
 {
-    local passedDir="$1"
-    
+    local passedMountPoint="$1"     
     local isWriteable=1
-    touch "$passedDir"/.test 2>/dev/null && rm -f "$passedDir"/.test || isWriteable=0
+    
+    if [ "$passedMountPoint" != "" ]; then
+        touch "$passedMountPoint"/.test 2>/dev/null && rm -f "$passedMountPoint"/.test || isWriteable=0
+    fi
 
     if [ $isWriteable -eq 0 ]; then
         return 1
@@ -895,6 +946,7 @@ PerformUpdates()
     
     if [ $successFlag -eq 0 ]; then
         WriteToLog "Updates were successful."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Success@"
         SendToUI "UpdateAppFeedback@Success@"
         
         # Remove update files
@@ -909,6 +961,7 @@ PerformUpdates()
         fi
     else
         WriteToLog "Updates failed."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Fail@"
         SendToUI "UpdateAppFeedback@Fail@"
     fi
     
@@ -1022,6 +1075,7 @@ CheckAndRecordAppUpdates()
 
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_UpdatesOK"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${updateAvailAppStr}@"
     SendToUI "UpdateAvailApp@${updateAvailAppStr}@"
 }
 
@@ -1161,81 +1215,189 @@ GetListOfMountedDevices()
 BuildDiskUtilStringArrays()
 {
     # ---------------------------------------------------------------------------------------
-    # Function to search for key in plist and return all associated strings in an array. 
-    # Will only find a single match
-    FindMatchInSlicePlist()
+    FindMatchInPlist()
     {
         local keyToFind="$1"
         local typeToFind="$2"
         declare -a plistToRead=("${!3}")
+        local whatToFind="$4"
         local foundSection=0
-        
-        #oIFS="$IFS"; IFS=$'\r\n'
+
         for (( n=0; n<${#plistToRead[@]}; n++ ))
         do
             [[ "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=1
             if [ $foundSection -eq 1 ]; then
-                [[ "${plistToRead[$n]}" == *"</array>"* ]] || [[ "${plistToRead[$n]}" == *"</dict>"* ]] || [[ ! "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=0
+            
+                if [ $whatToFind == "Multiple" ]; then
+                    [[ "${plistToRead[$n]}" == *"</array>"* ]] || [[ "${plistToRead[$n]}" == *"</dict>"* ]] && foundSection=0
+                else
+                    [[ "${plistToRead[$n]}" == *"</array>"* ]] || [[ "${plistToRead[$n]}" == *"</dict>"* ]] || [[ ! "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=0
+                fi
+                
                 if [[ "${plistToRead[$n]}" == *"$typeToFind"* ]]; then
+
                     tmp=$( echo "${plistToRead[$n]#*>}" )
                     tmp=$( echo "${tmp%<*}" )
-                    #tmpArray+=("$tmp")
-                    echo "$tmp" # return to caller
-                    break
+                    if [ $whatToFind == "Multiple" ]; then
+                        tmpArray+=("$tmp")
+                    else
+                        echo "$tmp" # return to caller
+                        break
+                    fi
                 fi
-            fi
+                
+            fi    
         done
-        #IFS="$oIFS"
     }
     
     local recordAdded=0
-    
-    # Declare local arrays (other global arrays are declared at the start of script).
-    declare -a diskUtilPlist
-    declare -a diskUtilSliceInfo
-    
+    local espMounted=0
+    local newThemeList=""
+
+    unset allDisks
+    unset tmpArray
+    unset duVolumeName
+    unset duVolumeMountPoint
+    unset duVolumeUuid
+    unset duIdentifier
+    unset themeDirPaths
+     
     WriteToLog "Getting diskutil info for mounted devices"
-        
+    
     # Read Diskutil command in to array rather than write to file.
 	diskUtilPlist=( $( diskutil list -plist ))
+	FindMatchInPlist "AllDisks" "string" "diskUtilPlist[@]" "Multiple"
+	allDisks=("${tmpArray[@]}")
 
-    # Only check details of mounted devices
-    for (( s=0; s<${#dfMounts[@]}; s++ ))
+    #Loop through all disk partitions
+    for (( s=0; s<${#allDisks[@]}; s++ ))
     do
-        if [[ "${dfMounts[$s]}" == *disk* ]]; then
+    
+        # Check this partition matches one that's mounted
+        local isMounted=0
+        for (( m=0; m<${#dfMounts[@]}; m++ ))
+        do
+            if [ "${dfMounts[$m]}" == "${allDisks[$s]}" ]; then
+               isMounted=1
+            fi
+        done
+        
+        # or is slice #1
+        local slice="${allDisks[$s]##*s}"
+        if [ $isMounted -eq 1 ] || [ "$slice" == "1" ]; then
+        
             unset diskUtilSliceInfo
-
             oIFS="$IFS"; IFS=$'\r\n'
-            diskUtilSliceInfo=( $( diskutil info -plist /dev/${dfMounts[$s]} ))
+            diskUtilSliceInfo=( $( diskutil info -plist /dev/${allDisks[$s]} ))
             IFS="$oIFS"
             
-            local tmp=$( FindMatchInSlicePlist "VolumeName" "string" "diskUtilSliceInfo[@]" )        
-            local tmpMP=$( FindMatchInSlicePlist "MountPoint" "string" "diskUtilSliceInfo[@]" )
+            local tmpContent=$( FindMatchInPlist "Content" "string" "diskUtilSliceInfo[@]" "Single" )
+            local tmp=$( FindMatchInPlist "VolumeName" "string" "diskUtilSliceInfo[@]" "Single" )        
+            local tmpMP=$( FindMatchInPlist "MountPoint" "string" "diskUtilSliceInfo[@]" "Single" )
+            local successFlag=1
+            
+            if [ "$tmpContent" == "EFI" ] && [ "$slice" == "1" ] && [ "$tmpMP" == "" ]; then
+                # Is not mounted. Does the user want it mounted?
+                WriteToLog "${allDisks[$s]} is unmounted ESP."
+                if [ "$1" == "ESP" ]; then
+                    # User wants to mount and check ESP for /EFI/Clover/Themes
+                    WriteToLog "Will Mount"  
+                    
+                    local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
+                    if [ ! "$mountPoint" == "" ]; then
+                        GetAndCheckUIPassword "Clover Theme Manager requires your password to mount the EFI system partition at /dev/${allDisks[$s]}. Type your password to allow this."
+                        returnValueRoot=$? # 1 = not root / 0 = root
+                        if [ ${returnValueRoot} = 0 ]; then 
+                            echo "$gPw" | sudo -S "$uiSudoChanges" "MountESP" "/dev/${allDisks[$s]}" "$mountPoint"
+                            returnValue=$?
+                            if [ ${returnValue} -eq 0 ]; then
+                                successFlag=0
+                            fi
+                        fi
+
+                        if [ $successFlag -eq 0 ]; then
+                            WriteToLog "Mounted ${allDisks[$s]} successfully."
+                            tmpMP="${mountPoint}"
+                            (( espMounted++ ))
+                        else
+                            WriteToLog "Failed to mount ${allDisks[$s]}."
+                            tmpMP=""
+                        fi
+                    fi
+                fi
+            fi
+            
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${allDisks[$s]} | slice=$slice | tmp=$tmp | tmpMP=$tmpMP | tmpC=$tmpContent"    
             
             # Does this device contain /efi/clover/themes directory?
             themeDir=$( find "$tmpMP"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
             if [ "$themeDir" ]; then
      
-                WriteToLog "Volume $tmp contains $themeDir" 
+                WriteToLog "Volume $tmp on mountpoint $tmpMP contains Clover themes directory" 
                 # Save VolumeName
                 duVolumeName+=( "${tmp}" )
                 # Save Mount Point
                 duVolumeMountPoint+=( "${tmpMP}" )
                 # Save device
-                duIdentifier+=("${dfMounts[$s]}")
+                duIdentifier+=("${allDisks[$s]}")
                 # Read and save Volume UUID
                 unset diskUtilSliceInfo
-                diskUtilSliceInfo=( $( diskutil info -plist /dev/"${dfMounts[$s]}" ))
-                tmp=$( FindMatchInSlicePlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" )
+                diskUtilSliceInfo=( $( diskutil info -plist /dev/"${allDisks[$s]}" ))
+                tmp=$( FindMatchInPlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" "Single" )
                 # Any FAT format volumes will not have UUID's so fill with zeros
-                [[ $tmp == "" ]] && tmp="00000000-0000-0000-0000-000000000000"
+                [[ $tmp == "" ]] && tmp="$zeroUUID"
                 duVolumeUuid+=("$tmp")
                 # Save path to theme directory 
                 themeDirPaths+=("$themeDir")
                 (( recordAdded++ ))
+            else
+                # If we mounted an ESP and there is not an /EFI/Clover/Themes dir
+                # then unmount it.
+                successFlag=1
+                if [[ "$tmpMP" =~ "$gESPMountPrefix" ]]; then
+                    echo "$gPw" | sudo -S "$uiSudoChanges" "UnMountESP" "$tmpMP" && gPw=""
+                    returnValue=$?
+                    if [ ${returnValue} -eq 0 ]; then
+                        successFlag=0
+                    fi
+                    
+                    if [ $successFlag -eq 0 ]; then
+                        WriteToLog "Unmounted ${allDisks[$s]} successfully."
+                        (( espMounted-- ))
+                    else
+                        WriteToLog "Failed to unmount ${allDisks[$s]}."
+                    fi
+                fi
             fi
         fi
     done
+    
+    # If user requested mounting ESP's then send new
+    # dropdown list for UI
+    if [ "$1" == "ESP" ]; then
+        for (( p=0; p<${#themeDirPaths[@]}; p++ ))
+        do
+            # Check if mountpoint is temporary for ESP partition.
+            # If yes then make it human readable by changing to EFI.
+            if [[ "${themeDirPaths[$p]}" == *$gESPMountPrefix* ]]; then
+                pathToPrint="/Volumes/EFI"
+            else
+                pathToPrint="${themeDirPaths[$p]}"
+            fi
+            newThemeList="${newThemeList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
+        done
+    
+        if [ "$newThemeList" != "" ]; then
+            # Remove leading comma from string
+             newThemeList="${newThemeList#?}"
+             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewMenuEntry@${newThemeList}@"
+             SendToUI "NewMenuEntry@${newThemeList}@"
+        fi
+    
+        #local checkMountPoints=$( ls /Volumes/ | grep "$gESPMountPrefix" | wc -l )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${espMounted}"
+        SendToUI "MessageESP@Mounted@${espMounted}"
+    fi
 
     # Before leaving, check all string array lengths are equal.
     if [ ${#duVolumeName[@]} -ne $recordAdded ] || [ ${#duVolumeUuid[@]} -ne $recordAdded ] || [ ${#duIdentifier[@]} -ne $recordAdded ]; then
@@ -1249,9 +1411,45 @@ BuildDiskUtilStringArrays()
 }
 
 # ---------------------------------------------------------------------------------------
+MountESPAndSearchThemesPath()
+{
+    WriteLinesToLog
+    WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
+    WriteToLog "Searching for ESP's with /EFI/Clover/Themes"
+    BuildDiskUtilStringArrays "ESP"
+        
+    # Set internal THEME vars to point to volume path..
+    [ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting internal THEME vars to ID $entry"
+    local mountpoint=$( ResolveMountPointFromUUID "${installedThemeVolumeUUID[$entry]}" )
+    if [ "$mountpoint" != "" ]; then
+        TARGET_THEME_DIR="$mountpoint"
+    else
+        TARGET_THEME_DIR="${installedThemePath[$entry]}"
+    fi
+    TARGET_THEME_DIR_DEVICE="${installedThemePathDevice[$entry]}"
+    TARGET_THEME_VOLUMEUUID="${installedThemeVolumeUUID[$entry]}"
+    
+    WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
+    WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+    WriteToLog "TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
+    
+    # As volume selector dropdown menu entries may well have changed
+    # send UI a partition to select
+    local entry=$( FindArrayIdFromTarget )
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+    SendToUI "Target@$entry"
+    
+    GetListOfInstalledThemesAndSendToUI
+    GetFreeSpaceOfTargetDeviceAndSendToUI
+}
+
+# ---------------------------------------------------------------------------------------
 CreateDiskPartitionDropDownHtml()
 {
     local check=1
+    local pathToPrint=""
+    
+    WriteLinesToLog
     
     RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}/dropdown_html"
     
@@ -1263,8 +1461,16 @@ CreateDiskPartitionDropDownHtml()
         if [ ! "${duVolumeName[$a]}" == "" ] && [[ ! "${duVolumeName[$a]}" =~ ^\ +$ ]]; then
             WriteToLog "${duIdentifier[$a]} | ${duVolumeMountPoint[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
 
+            # Check if mountpoint is temporary for ESP partition.
+            # If yes then make it human readable by changing to EFI.
+            if [[ "${themeDirPaths[$a]}" == *$gESPMountPrefix* ]]; then
+                pathToPrint="/Volumes/EFI"
+            else
+                pathToPrint="${themeDirPaths[$a]}"
+            fi
+            
             # Append paths to drop-down menu
-            htmlDropDown="${htmlDropDown}<option value=\"${a}\">${themeDirPaths[$a]} [${duIdentifier[$a]}] [${duVolumeUuid[$a]}]</option>"
+            htmlDropDown="${htmlDropDown}<option value=\"${a}\">$pathToPrint [${duIdentifier[$a]}] [${duVolumeUuid[$a]}]</option>"
         else
             WriteLog "must be blank or empty"
         fi
@@ -1276,7 +1482,6 @@ CreateDiskPartitionDropDownHtml()
     # Save html to file
     echo "$htmlDropDown" > "${WORKING_PATH}/${APP_DIR_NAME}"/dropdown_html
 
-    WriteLinesToLog
     # Insert dropdown Html in to placeholder
     WriteToLog "Inserting dropdown HTML in to managethemes.html"
     LANG=C sed -ie "s/<!--INSERT_MENU_OPTIONS_HERE-->/${htmlDropDown}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
@@ -1364,19 +1569,33 @@ ReadPrefsFile()
             fi
         done
         
-        if [ "$gLastSelectedPath" != "" ]; then
-            TARGET_THEME_DIR="$gLastSelectedPath"
-        else
-            TARGET_THEME_DIR="-"
-        fi
-        if [ "$gLastSelectedPathDevice" != "" ]; then
+        # Map $gLastSelectedPath against $gLastSelectedVolumeUUID to catch differences
+        # which will occur when using ESP. Internal random mountpoint gets written to 
+        # prefs as /Volumes/EFI because random mountpoint will not happen again.
+        if [ "$gLastSelectedVolumeUUID" != "" ] && [ "$gLastSelectedPath" != "" ] && [ "$gLastSelectedPathDevice" != "" ]; then
+            
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Mapping lastSelectedUUID against mountpoint"
+            local checkPath=""
+            for (( u=0; u<${#themeDirPaths[@]}; u++ ))
+            do
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duVolumeUuid[$u]} to $gLastSelectedVolumeUUID"
+                if [[ "${duVolumeUuid[$u]}" == "$gLastSelectedVolumeUUID" ]]; then
+                    checkPath="${themeDirPaths[$u]}"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
+                fi
+            done
+            
+            if [ "$checkPath" != "" ]; then
+                TARGET_THEME_DIR="$checkPath"
+            else
+                TARGET_THEME_DIR="$gLastSelectedPath"
+            fi
+            
             TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
-        else
-            TARGET_THEME_DIR_DEVICE="-"
-        fi
-        if [ "$gLastSelectedVolumeUUID" != "" ]; then
             TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
         else
+            TARGET_THEME_DIR="-"
+            TARGET_THEME_DIR_DEVICE="-"
             TARGET_THEME_VOLUMEUUID="-"
         fi
         
@@ -1397,6 +1616,10 @@ ReadPrefsFile()
         WriteToLog "CTM_ReadPrefsCreate"
     fi
     
+    WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
+    WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+    WriteToLog "TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
+        
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
 }
 
@@ -1443,18 +1666,6 @@ SendUIInitData()
 
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
-                        
-        elif [ $retVal -eq 1 ]; then
-            if [ ! "$TARGET_THEME_DIR" == "-" ] && [ ! "$TARGET_THEME_VOLUMEUUID" == "-" ] ; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
-                SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}"
-            else
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
-                SendToUI "NoPathSelected@@"
-            fi
-            TARGET_THEME_DIR="-"
-            TARGET_THEME_DIR_DEVICE="-"
-            TARGET_THEME_VOLUMEUUID="-"
         fi
         
         # Run these regardless of path chosen as JS is waiting to hear it. 
@@ -1464,7 +1675,8 @@ SendUIInitData()
         # Set redirect from initial page
         #WriteToLog "Redirect managethemes.html"
     else
-        WriteToLog "Sending UI: NoPathSelected@@"
+        WriteToLog "NoPathSelected"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
         
         # Send list of updated themes to UI otherwise the UI interface will not be enabled.
@@ -1475,21 +1687,21 @@ SendUIInitData()
     
     # Send thumbnail size
     if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
-        SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+        SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
     fi
     
     # Send UI view choice for UnInstalled themes
-    SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
+    SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
     
     # Send UI view choice for Thumbnails
-    SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
+    SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
     
     # Send UI view choice for Previews
-    SendToUI "PreviewView@${gUISettingViewPreviews}@"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
+    SendToUI "PreviewView@${gUISettingViewPreviews}@"
     
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
@@ -1534,7 +1746,12 @@ RespondToUserDeviceSelection()
 
         WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with UUID ${duVolumeUuid[$pathOption]}" 
 
-        TARGET_THEME_DIR="${themeDirPaths[$pathOption]}"
+        local mountpoint=$( ResolveMountPointFromUUID "${duVolumeUuid[$pathOption]}" )
+        if [ "$mountpoint" != "" ]; then
+            TARGET_THEME_DIR="$mountpoint"
+        else
+            TARGET_THEME_DIR="${themeDirPaths[$pathOption]}"
+        fi
         TARGET_THEME_DIR_DEVICE="${duIdentifier[$pathOption]}"
         TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$pathOption]}"
 
@@ -1542,19 +1759,24 @@ RespondToUserDeviceSelection()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
         
-        UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"
-        UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
-        UpdatePrefsKey "LastSelectedVolumeUUID" "$TARGET_THEME_VOLUMEUUID"
+        CheckThemePathIsStillValid
+        retVal=$? # returns 1 if invalid / 0 if valid
+        if [ $retVal -eq 0 ]; then
         
-        GetListOfInstalledThemesAndSendToUI
-        GetFreeSpaceOfTargetDeviceAndSendToUI
-        CheckAndRecordOrphanedThemesAndSendToUI
-        CheckForAnyUpdatesStoredInPrefsAndSendToUI
-        CheckAndRemoveBareClonesNoLongerNeeded
-        ReadAndSendCurrentNvramTheme
-        CheckForUpdatesInTheBackground &
+            UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"  
+            UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
+            UpdatePrefsKey "LastSelectedVolumeUUID" "$TARGET_THEME_VOLUMEUUID"
+        
+            GetListOfInstalledThemesAndSendToUI
+            GetFreeSpaceOfTargetDeviceAndSendToUI
+            CheckAndRecordOrphanedThemesAndSendToUI
+            CheckForAnyUpdatesStoredInPrefsAndSendToUI
+            CheckAndRemoveBareClonesNoLongerNeeded
+            ReadAndSendCurrentNvramTheme
+            CheckForUpdatesInTheBackground &
+        fi
     else
-        WriteToLog "User de-selected device pointing to theme path"
+        WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_VOLUMEUUID="-"
@@ -1582,8 +1804,15 @@ RespondToUserThemeAction()
     if [ ! "$chosenTheme" == "" ] && [ ! "$desiredAction" == "" ]; then
         WriteLinesToLog
         WriteToLog "User chose to $desiredAction theme $chosenTheme"
-        RunThemeAction "$desiredAction" "$chosenTheme"
-        return $?
+        
+        CheckThemePathIsStillValid
+        retVal=$? # returns 1 if invalid / 0 if valid
+        if [ $retVal -eq 0 ]; then
+            RunThemeAction "$desiredAction" "$chosenTheme"
+            return $?
+        else
+            return 1
+        fi
     fi
 }
 
@@ -1592,6 +1821,23 @@ CheckThemePathIsStillValid()
 {
     if [ ! -d "$TARGET_THEME_DIR" ]; then
         WriteToLog "Theme directory $TARGET_THEME_DIR does not exist! Setting to -"
+        
+        local entry=$( FindArrayIdFromTarget )
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
+        SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
+
+        WriteToLog "NoPathSelected"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
+        SendToUI "NoPathSelected@@"
+            
+        SendToUI "UpdateAvailThemes@@"
+        SendToUI "Target@-@"
+        
+        TARGET_THEME_DIR="-"
+        TARGET_THEME_DIR_DEVICE="-"
+        TARGET_THEME_VOLUMEUUID="-"
+
         return 1
     else
         WriteToLog "Theme directory $TARGET_THEME_DIR exists."
@@ -1628,7 +1874,7 @@ GetListOfInstalledThemesAndSendToUI()
         WriteToLog "Can't check for installed themes at $TARGET_THEME_DIR"
     fi
     
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI list of installed themes: InstalledThemes@${installedThemeStr}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@${installedThemeStr}@"
     SendToUI "InstalledThemes@${installedThemeStr}@"
 }
 
@@ -1673,10 +1919,17 @@ CheckThemeIsInPrefs()
     
     local themeToFind="$1"
     local inPrefs=0
+    
     for ((n=0; n<${#installedThemeName[@]}; n++ ))
     do
-        if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
-            inPrefs=1
+        if [ "$TARGET_THEME_VOLUMEUUID" == "$zeroUUID" ]; then
+            if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
+                inPrefs=1
+            fi
+        else
+            if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
+                inPrefs=1
+            fi
         fi
     done
     
@@ -1710,7 +1963,7 @@ CheckAndRecordOrphanedThemesAndSendToUI()
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
             if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-                WriteToLog "! ${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
+                WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
                 # Append to list of themes that cannot be checked for updates
                 unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
             
@@ -2137,6 +2390,8 @@ gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
 gFirstRun=0
 gitCmd=""
+gESPMountPrefix="ctmTempMp"
+zeroUUID="00000000-0000-0000-0000-000000000000"
 
 # Find version of main app.
 mainAppInfoFilePath="${SELF_PATH%Resources*}"
@@ -2206,7 +2461,12 @@ if [ "$gitCmd" != "" ]; then
         declare -a dfMounts
         declare -a tmpArray
     
+        # Arrays for reading and recording diskutil info
+        declare -a allDisks
+        declare -a diskUtilSliceInfo
+    
         # Arrays for saving volume info
+        declare -a diskUtilPlist
         declare -a duVolumeName
         declare -a duIdentifier
         declare -a duVolumeUuid
@@ -2242,7 +2502,7 @@ if [ "$gitCmd" != "" ]; then
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
         GetListOfMountedDevices
-        BuildDiskUtilStringArrays
+        BuildDiskUtilStringArrays ""
         CreateDiskPartitionDropDownHtml
         ReadPrefsFile
         CleanInstalledThemesPrefEntries
@@ -2290,9 +2550,18 @@ if [ "$gitCmd" != "" ]; then
     
             # Has the user clicked the OpenPath button?
             elif [[ "$logLine" == *OpenPath* ]]; then
-                [[ ! "$TARGET_THEME_DIR" == "-" ]] && Open "$TARGET_THEME_DIR"
                 ClearTopOfMessageLog "$logJsToBash"
+                CheckThemePathIsStillValid
+                retVal=$? # returns 1 if invalid / 0 if valid
+                if [ $retVal -eq 0 ]; then
+                    [[ ! "$TARGET_THEME_DIR" == "-" ]] && Open "$TARGET_THEME_DIR"
+                fi
                 WriteToLog "User selected to open $TARGET_THEME_DIR"
+
+            # Has the user clicked the MountESP button?
+            elif [[ "$logLine" == *MountESP* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                MountESPAndSearchThemesPath
 
             # Has the user pressed a theme button to install, uninstall or update?
             elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
@@ -2327,13 +2596,13 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "UnInstalledButton" "Show"
-                WriteToLog "User chose to hide uninstalled themes"
+                WriteToLog "User chose to show uninstalled themes"
             
             # Has user chosen to show uninstalled themes?
             elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "UnInstalledButton" "Hide"
-                WriteToLog "User chose to show uninstalled themes"
+                WriteToLog "User chose to hide uninstalled themes"
             
             # Has user chosen to show thumbnails?
             elif [[ "$logLine" == *CTM_hideThumbails* ]]; then

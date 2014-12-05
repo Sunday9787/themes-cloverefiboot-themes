@@ -1,4 +1,20 @@
-#!/bin/sh
+#!/bin/bash
+
+# A script for Clover Theme Manager
+# Copyright (C) 2014 Blackosx
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 TMPDIR="/tmp/CloverThemeManager"
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
@@ -124,7 +140,40 @@ UpdateApp()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+MountESP()
+{
+    local successFlag=1
+    local targetFormat=$( fstyp "$device" )
 
+    if [ "$device" != "" ] && [ "$targetFormat" != "" ] && [ "$mountPoint" != "" ]; then
+        mount -t "$targetFormat" "$device" "$mountPoint" && successFlag=0
+    fi
+        
+    if [ $successFlag -eq 0 ]; then
+        exit 0
+    else
+        exit 1
+    fi
+    
+}
+
+# ---------------------------------------------------------------------------------------
+UnMountESP()
+{
+    local successFlag=1
+
+    if [ "$mountPoint" != "" ]; then
+        umount -f "$mountPoint" && successFlag=0
+    fi
+        
+    if [ $successFlag -eq 0 ]; then
+        exit 0
+    else
+        exit 1
+    fi
+    
+}
 
 # ---------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------
@@ -156,6 +205,13 @@ case "$whichFunction" in
                                     ;;
      "UpdateApp"                  ) scriptToRun="$2"
                                     UpdateApp
+                                    ;;
+     "MountESP"                   ) device="$2"
+                                    mountPoint="$3"
+                                    MountESP
+                                    ;;
+     "UnMountESP"                   ) mountPoint="$2"
+                                    UnMountESP
                                     ;;
 esac
 

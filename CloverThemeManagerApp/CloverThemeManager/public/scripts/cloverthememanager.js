@@ -77,9 +77,9 @@ function readBashToJsMessageFile()
                 setTargetThemePath(firstLineSplit[1]);
                 break;
             case "NotExist":
-                // Bash Sends: "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}"
+                // Bash Sends: "NotExist@${TARGET_THEME_DIR_DEVICE}@${TARGET_THEME_DIR}@entry"
                 macgap.app.removeMessage(firstLine);
-                presentNotExistsDialog(firstLineSplit[1],firstLineSplit[2]);
+                presentNotExistsDialog(firstLineSplit[1],firstLineSplit[2],firstLineSplit[3]);
                 break;
             case "InstalledThemes":
                 // Bash sends: "InstalledThemes@${installedThemeStr}@"
@@ -147,7 +147,6 @@ function readBashToJsMessageFile()
                 break;
             case "UpdateAvailApp":
                 // Bash sends: "UpdateAvailApp@${updateAvailAppStr}@"
-                // where $updateAvailThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
                 DisplayAppUpdates(firstLineSplit[1]);
                 break;
@@ -156,6 +155,17 @@ function readBashToJsMessageFile()
                 // where $updateAvailThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
                 AppUpdateFeedback(firstLineSplit[1]);
+                break;
+            case "MessageESP":
+                // Bash sends: "MessageESP@Mounted@${checkMountPoints##* }"
+                macgap.app.removeMessage(firstLine);
+                UpdateMessageBox(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "NewMenuEntry":
+                // Bash sends: "NewMenuEntry@${newThemeList}"
+                //${newThemeList} is a comma separated list
+                macgap.app.removeMessage(firstLine);
+                UpdateAndRefreshPartitionSelectMenu(firstLineSplit[1]);
                 break;
             default:
                 alert("Found else:"  + firstLine);
@@ -180,16 +190,27 @@ function setTargetThemePath(entry)
         showButtons();
         // Show open button beside device dropdown
         $("#OpenPathButton").css("display","block");
+    } else {
+        //updateBandsWithInstalledThemes("-");
+        $("#OpenPathButton").css("display","none");
+        ResetButtonsAndBandsToDefault();
+        ShowMessageBoxClose();
+        HideProgressBar();
     }
 }
 
 //-------------------------------------------------------------------------------------
-function presentNotExistsDialog(uuid,path)
+function presentNotExistsDialog(uuid,path,id)
 {
     if (uuid != "" & path != "") {
         ChangeMessageBoxHeaderColour("red");
-        SetMessageBoxText("Attention:" , "Previous path " + path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
+        SetMessageBoxText("Attention:" ,path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
         ShowMessageBox();
+        
+        // Remove partition entry from dropdown menu
+        $(document).ready(function () {
+            $("#partitionSelect option[value=" + id + "]").remove();
+        });
     }
 }
 
@@ -603,6 +624,18 @@ $(function()
     });
     
     //-----------------------------------------------------
+    // On pressing the mount ESP button
+    $("#MountEspButton").on('click', function() {
+        macgap.app.launch("MountESP");
+        // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue");                            
+        SetMessageBoxText("EFI System Partition(s)","All currently unmounted EFI System Partitions will now be mounted and checked for a /EFI/Clover/Themes directory. If found, the paths will appear in the volume selector.");
+        HideMessageBoxClose();
+        ShowProgressBar();
+        ShowMessageBox();
+    });
+    
+    //-----------------------------------------------------
     // On pressing a theme button (Install,UnInstall,Update)
     $("[id^=button_]").on('click', function() {
         var pressedButton=$(this).attr('id');
@@ -862,6 +895,25 @@ function SetThemeBandHeight(setting)
             $("#BandsHeightToggleButton").css("border","1px solid #282828");
             $("#BandsHeightToggleButton").css("color","#FFF");
             
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function UpdateMessageBox(messageOne,messageTwo)
+{
+    HideProgressBar();
+    if (messageOne != "" && messageTwo != "") {
+        // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue"); 
+        if (messageOne == 'Mounted') {
+            if (messageTwo == '0') {
+                SetMessageBoxText("EFI System Partition(s)","There are no unmounted EFI system partitions with an existing /EFI/Clover/Themes directory.");
+            } else {
+                SetMessageBoxText("EFI System Partition(s)","Number of EFI system partitions with an existing /EFI/Clover/Themes directory mounted by this app: " + messageTwo);
+            }
+        }
+        ShowMessageBoxClose();
+        ShowMessageBox();
     }
 }
 
@@ -1199,13 +1251,34 @@ function SetUnVersionedControlIndicator(themeName)
 }
 
 //-------------------------------------------------------------------------------------
+function UpdateAndRefreshPartitionSelectMenu(list)
+{
+    if (list != "") {
+    
+        // Clear existing entries
+        $(partitionSelect).empty();
+        
+        // Add title menu option
+        $("#partitionSelect").append("<option value=\"-\">Select your target theme directory:</option>");
+        
+        splitList = (list).split(',');
+        for (var t = 0; t < splitList.length; t++) {
+            var parts = (splitList[t]).split(';');
+            var id = (parts[0]);
+            var desc = (parts[1]);
+            $("#partitionSelect").append("<option value=\"" + id + "\">" + desc + "</option>");
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------
 function UpdateAndRefreshInstalledThemeDropDown(themeList)
 {
     // Clear any existing entries
     $(installedThemeDropDown).empty();
 
     if (themeList != "-") {
-        // Add random option
+        // Add title option with - value
         $("#installedThemeDropDown").append("<option value=\"-\">Set Default Theme</option>");
         // Add new list
         for (var t = 0; t < themeList.length; t++) {
