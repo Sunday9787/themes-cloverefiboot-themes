@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.3"
+VERS="0.74.4"
 
 DEBUG=0
 #set -x
@@ -1145,9 +1145,6 @@ GetLatestIndexAndEnsureThemeHtml()
         else
             WriteToLog "CTM_IndexFail"
         fi
-        
-        # Check downloaded app files for update.
-        CheckAndRecordAppUpdates
     }
     
     if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
@@ -1169,8 +1166,6 @@ GetLatestIndexAndEnsureThemeHtml()
         else
             WriteToLog "No updates to index.git"
             WriteToLog "CTM_IndexOK"
-            WriteToLog "No App updates"
-            WriteToLog "CTM_UpdatesOK"
             
             # Use previously saved theme.html
             if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
@@ -1252,7 +1247,7 @@ BuildDiskUtilStringArrays()
     
     local recordAdded=0
     local espMounted=0
-    local newThemeList=""
+    local newPathList=""
 
     unset allDisks
     unset tmpArray
@@ -1350,6 +1345,8 @@ BuildDiskUtilStringArrays()
                 # Save path to theme directory 
                 themeDirPaths+=("$themeDir")
                 (( recordAdded++ ))
+                # Forget user password
+                gPw=""
             else
                 # If we mounted an ESP and there is not an /EFI/Clover/Themes dir
                 # then unmount it.
@@ -1380,18 +1377,21 @@ BuildDiskUtilStringArrays()
             # Check if mountpoint is temporary for ESP partition.
             # If yes then make it human readable by changing to EFI.
             if [[ "${themeDirPaths[$p]}" == *$gESPMountPrefix* ]]; then
-                pathToPrint="/Volumes/EFI"
+                local tmpStrip="${themeDirPaths[$p]#*/}"
+                tmpStrip="${tmpStrip#*/}"
+                tmpStrip="${tmpStrip#*/}"
+                pathToPrint="/Volumes/EFI/${tmpStrip}"
             else
                 pathToPrint="${themeDirPaths[$p]}"
             fi
-            newThemeList="${newThemeList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
+            newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
         done
     
-        if [ "$newThemeList" != "" ]; then
+        if [ "$newPathList" != "" ]; then
             # Remove leading comma from string
-             newThemeList="${newThemeList#?}"
-             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewMenuEntry@${newThemeList}@"
-             SendToUI "NewMenuEntry@${newThemeList}@"
+             newPathList="${newPathList#?}"
+             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewMenuEntry@${newPathList}@"
+             SendToUI "NewMenuEntry@${newPathList}@"
         fi
     
         #local checkMountPoints=$( ls /Volumes/ | grep "$gESPMountPrefix" | wc -l )
@@ -1451,6 +1451,7 @@ MountESPAndSearchThemesPath()
     if [ "$TARGET_THEME_VOLUMEUUID" != "-" ]; then
         GetListOfInstalledThemesAndSendToUI
         GetFreeSpaceOfTargetDeviceAndSendToUI
+        ReadAndSendCurrentNvramTheme
     fi
 }
 
@@ -1834,7 +1835,7 @@ CheckThemePathIsStillValid()
         WriteToLog "Theme directory $TARGET_THEME_DIR does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
-        
+
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
         SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
 
@@ -2377,6 +2378,7 @@ PUBLIC_DIR="${SELF_PATH%/*}"
 PUBLIC_DIR="${PUBLIC_DIR%/*}"
 ASSETS_DIR="$PUBLIC_DIR"/assets
 SCRIPTS_DIR="$PUBLIC_DIR"/bash
+JSSCRIPTS_DIR="$PUBLIC_DIR"/scripts
 WORKING_PATH="${HOME}/Library/Application Support"
 APP_DIR_NAME="CloverThemeManager"
 TARGET_THEME_DIR=""
@@ -2407,13 +2409,19 @@ gitCmd=""
 gESPMountPrefix="ctmTempMp"
 zeroUUID="00000000-0000-0000-0000-000000000000"
 
+# Get versions of js scripts
+jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
+jsScriptInitVersion="${jsScriptInitVersion##*=}"
+jsScriptCtmVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/cloverthememanager.js )
+jsScriptCtmVersion="${jsScriptCtmVersion##*=}"
+
 # Find version of main app.
 mainAppInfoFilePath="${SELF_PATH%Resources*}"
 mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$mainAppInfoFilePath"/Info.plist  )
 
 # Begin log file
 RemoveFile "$logFile"
-WriteToLog "CTM_VersionApp ${mainAppVersion} / Script ${VERS}"
+WriteToLog "CTM_VersionApp ${mainAppVersion} / BashScript ${VERS} / JSinit ${jsScriptInitVersion} / JSctm ${jsScriptCtmVersion}"
 WriteToLog "Started Clover Theme Manager script"
 WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
@@ -2523,7 +2531,7 @@ if [ "$gitCmd" != "" ]; then
         SendUIInitData
 
         # Check for any updates to this app
-        # Not function set for this yet
+        CheckAndRecordAppUpdates
 
         # Read current Clover.Theme Nvram variable and send to UI.
         ReadAndSendCurrentNvramTheme

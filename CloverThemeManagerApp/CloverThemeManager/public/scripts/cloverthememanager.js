@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+//Version=0.74.4
+
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
 
@@ -191,6 +193,7 @@ function setTargetThemePath(entry)
         showButtons();
         // Show open button beside device dropdown
         $("#OpenPathButton").css("display","block");
+        ShowFreeSpace();
     } else {
         //updateBandsWithInstalledThemes("-");
         $("#OpenPathButton").css("display","none");
@@ -204,13 +207,13 @@ function presentNotExistsDialog(uuid,path,id)
 {
     if (uuid != "" & path != "") {
         ChangeMessageBoxHeaderColour("red");
-        SetMessageBoxText("Attention:" ,path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
+        SetMessageBoxText("Attention:" ,"Previously used " + path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
         ShowMessageBox();
         
         // Remove partition entry from dropdown menu
-        $(document).ready(function () {
+        if ( id != "-" ) {
             $("#partitionSelect option[value=" + id + "]").remove();
-        });
+        }
     }
 }
 
@@ -225,7 +228,6 @@ function updateBandsWithInstalledThemes(themeList)
             var unknownThemeCount=0;
             // Update only installed themes with uninstall buttons
             for (var t = 0; t < splitThemeList.length; t++) {
-
                 // Does theme actually exist?
                 // User could have their own theme installed which is not in the repo.
                 if (!$("[id='button_" + splitThemeList[t] + "']").length) {
@@ -286,7 +288,7 @@ function actOnFreeSpace(availableSpace)
         // This will look like 168M 
         // Is the last character a G?
         lastChar = availableSpace.slice(-1);
-           
+
         if (lastChar == "K") {
             // change colour to red
             $(".textFreeSpace").css("color","#C00000");
@@ -309,11 +311,12 @@ function actOnFreeSpace(availableSpace)
                 ShowMessageBox();
             }
         }
-                
+
         if (lastChar == "G") {
             // set to green as defined in the .css file
             $(".textFreeSpace").css("color","#3ef14b");
         }
+
         $(".textFreeSpace").text(availableSpace+"B");
     }
 }
@@ -1315,6 +1318,7 @@ function AddYesNoButtons(){
         CloseMessageBox();
         ShowMessageBoxClose();
         RemoveYesNoButtons();
+        enableInterface();
         
     }).insertAfter("[id='FeedbackButtons']");
     
