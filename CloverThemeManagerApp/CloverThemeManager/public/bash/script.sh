@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.6"
+VERS="0.74.7"
 
 export DEBUG=1
 #set -x
@@ -1101,6 +1101,7 @@ CreateUpdateScript()
 # ---------------------------------------------------------------------------------------
 PerformUpdates()
 {
+    local successFlag=1
     if [ -f "$updateScript" ]; then
 
         # Check update script md5
@@ -1114,7 +1115,6 @@ PerformUpdates()
             local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
             WriteToLog "Performing Updates"
-            local successFlag=1
             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                 WriteToLog "Public DIR is not writeable. Asking for password"
 
