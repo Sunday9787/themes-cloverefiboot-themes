@@ -22,9 +22,9 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.4"
+VERS="0.74.5"
 
-DEBUG=0
+export DEBUG=0
 #set -x
 
 # =======================================================================================
@@ -149,6 +149,20 @@ ResetInternalThemeArrays()
     unset installedThemePathDevice
     unset installedThemeVolumeUUID
     unset installedThemeUpdateAvailable
+}
+
+# ---------------------------------------------------------------------------------------
+ResetInternalDiskArrays()
+{
+    # Reset arrays for newly installed theme
+    unset duIdentifier
+    unset duSlice
+    unset duVolumeName
+    unset duVolumeMountPoint
+    unset duContent
+    unset duVolumeUuid
+    unset themeDirPaths
+    unset unmountedEsp
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1194,220 +1208,139 @@ GetFreeSpaceOfTargetDeviceAndSendToUI()
 }
 
 # ---------------------------------------------------------------------------------------
-GetListOfMountedDevices()
+ReadThemeDirList()
 {
-    WriteToLog "Getting list of mounted devices"
-    unset dfMounts
-    dfMounts+=( $( df -laH | awk '{print $1}' | tail -n +2  ))
-    # Remove /dev/
-    for (( m=0; m<${#dfMounts[@]}; m++ ))
-    do
-        dfMounts[$m]="${dfMounts[$m]##*/}"
-    done
+    # Read /tmp/CloverThemeManager/themeDirInfo.txt file and populate
+    # arrays for theme directory information.
+    # themeDirInfo.txt is created by findThemeDirs.sh script.
+    
+    if [ -f "$themeDirInfo" ]; then
+        oIFS="$IFS"; IFS=$'\r\n'
+        while read -r line
+        do
+            duIdentifier+=( $( cut -d@ -f1 <<<"${line}" ))
+            duSlice+=( $( cut -d@ -f2 <<<"${line}" ))
+            duVolumeName+=( $( cut -d@ -f3 <<<"${line}" ))
+            duVolumeMountPoint+=( $( cut -d@ -f4 <<<"${line}" ))
+            duContent+=( $( cut -d@ -f5 <<<"${line}" ))
+            duVolumeUuid+=( $( cut -d@ -f6 <<<"${line}" ))
+            themeDirPaths+=( $( cut -d@ -f7 <<<"${line}" ))
+        done < "$themeDirInfo"
+        IFS="$oIFS"
+            
+        # Check array contents match and send message to UI via log
+        local total=${#duIdentifier[@]}
+        if [ ${#duSlice[@]} -ne $total ] || [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duVolumeUuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
+            WriteToLog "CTM_ThemeDirsOKFail"
+        
+            # Print results
+            for (( s=0; s<${#duIdentifier[@]}; s++ ))
+            do
+                WriteToLog "${duIdentifier[$s]} | ${duSlice[$s]} | ${duVolumeName[$s]} | ${duVolumeMountPoint[$s]} | ${duContent[$s]} | ${duVolumeUuid[$s]} | ${themeDirPaths[$s]}"
+            done   
+            exit 1 
+        else
+            WriteToLog "CTM_ThemeDirsOK" 
+        fi
+    else
+        WriteToLog "Error. Missing $themeDirInfo file"
+        WriteToLog "CTM_ThemeDirsOKFail"
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
-BuildDiskUtilStringArrays()
+ManageESP()
 {
-    # ---------------------------------------------------------------------------------------
-    FindMatchInPlist()
-    {
-        local keyToFind="$1"
-        local typeToFind="$2"
-        declare -a plistToRead=("${!3}")
-        local whatToFind="$4"
-        local foundSection=0
-
-        for (( n=0; n<${#plistToRead[@]}; n++ ))
+    # Read espList.txt file
+    # Store indentifiers for unmounted ESP's in array
+    # espList.txt is created by findThemeDirs.sh script.
+    if [ -f "$espList" ]; then
+        oIFS="$IFS"; IFS=$'\r\n'
+        while read -r line
         do
-            [[ "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=1
-            if [ $foundSection -eq 1 ]; then
-            
-                if [ $whatToFind == "Multiple" ]; then
-                    [[ "${plistToRead[$n]}" == *"</array>"* ]] || [[ "${plistToRead[$n]}" == *"</dict>"* ]] && foundSection=0
-                else
-                    [[ "${plistToRead[$n]}" == *"</array>"* ]] || [[ "${plistToRead[$n]}" == *"</dict>"* ]] || [[ ! "${plistToRead[$n]}" == *"<key>$keyToFind</key>"* ]] && foundSection=0
-                fi
-                
-                if [[ "${plistToRead[$n]}" == *"$typeToFind"* ]]; then
+            if [[ "$line" == *@U ]]; then
+                unmountedEsp+=( "${line%@*}" )
+            fi
+        done < "$espList"
+        IFS="$oIFS"
 
-                    tmp=$( echo "${plistToRead[$n]#*>}" )
-                    tmp=$( echo "${tmp%<*}" )
-                    if [ $whatToFind == "Multiple" ]; then
-                        tmpArray+=("$tmp")
-                    else
-                        echo "$tmp" # return to caller
-                        break
-                    fi
-                fi
-                
-            fi    
-        done
-    }
-    
-    local recordAdded=0
-    local espMounted=0
-    local newPathList=""
-
-    unset allDisks
-    unset tmpArray
-    unset duVolumeName
-    unset duVolumeMountPoint
-    unset duVolumeUuid
-    unset duIdentifier
-    unset themeDirPaths
-     
-    WriteToLog "Getting diskutil info for mounted devices"
-    
-    # Read Diskutil command in to array rather than write to file.
-	diskUtilPlist=( $( diskutil list -plist ))
-	FindMatchInPlist "AllDisks" "string" "diskUtilPlist[@]" "Multiple"
-	allDisks=("${tmpArray[@]}")
-
-    #Loop through all disk partitions
-    for (( s=0; s<${#allDisks[@]}; s++ ))
-    do
-    
-        # Check this partition matches one that's mounted
-        local isMounted=0
-        for (( m=0; m<${#dfMounts[@]}; m++ ))
+        # Loop through partitions
+        for (( s=0; s<${#unmountedEsp[@]}; s++ ))
         do
-            if [ "${dfMounts[$m]}" == "${allDisks[$s]}" ]; then
-               isMounted=1
-            fi
-        done
-        
-        # or is slice #1
-        local slice="${allDisks[$s]##*s}"
-        if [ $isMounted -eq 1 ] || [ "$slice" == "1" ]; then
-        
-            unset diskUtilSliceInfo
-            oIFS="$IFS"; IFS=$'\r\n'
-            diskUtilSliceInfo=( $( diskutil info -plist /dev/${allDisks[$s]} ))
-            IFS="$oIFS"
-            
-            local tmpContent=$( FindMatchInPlist "Content" "string" "diskUtilSliceInfo[@]" "Single" )
-            local tmp=$( FindMatchInPlist "VolumeName" "string" "diskUtilSliceInfo[@]" "Single" )        
-            local tmpMP=$( FindMatchInPlist "MountPoint" "string" "diskUtilSliceInfo[@]" "Single" )
-            local successFlag=1
-            
-            if [ "$tmpContent" == "EFI" ] && [ "$slice" == "1" ] && [ "$tmpMP" == "" ]; then
-                # Is not mounted. Does the user want it mounted?
-                WriteToLog "${allDisks[$s]} is unmounted ESP."
-                if [ "$1" == "ESP" ]; then
-                    # User wants to mount and check ESP for /EFI/Clover/Themes
-                    WriteToLog "Will Mount"  
-                    
-                    local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
-                    if [ ! "$mountPoint" == "" ]; then
-                        GetAndCheckUIPassword "Clover Theme Manager requires your password to mount the EFI system partition at /dev/${allDisks[$s]}. Type your password to allow this."
-                        returnValueRoot=$? # 1 = not root / 0 = root
-                        if [ ${returnValueRoot} = 0 ]; then 
-                            echo "$gPw" | sudo -S "$uiSudoChanges" "MountESP" "/dev/${allDisks[$s]}" "$mountPoint"
-                            returnValue=$?
-                            if [ ${returnValue} -eq 0 ]; then
-                                successFlag=0
-                            fi
-                        fi
 
-                        if [ $successFlag -eq 0 ]; then
-                            WriteToLog "Mounted ${allDisks[$s]} successfully."
-                            tmpMP="${mountPoint}"
-                            (( espMounted++ ))
-                        else
-                            WriteToLog "Failed to mount ${allDisks[$s]}."
-                            tmpMP=""
-                        fi
-                    fi
-                fi
-            fi
-            
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${allDisks[$s]} | slice=$slice | tmp=$tmp | tmpMP=$tmpMP | tmpC=$tmpContent"    
-            
-            # Does this device contain /efi/clover/themes directory?
-            themeDir=$( find "$tmpMP"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
-            if [ "$themeDir" ]; then
-     
-                WriteToLog "Volume $tmp on mountpoint $tmpMP contains Clover themes directory" 
-                # Save VolumeName
-                duVolumeName+=( "${tmp}" )
-                # Save Mount Point
-                duVolumeMountPoint+=( "${tmpMP}" )
-                # Save device
-                duIdentifier+=("${allDisks[$s]}")
-                # Read and save Volume UUID
-                unset diskUtilSliceInfo
-                diskUtilSliceInfo=( $( diskutil info -plist /dev/"${allDisks[$s]}" ))
-                tmp=$( FindMatchInPlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" "Single" )
-                # Any FAT format volumes will not have UUID's so fill with zeros
-                [[ $tmp == "" ]] && tmp="$zeroUUID"
-                duVolumeUuid+=("$tmp")
-                # Save path to theme directory 
-                themeDirPaths+=("$themeDir")
-                (( recordAdded++ ))
-                # Forget user password
-                gPw=""
-            else
-                # If we mounted an ESP and there is not an /EFI/Clover/Themes dir
-                # then unmount it.
-                successFlag=1
-                if [[ "$tmpMP" =~ "$gESPMountPrefix" ]]; then
-                    echo "$gPw" | sudo -S "$uiSudoChanges" "UnMountESP" "$tmpMP" && gPw=""
+            successFlag=1
+            local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
+            if [ ! "$mountPoint" == "" ]; then
+                GetAndCheckUIPassword "Clover Theme Manager requires your password to mount the EFI system partition at /dev/${unmountedEsp[$s]}. Type your password to allow this."
+                returnValueRoot=$? # 1 = not root / 0 = root
+                if [ ${returnValueRoot} = 0 ]; then 
+                    echo "$gPw" | sudo -S "$uiSudoChanges" "MountESP" "/dev/${unmountedEsp[$s]}" "$mountPoint"
                     returnValue=$?
                     if [ ${returnValue} -eq 0 ]; then
                         successFlag=0
                     fi
+                fi
+
+                if [ $successFlag -eq 0 ]; then
+                    WriteToLog "Mounted ${unmountedEsp[$s]} successfully. Checking for /EFI/Clover/Themes"
+                    (( gEspMounted++ ))
                     
-                    if [ $successFlag -eq 0 ]; then
-                        WriteToLog "Unmounted ${allDisks[$s]} successfully."
-                        (( espMounted-- ))
+                    # Does this device contain /efi/clover/themes directory?
+                    local themeDir=$( find "$mountPoint"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
+                    if [ ! "$themeDir" ]; then
+                    
+                        # Unmount ESP
+                        echo "$gPw" | sudo -S "$uiSudoChanges" "UnMountESP" "$mountPoint" && gPw=""
+                        returnValue=$?
+                        if [ ${returnValue} -eq 0 ]; then
+                            WriteToLog "Unmounted ${unmountedEsp[$s]} successfully."
+                            (( gEspMounted-- ))
+                        else
+                            WriteToLog "Failed to unmount ${unmountedEsp[$s]}."
+                        fi
                     else
-                        WriteToLog "Failed to unmount ${allDisks[$s]}."
+                        WriteToLog "/EFI/Clover/Themes directory found on ${unmountedEsp[$s]}"
                     fi
+                else
+                    WriteToLog "Failed to mount ${unmountedEsp[$s]}."
                 fi
             fi
+        done
+    else
+        WriteToLog "Error. Missing $espList file"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+CreateAndSendVolumeDropDownMenu()
+{
+    # Send new dropdown list for UI
+    for (( p=0; p<${#themeDirPaths[@]}; p++ ))
+    do
+        # Check if mountpoint is temporary for ESP partition.
+        # If yes then make it human readable by changing to EFI.
+        if [[ "${themeDirPaths[$p]}" == *$gESPMountPrefix* ]]; then
+            local tmpStrip="${themeDirPaths[$p]#*/}"
+            tmpStrip="${tmpStrip#*/}"
+            tmpStrip="${tmpStrip#*/}"
+            pathToPrint="/Volumes/EFI/${tmpStrip}"
+            espID=$p
+        else
+            pathToPrint="${themeDirPaths[$p]}"
         fi
+        local newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
     done
     
-    # If user requested mounting ESP's then send new
-    # dropdown list for UI
-    if [ "$1" == "ESP" ]; then
-        for (( p=0; p<${#themeDirPaths[@]}; p++ ))
-        do
-            # Check if mountpoint is temporary for ESP partition.
-            # If yes then make it human readable by changing to EFI.
-            if [[ "${themeDirPaths[$p]}" == *$gESPMountPrefix* ]]; then
-                local tmpStrip="${themeDirPaths[$p]#*/}"
-                tmpStrip="${tmpStrip#*/}"
-                tmpStrip="${tmpStrip#*/}"
-                pathToPrint="/Volumes/EFI/${tmpStrip}"
-            else
-                pathToPrint="${themeDirPaths[$p]}"
-            fi
-            newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
-        done
-    
-        if [ "$newPathList" != "" ]; then
-            # Remove leading comma from string
-             newPathList="${newPathList#?}"
-             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewMenuEntry@${newPathList}@"
-             SendToUI "NewMenuEntry@${newPathList}@"
-        fi
-    
-        #local checkMountPoints=$( ls /Volumes/ | grep "$gESPMountPrefix" | wc -l )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${espMounted}"
-        SendToUI "MessageESP@Mounted@${espMounted}"
+    if [ "$newPathList" != "" ]; then
+        # Remove leading comma from string
+        newPathList="${newPathList#?}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewVolumeDropDown@${newPathList}@"
+        SendToUI "NewVolumeDropDown@${newPathList}@"
+        
+        WriteToLog "CTM_DropDownListOK"
+    else
+        WriteToLog "CTM_DropDownListFail"
     fi
-
-    # Before leaving, check all string array lengths are equal.
-    if [ ${#duVolumeName[@]} -ne $recordAdded ] || [ ${#duVolumeUuid[@]} -ne $recordAdded ] || [ ${#duIdentifier[@]} -ne $recordAdded ]; then
-        WriteToLog "Error- Disk Utility string arrays are not equal lengths!"
-        WriteToLog "records=$recordAdded V=${#duVolumeName[@]} C=${#duVolumeUuid[@]} I=${#duIdentifier[@]}"
-        WriteToLog "CTM_ThemeDirsFail"
-        exit 1
-    fi
-    
-    WriteToLog "CTM_ThemeDirsOK"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1416,101 +1349,32 @@ MountESPAndSearchThemesPath()
     WriteLinesToLog
     WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
     WriteToLog "Searching for ESP's with /EFI/Clover/Themes"
-    BuildDiskUtilStringArrays "ESP"
+    
+    gEspMounted=0
+    local currentMountedEspCount=$gEspMounted
+    
+    ManageESP
+    if [ $gEspMounted -gt $currentMountedEspCount ]; then
+    
+        "$findThemeDirs"
+        ResetInternalDiskArrays
+        ReadThemeDirList
         
-    # Set internal THEME vars to point to volume path..
-    [ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting internal THEME vars to ID $entry"
-    local mountpoint=$( ResolveMountPointFromUUID "${duVolumeUuid[$entry]}" )
-    if [ "$mountpoint" != "" ]; then
-        TARGET_THEME_DIR="$mountpoint"
-        TARGET_THEME_DIR_DEVICE="${duIdentifier[$entry]}"
-        TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$entry]}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${gEspMounted}"
+        SendToUI "MessageESP@Mounted@${gEspMounted}"
+        
+        CreateAndSendVolumeDropDownMenu
+
+        # As volume selector dropdown menu entries have changed,
+        # send UI a partition to select
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$espID"
+        SendToUI "Target@$espID"
+        
+        RespondToUserDeviceSelection "@$espID"
     else
-        if [ "${#duVolumeUuid[@]}" -eq 0 ]; then
-            WriteToLog "No /EFI/Clover/Theme paths exist"
-            TARGET_THEME_DIR="-"
-            TARGET_THEME_DIR_DEVICE="-"
-            TARGET_THEME_VOLUMEUUID="-"
-        else
-            TARGET_THEME_DIR="${duVolumeMountPoint[$entry]}"
-            TARGET_THEME_DIR_DEVICE="${duIdentifier[$entry]}"
-            TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$entry]}"
-        fi
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${gEspMounted}"
+        SendToUI "MessageESP@Mounted@${gEspMounted}"
     fi
-
-    WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
-    WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-    WriteToLog "TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
-    
-    # As volume selector dropdown menu entries may well have changed
-    # send UI a partition to select
-    local entry=$( FindArrayIdFromTarget )
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-    SendToUI "Target@$entry"
-    
-    if [ "$TARGET_THEME_VOLUMEUUID" != "-" ]; then
-        GetListOfInstalledThemesAndSendToUI
-        GetFreeSpaceOfTargetDeviceAndSendToUI
-        ReadAndSendCurrentNvramTheme
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-CreateDiskPartitionDropDownHtml()
-{
-    local check=1
-    local pathToPrint=""
-    
-    WriteLinesToLog
-    
-    RemoveFile "${WORKING_PATH}/${APP_DIR_NAME}/dropdown_html"
-    
-    # Create html for drop-down menu
-    htmlDropDown="<option value=\"-\">Select your target theme directory:</option>"
-
-    for ((a=0; a<${#duVolumeName[@]}; a++))
-    do
-        if [ ! "${duVolumeName[$a]}" == "" ] && [[ ! "${duVolumeName[$a]}" =~ ^\ +$ ]]; then
-            WriteToLog "${duIdentifier[$a]} | ${duVolumeMountPoint[$a]} | ${duVolumeName[$a]} [${duVolumeUuid[$a]}]"
-
-            # Check if mountpoint is temporary for ESP partition.
-            # If yes then make it human readable by changing to EFI.
-            if [[ "${themeDirPaths[$a]}" == *$gESPMountPrefix* ]]; then
-                pathToPrint="/Volumes/EFI"
-            else
-                pathToPrint="${themeDirPaths[$a]}"
-            fi
-            
-            # Append paths to drop-down menu
-            htmlDropDown="${htmlDropDown}<option value=\"${a}\">$pathToPrint [${duIdentifier[$a]}] [${duVolumeUuid[$a]}]</option>"
-        else
-            WriteLog "must be blank or empty"
-        fi
-    done
-    
-    # Escape forward slashes
-    htmlDropDown=$( echo "$htmlDropDown" | sed 's/\//\\\//g' )
-
-    # Save html to file
-    echo "$htmlDropDown" > "${WORKING_PATH}/${APP_DIR_NAME}"/dropdown_html
-
-    # Insert dropdown Html in to placeholder
-    WriteToLog "Inserting dropdown HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_MENU_OPTIONS_HERE-->/${htmlDropDown}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
-
-    # Clean up
-    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-        rm "${PUBLIC_DIR}"/managethemes.htmle
-    fi
-    
-    # Add message in to log for initialise.js to detect.
-    if [ $check -eq 0 ]; then
-        WriteToLog "CTM_DropDownListOK"
-    else
-        WriteToLog "CTM_DropDownListFail"
-    fi
-    
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1668,7 +1532,7 @@ SendUIInitData()
     if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
 
         local entry=$( FindArrayIdFromTarget )
-
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
@@ -1786,6 +1650,10 @@ RespondToUserDeviceSelection()
             CheckAndRemoveBareClonesNoLongerNeeded
             ReadAndSendCurrentNvramTheme
             CheckForUpdatesInTheBackground &
+        else
+            # Run these regardless of path chosen as JS is waiting to hear it. 
+            CheckAndRecordOrphanedThemesAndSendToUI
+            CheckForAnyUpdatesStoredInPrefsAndSendToUI
         fi
     else
         WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
@@ -1835,20 +1703,30 @@ CheckThemePathIsStillValid()
         WriteToLog "Theme directory $TARGET_THEME_DIR does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
-
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
-        SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${TARGET_THEME_DIR}@$entry"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
+        local pathToPrint="$TARGET_THEME_DIR"
+        if [ "$entry" != "-" ]; then
+            if [[ "${themeDirPaths[$entry]}" == *$gESPMountPrefix* ]]; then
+                local tmpStrip="${themeDirPaths[$entry]#*/}"
+                tmpStrip="${tmpStrip#*/}"
+                tmpStrip="${tmpStrip#*/}"
+                pathToPrint="/Volumes/EFI/${tmpStrip}"
+            fi
+        fi
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${pathToPrint}@$entry"
+        SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${pathToPrint}@$entry"
 
         WriteToLog "NoPathSelected"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
-            
-        SendToUI "UpdateAvailThemes@@"
-        SendToUI "Target@-@"
         
-        TARGET_THEME_DIR="-"
-        TARGET_THEME_DIR_DEVICE="-"
-        TARGET_THEME_VOLUMEUUID="-"
+        # Re-build theme directory list
+        "$findThemeDirs"
+        ResetInternalDiskArrays
+        ReadThemeDirList
+        CreateAndSendVolumeDropDownMenu
+        SendToUI "Target@-@"
+        RespondToUserDeviceSelection "@-"
 
         return 1
     else
@@ -2148,6 +2026,8 @@ CheckForUpdatesInTheBackground()
             MaintainInstalledThemeListInPrefs  
         fi
     fi
+    
+    WriteToLog "Checking for updates complete."
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2345,8 +2225,10 @@ CleanUp()
 {
     RemoveFile "$logJsToBash"
     RemoveFile "$logFile"
+    RemoveFile "$themeDirInfo"
     RemoveFile "$logBashToJs"
     RemoveFile "$updateScript"
+    RemoveFile "$espList"
     
     if [ -d "$tmp_dir" ]; then
         rm -rf "$tmp_dir"
@@ -2389,6 +2271,8 @@ UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
 COMMANDLINE=0
 
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
+themeDirInfo="${TMPDIR}/themeDirInfo.txt"
+espList="${TMPDIR}/espList.txt"
 logJsToBash="${TMPDIR}/jsToBash" # Note - this is created in AppDelegate.m
 logBashToJs="${TMPDIR}/bashToJs" # Note - this is created in AppDelegate.m
 updateScript="${TMPDIR}/updateScript.sh"
@@ -2396,6 +2280,7 @@ gUserPrefsFileName="org.black.CloverThemeManager"
 gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
 gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
 uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
+findThemeDirs="${SCRIPTS_DIR}/findThemeDirs.sh"
 gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
 remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
 debugIndent="    "
@@ -2405,6 +2290,7 @@ gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
 gFirstRun=0
+gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
 zeroUUID="00000000-0000-0000-0000-000000000000"
@@ -2489,10 +2375,13 @@ if [ "$gitCmd" != "" ]; then
     
         # Arrays for saving volume info
         declare -a diskUtilPlist
-        declare -a duVolumeName
         declare -a duIdentifier
-        declare -a duVolumeUuid
+        declare -a duSlice
+        declare -a duVolumeName
         declare -a duVolumeMountPoint
+        declare -a duContent
+        declare -a duVolumeUuid
+        declare -a unmountedEsp
     
         # Arrays for theme
         declare -a themeDirPaths
@@ -2518,14 +2407,16 @@ if [ "$gitCmd" != "" ]; then
         #ReadRepoUrlList
 
         # Begin
+        "$findThemeDirs" &
         RefreshHtmlTemplates "managethemes.html"
         IsRepositoryLive
         EnsureLocalSupportDir
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
-        GetListOfMountedDevices
-        BuildDiskUtilStringArrays ""
-        CreateDiskPartitionDropDownHtml
+        WriteToLog "CTM_ThemeDirsScan"
+        wait
+        ReadThemeDirList
+        CreateAndSendVolumeDropDownMenu
         ReadPrefsFile
         CleanInstalledThemesPrefEntries
         SendUIInitData

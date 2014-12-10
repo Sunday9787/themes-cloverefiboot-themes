@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.4
+//Version=0.74.5
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
 
 //-------------------------------------------------------------------------------------
 // On initial load
-$(document).ready(function() {    
-    //macgap.app.launch("started");
+$(document).ready(function() {
     disableInterface();
     hideButtons();
     HideProgressBar();
@@ -163,8 +162,8 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 UpdateMessageBox(firstLineSplit[1],firstLineSplit[2]);
                 break;
-            case "NewMenuEntry":
-                // Bash sends: "NewMenuEntry@${newThemeList}"
+            case "NewVolumeDropDown":
+                // Bash sends: "NewVolumeDropDown@${newThemeList}"
                 //${newThemeList} is a comma separated list
                 macgap.app.removeMessage(firstLine);
                 UpdateAndRefreshPartitionSelectMenu(firstLineSplit[1]);
@@ -207,7 +206,7 @@ function presentNotExistsDialog(uuid,path,id)
 {
     if (uuid != "" & path != "") {
         ChangeMessageBoxHeaderColour("red");
-        SetMessageBoxText("Attention:" ,"Previously used " + path + " on volume with UUID " + uuid + " is no longer mounted. Please choose a theme path.")
+        SetMessageBoxText("Attention:" ,"Previously used:<br>" + path + "<br>on volume with UUID<br>" + uuid + "<br>is no longer mounted.<br><br>Please choose a theme path.")
         ShowMessageBox();
         
         // Remove partition entry from dropdown menu
@@ -912,7 +911,18 @@ function UpdateMessageBox(messageOne,messageTwo)
             if (messageTwo == '0') {
                 SetMessageBoxText("EFI System Partition(s)","There are no unmounted EFI system partitions with an existing /EFI/Clover/Themes directory.");
             } else {
-                SetMessageBoxText("EFI System Partition(s)","Number of EFI system partitions with an existing /EFI/Clover/Themes directory mounted by this app: " + messageTwo);
+                ChangeMessageBoxHeaderColour("green");
+                SetMessageBoxText("EFI System Partition(s)","Number of EFI system partitions with an existing /EFI/Clover/Themes directory mounted just now:<br><br>" + messageTwo);
+
+                // Honour users choice of which themes to view (All or just Installed)
+                GetShowHideButtonStateAndUpdateUI();
+        
+                // Reset current theme list, bands and buttons
+                ResetButtonsAndBandsToDefault();
+                hideButtons();
+        
+                // show all themes, even if asked to hide uninstalled
+                $(".accordion").css("display","block");
             }
         }
         ShowMessageBoxClose();
@@ -1260,7 +1270,7 @@ function UpdateAndRefreshPartitionSelectMenu(list)
     
         // Clear existing entries
         $(partitionSelect).empty();
-        
+      
         // Add title menu option
         $("#partitionSelect").append("<option value=\"-\">Select your target theme directory:</option>");
         

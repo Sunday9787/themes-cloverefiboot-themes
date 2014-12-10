@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.4
+//Version=0.74.5
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -195,7 +195,7 @@ function printLogtoScreen()
                            $("#status_SymbolicLink").css("color","#DD171B");
                            
                 } else if (/CTM_IndexCloneAndCheckout/i.test(splitContent[i])) {
-                           $("#status_Index").text( 'Cloning index.git' ).append( '<span class="checkMark" id="check_Index"></span>' );
+                           $("#status_Index").text( 'Downloading latest git index' ).append( '<span class="checkMark" id="check_Index"></span>' );
                            $("#status_Index").css("color","#FFAE40"); 
                 } else if (/CTM_IndexOK/i.test(splitContent[i])) {
                            $("#check_Index").append( "  \u2713" );
@@ -222,8 +222,11 @@ function printLogtoScreen()
                 } else if (/CTM_InsertHtmlFail/i.test(splitContent[i])) {
                            $("#status_InsertHtml").css("color","#DD171B");
                            
+                } else if (/CTM_ThemeDirsScan/i.test(splitContent[i])) {
+                           $("#status_ThemeDirs").text( 'Building list of Theme dir(s)' );
+                           $("#status_ThemeDirs").css("color","#FFAE40"); 
                 } else if (/CTM_ThemeDirsOK/i.test(splitContent[i])) {
-                           $("#check_ThemeDirs").append( "  \u2713" );
+                           $("#status_ThemeDirs").text( 'Theme directories' ).append( '<span class="checkMark" id="check_ThemeDirs">  \u2713</span>' );
                            $("#status_ThemeDirs").css("color","#FFF"); 
                 } else if (/CTM_ThemeDirsFail/i.test(splitContent[i])) {
                            $("#status_ThemeDirs").css("color","#DD171B");
@@ -238,8 +241,7 @@ function printLogtoScreen()
                            $("#check_ReadPrefs").append( "  \u2713" );
                            $("#status_ReadPrefs").css("color","#FFF"); 
                 } else if (/CTM_ReadPrefsCreate/i.test(splitContent[i])) {
-                           $("#check_ReadPrefs").append( "  \u2713" );
-                           $("#status_ReadPrefs").text("Created Prefs");
+                           $("#status_ReadPrefs").text( 'Create prefs file' ).append( '<span class="checkMark" id="check_ReadPrefs">  \u2713</span>' );
                            $("#status_ReadPrefs").css("color","#FFF");
                            
                 } else if (/CTM_InitInterface/i.test(splitContent[i])) {
@@ -250,7 +252,9 @@ function printLogtoScreen()
                            $("#check_NvramVar").append( "  \u2713" );
                            $("#status_NvramVar").css("color","#FFF"); 
                 } else if (/CTM_NvramNotFound/i.test(splitContent[i])) {
-                           $("#status_NvramVar").css("color","#DD171B");
+                           $("#check_NvramVar").append( "  \u2713" );
+                           $("#status_NvramVar").css("color","#BBB"); // Change to lighter grey, not red.
+                           
                 }
             }
             prevLastLineCount=splitContent.length-2;
@@ -281,4 +285,3 @@ function printLogtoScreen()
             timerCheckEof = setTimeout(printLogtoScreen, 250);
     }
 }
-
