@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.5
+//Version=0.74.6
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -147,7 +147,7 @@ function readBashToJsMessageFile()
                 SetShowHidePreviews(firstLineSplit[1]);
                 break;
             case "UpdateAvailApp":
-                // Bash sends: "UpdateAvailApp@${updateAvailAppStr}@"
+                // Bash sends: "UpdateAvailApp@${serverVersion}@"
                 macgap.app.removeMessage(firstLine);
                 DisplayAppUpdates(firstLineSplit[1]);
                 break;
@@ -194,7 +194,6 @@ function setTargetThemePath(entry)
         $("#OpenPathButton").css("display","block");
         ShowFreeSpace();
     } else {
-        //updateBandsWithInstalledThemes("-");
         $("#OpenPathButton").css("display","none");
         ShowMessageBoxClose();
         HideProgressBar();
@@ -321,14 +320,13 @@ function actOnFreeSpace(availableSpace)
 }
 
 //-------------------------------------------------------------------------------------
-function DisplayAppUpdates(fileList)
+function DisplayAppUpdates(updateID)
 {    
-    if (fileList != "") {
+    if (updateID != "") {
         disableInterface();
-        appUpdateFileList = (fileList).split(',');
+        appUpdateFileList = (updateID).split(',');
+        var printString="";
         if (appUpdateFileList != "") {
-        
-            var printString="";
         
             // Update only installed themes with uninstall buttons
             for (var t = 0; t < appUpdateFileList.length; t++) {
@@ -337,16 +335,17 @@ function DisplayAppUpdates(fileList)
                 ChangeButtonAndBandToUpdate(appUpdateFileList[t]);
                         
                 // Prepare text for pretty print
-                printString=(printString + appUpdateFileList[t] + "<br>");
+                printString=(printString + appUpdateFileList[t] + "<br><br>");
             }
-                    
-            // Show a message to the user
-            ChangeMessageBoxHeaderColour("blue");                            
-            SetMessageBoxText("Application Update Available:",printString + "<br>Do you wish to update the app?");
-            HideMessageBoxClose();
-            AddYesNoButtons();
-            ShowMessageBox();
         }
+        
+        // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue");                            
+        SetMessageBoxText("Application Update Available:","updateID: " + printString + "It's recommended to update to the latest version.<br>Do you wish to update Clover Theme Manager?");
+        HideMessageBoxClose();
+        AddYesNoButtons();
+        ShowMessageBox();
+        //}
     }
 }
 
@@ -447,7 +446,8 @@ function AppUpdateFeedback(state)
 
             // Print message
             HideProgressBar();
-            SetMessageBoxText("Success:","The app updates completed successfully and will be operational next time you launch CloverThemeManager.");
+            SetMessageBoxText("Success:","The app updates completed successfully. Please quit and re-launch CloverThemeManager.");
+            AddQuitButton();
             
         } else if (state == "Fail")  {
         
@@ -457,10 +457,8 @@ function AppUpdateFeedback(state)
             // Print message
             HideProgressBar();
             SetMessageBoxText("Failed:","The app updates did not successfully complete.");
+            ShowMessageBoxClose();
         }
-        
-        ShowMessageBoxClose();
-        ShowMessageBox();
     }
 }
 
@@ -649,6 +647,7 @@ $(function()
     // On clicking the message box close button
     $('#boxclose').click(function(){
         CloseMessageBox();
+        enableInterface();
     });
     
     //-----------------------------------------------------
@@ -1340,15 +1339,32 @@ function AddYesNoButtons(){
         e.preventDefault();
         // Send message back to bash script to notify receipt
         
-        // Hide message box and reset
-        //CloseMessageBox();
-        ShowMessageBoxClose();
+        // Update message box
         RemoveYesNoButtons();
         macgap.app.launch("CTM_updateApp:Yes");
+        // Show progress bar while files are downloaded.
+        SetMessageBoxText("Application Update Available:","Downloading files from repository and applying update.");
+        ShowProgressBar();
+    
     }).insertAfter("[id='FeedbackButtons']");
     
     // Set button text
     $("[id='feedback_Button_Yes']").html("Yes");
+}
+
+//-------------------------------------------------------------------------------------
+function AddQuitButton(){
+
+    // Add button No
+    $( '<div class="feedbackButton" id="feedback_Button_Quit"></div>' ).on('click', function(e) {
+        e.preventDefault();
+        // Terminate the app
+        macgap.app.terminate(); 
+        
+    }).insertAfter("[id='FeedbackButtons']");
+
+    // Set button text
+    $("[id='feedback_Button_Quit']").html("Quit");
 }
 
 //-------------------------------------------------------------------------------------

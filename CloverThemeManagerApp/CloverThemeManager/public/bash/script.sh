@@ -22,9 +22,9 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.5"
+VERS="0.74.6"
 
-export DEBUG=0
+export DEBUG=1
 #set -x
 
 # =======================================================================================
@@ -487,7 +487,7 @@ RunThemeAction()
                  
                 "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
                             # Note: The bare git repo will have already been updated when the fetch command was run
-                            # from CheckForUpdatesInTheBackground() to discover the update.
+                            # from CheckForThemeUpdates() to discover the update.
                             # All we need to do is checkout the bare repo to the unpack dir then replace on target dir.
                             if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
 
@@ -911,7 +911,12 @@ RespondToUserUpdateApp()
         WriteLinesToLog
         if [ "$chosenOption" == "Yes" ]; then
             WriteToLog "User chose to update app."
-            PerformUpdates
+            DownloadPublicDirFromServer
+            if [ $? -eq 0 ]; then
+                CreateUpdateScript
+                PerformUpdates
+                SendToUI "UpdateAppFeedback@Success@"
+            fi
         else
             WriteToLog "User chose not to update app."
         fi
@@ -919,71 +924,70 @@ RespondToUserUpdateApp()
 }
 
 # ---------------------------------------------------------------------------------------
-PerformUpdates()
+CheckForAppUpdate()
 {
-    if [ -f "$updateScript" ]; then
+    # Remove app files from a previous run
+    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
+        WriteToLog "Removing previous CloverThemeManagerApp directory"
+        rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+    fi
 
-        # Check update script md5
-        if [ $(CalculateMd5 "$updateScript") == $updateScriptChecksum ]; then
-
-            WriteToLog "md5 matches."
-            chmod 755 "$updateScript"
-        
-            # Check public directory is writeable
-            CheckPathIsWriteable "${PUBLIC_DIR}"
-            local isPathWriteable=$? # 1 = not writeable / 0 = writeable
-
-            WriteToLog "Performing Updates"
-            local successFlag=1
-            if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                WriteToLog "Public DIR is not writeable. Asking for password"
-
-                GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
-                returnValueRoot=$? # 1 = not root / 0 = root
-                if [ ${returnValueRoot} = 0 ]; then 
-                    echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
-                    returnValue=$?
-                    if [ ${returnValue} -eq 0 ]; then
-                        successFlag=0
-                    fi
-                fi
-            else
-                WriteToLog "Public DIR is writeable"
-                "$updateScript" && successFlag=0
-            fi
-        else
-            WriteToLog "Error. $updateScript has invalid md5. Update not done."
-        fi
+    # Get current internal app version
+    if [ -f "${PUBLIC_DIR}"/.updateID ]; then
+        local currentVersion=$( cat "${PUBLIC_DIR}"/.updateID )
     else
-        WriteToLog "$updateScript not found."
+        local currentVersion=0
     fi
     
-    if [ $successFlag -eq 0 ]; then
-        WriteToLog "Updates were successful."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Success@"
-        SendToUI "UpdateAppFeedback@Success@"
-        
-        # Remove update files
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
-        if [ -d "CloverThemeManager/public" ]; then
-            rm -rf "CloverThemeManager/public"
-        fi
-        
-        # Remove update script
-        if [ -f "$updateScript" ]; then
-            rm "$updateScript"
-        fi
+    # Get server version  
+    local updateIDFilePath="CloverThemeManagerApp/CloverThemeManager/public/.updateID"
+    local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
+    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+    cd "${WORKING_PATH}/${APP_DIR_NAME}"
+    git archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
+    if [ -f "${pathToWorkingPublicDir}"/.updateID ]; then
+        local serverVersion=$( cat "${pathToWorkingPublicDir}"/.updateID )
     else
-        WriteToLog "Updates failed."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Fail@"
-        SendToUI "UpdateAppFeedback@Fail@"
+        local serverVersion=0
     fi
     
-    WriteLinesToLog
+    if [ $serverVersion -gt $currentVersion ]; then
+        WriteToLog "App update available. Current=$currentVersion | Server=$serverVersion"
+        SendToUI "UpdateAvailApp@${serverVersion}@"
+    else
+        WriteToLog "No app update available. Current=$currentVersion | Server=$serverVersion"
+    fi
+    
+    cd "${WORKING_PATH}"
 }
 
 # ---------------------------------------------------------------------------------------
-CheckAndRecordAppUpdates()
+DownloadPublicDirFromServer()
+{
+    # Remove app files from a previous run
+    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
+        WriteToLog "Removing previous CloverThemeManagerApp directory"
+        rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+    fi
+    
+    # Download public dir
+    local success=0
+    local filePath="CloverThemeManagerApp/CloverThemeManager/public"
+    local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
+    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+    cd "${WORKING_PATH}/${APP_DIR_NAME}"
+    git archive --remote="${gitRepositoryUrl}themes" HEAD "$filePath" | tar -x && success=1
+    if [ $success -eq 1 ]; then
+        WriteToLog "Downloading app files from the repo was successful."
+        return 0
+    else
+        WriteToLog "Error. Downloading app files from the repo failed."
+        return 1
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+CreateUpdateScript()
 {
     AddCopyCommandToFile()
     {
@@ -1076,6 +1080,12 @@ CheckAndRecordAppUpdates()
 
         done
     fi
+    
+    # Add copying .updateID to app public dir
+    if [ -f "${pathToDownloadedPublicDir}"/.updateID ]; then
+        AddCopyCommandToFile "" "${pathToDownloadedPublicDir}/.updateID"
+    fi    
+    
     if [ "$updateAvailAppStr" != "" ] && [ "${updateAvailAppStr:0:1}" == "," ]; then
         # Remove leading comma from string
         updateAvailAppStr="${updateAvailAppStr#?}"
@@ -1086,11 +1096,70 @@ CheckAndRecordAppUpdates()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No app updates. Deleting $pathToDownloadedPublicDir" 
         rm -rf "$pathToDownloadedPublicDir"
     fi
+}
 
-    # Add message in to log for initialise.js to detect.
-    WriteToLog "CTM_UpdatesOK"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${updateAvailAppStr}@"
-    SendToUI "UpdateAvailApp@${updateAvailAppStr}@"
+# ---------------------------------------------------------------------------------------
+PerformUpdates()
+{
+    if [ -f "$updateScript" ]; then
+
+        # Check update script md5
+        if [ $(CalculateMd5 "$updateScript") == $updateScriptChecksum ]; then
+
+            WriteToLog "md5 matches."
+            chmod 755 "$updateScript"
+        
+            # Check public directory is writeable
+            CheckPathIsWriteable "${PUBLIC_DIR}"
+            local isPathWriteable=$? # 1 = not writeable / 0 = writeable
+
+            WriteToLog "Performing Updates"
+            local successFlag=1
+            if [ $isPathWriteable -eq 1 ]; then # Not Writeable
+                WriteToLog "Public DIR is not writeable. Asking for password"
+
+                GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
+                returnValueRoot=$? # 1 = not root / 0 = root
+                if [ ${returnValueRoot} = 0 ]; then 
+                    echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
+                    returnValue=$?
+                    if [ ${returnValue} -eq 0 ]; then
+                        successFlag=0
+                    fi
+                fi
+            else
+                WriteToLog "Public DIR is writeable"
+                "$updateScript" && successFlag=0
+            fi
+        else
+            WriteToLog "Error. $updateScript has invalid md5. Update not done."
+        fi
+    else
+        WriteToLog "$updateScript not found."
+    fi
+    
+    if [ $successFlag -eq 0 ]; then
+        WriteToLog "Updates were successful."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Success@"
+        SendToUI "UpdateAppFeedback@Success@"
+        
+        # Remove update files
+        cd "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+        if [ -d "CloverThemeManager/public" ]; then
+            rm -rf "CloverThemeManager/public"
+        fi
+        
+        # Remove update script
+        if [ -f "$updateScript" ]; then
+            rm "$updateScript"
+        fi
+    else
+        WriteToLog "Updates failed."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Fail@"
+        SendToUI "UpdateAppFeedback@Fail@"
+    fi
+    
+    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1138,13 +1207,7 @@ GetLatestIndexAndEnsureThemeHtml()
             WriteToLog "Removing previous index themes directory"
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/themes
         fi
-        
-        # Remove app files from a previous run
-        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
-            WriteToLog "Removing previous CloverThemeManagerApp directory"
-            rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
-        fi
-    
+            
         # Get new index.git from CloverRepo
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
         WriteToLog "CTM_IndexCloneAndCheckout"
@@ -1649,7 +1712,7 @@ RespondToUserDeviceSelection()
             CheckForAnyUpdatesStoredInPrefsAndSendToUI
             CheckAndRemoveBareClonesNoLongerNeeded
             ReadAndSendCurrentNvramTheme
-            CheckForUpdatesInTheBackground &
+            CheckForThemeUpdates &
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordOrphanedThemesAndSendToUI
@@ -1771,7 +1834,7 @@ GetListOfInstalledThemesAndSendToUI()
 # ---------------------------------------------------------------------------------------
 CheckForAnyUpdatesStoredInPrefsAndSendToUI()
 {
-    # If an update to a theme has been found by CheckForUpdatesInTheBackground()
+    # If an update to a theme has been found by CheckForThemeUpdates()
     # an update notification would have been written to the prefs file under each
     # instance of installed theme.
     # Here we read prefs, loop through the installedThemeUpdateAvailable[] array,
@@ -1981,7 +2044,7 @@ CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckForUpdatesInTheBackground()
+CheckForThemeUpdates()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
@@ -2014,7 +2077,7 @@ CheckForUpdatesInTheBackground()
                             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting installedThemeUpdateAvailable[$n] to Yes"
                             installedThemeUpdateAvailable[$n]="Yes" 
                         fi
-                    done
+                    done 
                 else
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No update found for ${installedThemesOnCurrentVolume[$t]}"
                 fi
@@ -2428,9 +2491,6 @@ if [ "$gitCmd" != "" ]; then
         CleanInstalledThemesPrefEntries
         SendUIInitData
 
-        # Check for any updates to this app
-        CheckAndRecordAppUpdates
-
         # Read current Clover.Theme Nvram variable and send to UI.
         ReadAndSendCurrentNvramTheme
     
@@ -2446,7 +2506,8 @@ if [ "$gitCmd" != "" ]; then
         parentId=$appPid
 
         CheckAndRemoveBareClonesNoLongerNeeded
-        CheckForUpdatesInTheBackground &
+        CheckForThemeUpdates &
+        CheckForAppUpdate &
 
         # The messaging system is event driven and quite simple.
         # Run a loop for as long as the parent process ID still exists

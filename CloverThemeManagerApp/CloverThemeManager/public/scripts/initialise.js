@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.5
+//Version=0.74.6
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -203,13 +203,6 @@ function printLogtoScreen()
                 } else if (/CTM_IndexFail/i.test(splitContent[i])) {
                            $("#status_Index").css("color","#DD171B");
                            
-                } else if (/CTM_UpdatesOK/i.test(splitContent[i])) {
-                           $("#check_Updates").append( "  \u2713" );
-                           $("#status_Updates").css("color","#FFF"); 
-    
-                } else if (/CTM_UpdatesFail/i.test(splitContent[i])) {
-                           $("#status_Updates").css("color","#DD171B");
-                      
                 } else if (/CTM_ThemeListOK/i.test(splitContent[i])) {
                            $("#check_ThemeList").append( "  \u2713" );
                            $("#status_ThemeList").css("color","#FFF"); 
