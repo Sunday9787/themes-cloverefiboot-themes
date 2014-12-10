@@ -2313,6 +2313,13 @@ WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
 WriteLinesToLog
 WriteToLog "PATH=$PATH"
+
+# Ensure permissions of findThemeDirs script
+if [ -f "$findThemeDirs" ]; then
+    chmod 755 "$findThemeDirs"
+    WriteToLog "Set permissions of findThemeDirs script"
+fi
+
 IsGitInstalled
 
 # Only continue if git is installed
