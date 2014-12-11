@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.8"
+VERS="0.74.9"
 
 export DEBUG=1
 #set -x
@@ -1294,7 +1294,7 @@ ReadThemeDirList()
         # Check array contents match and send message to UI via log
         local total=${#duIdentifier[@]}
         if [ ${#duSlice[@]} -ne $total ] || [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duVolumeUuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
-            WriteToLog "CTM_ThemeDirsOKFail"
+            WriteToLog "CTM_ThemeDirsFail"
         
             # Print results
             for (( s=0; s<${#duIdentifier[@]}; s++ ))
