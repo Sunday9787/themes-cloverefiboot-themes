@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.7"
+VERS="0.74.8"
 
 export DEBUG=1
 #set -x
@@ -1393,16 +1393,17 @@ CreateAndSendVolumeDropDownMenu()
         fi
         local newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
     done
-    
+
     if [ "$newPathList" != "" ]; then
         # Remove leading comma from string
         newPathList="${newPathList#?}"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewVolumeDropDown@${newPathList}@"
         SendToUI "NewVolumeDropDown@${newPathList}@"
-        
-        WriteToLog "CTM_DropDownListOK"
+        return 0
     else
-        WriteToLog "CTM_DropDownListFail"
+        # Still send UI DropDown message, even though there are no entries.
+        SendToUI "NewVolumeDropDown@@"
+        return 1
     fi
 }
 
@@ -2487,6 +2488,11 @@ if [ "$gitCmd" != "" ]; then
         wait
         ReadThemeDirList
         CreateAndSendVolumeDropDownMenu
+        if [ $? -eq 0 ]; then
+            WriteToLog "CTM_DropDownListOK"
+        else
+            WriteToLog "CTM_DropDownListNone"
+        fi
         ReadPrefsFile
         CleanInstalledThemesPrefEntries
         SendUIInitData

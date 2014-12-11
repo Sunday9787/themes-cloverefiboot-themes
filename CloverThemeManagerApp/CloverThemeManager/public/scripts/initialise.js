@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.6
+//Version=0.74.7
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -227,8 +227,9 @@ function printLogtoScreen()
                 } else if (/CTM_DropDownListOK/i.test(splitContent[i])) {
                            $("#check_Dropdown").append( "  \u2713" );
                            $("#status_Dropdown").css("color","#FFF"); 
-                } else if (/CTM_DropDownListFail/i.test(splitContent[i])) {
-                           $("#status_Dropdown").css("color","#DD171B");
+                } else if (/CTM_DropDownListNone/i.test(splitContent[i])) {
+                           $("#check_Dropdown").append( "  \u2713" );
+                           $("#status_Dropdown").css("color","#BBB"); // Change to lighter grey, not red.
                            
                 } else if (/CTM_ReadPrefsOK/i.test(splitContent[i])) {
                            $("#check_ReadPrefs").append( "  \u2713" );

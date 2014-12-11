@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.6
+//Version=0.74.7
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -1265,14 +1265,13 @@ function SetUnVersionedControlIndicator(themeName)
 //-------------------------------------------------------------------------------------
 function UpdateAndRefreshPartitionSelectMenu(list)
 {
-    if (list != "") {
-    
-        // Clear existing entries
-        $(partitionSelect).empty();
+    // Clear existing entries
+    $(partitionSelect).empty();
       
-        // Add title menu option
-        $("#partitionSelect").append("<option value=\"-\">Select your target theme directory:</option>");
-        
+    // Add title menu option
+    $("#partitionSelect").append("<option value=\"-\">Select your target theme directory:</option>");
+    
+    if (list != "") {
         splitList = (list).split(',');
         for (var t = 0; t < splitList.length; t++) {
             var parts = (splitList[t]).split(';');
