@@ -11,6 +11,15 @@
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
 	<script src="scripts/jquery-2.1.1.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
+	<script src="http://www.schillmania.com/projects/snowstorm/snowstorm.js"></script>
+	<script>
+	    snowStorm.animationInterval = 256;
+	    snowStorm.followMouse = false;
+	    this.freezeOnBlur = false;
+	    this.vMaxX = 0;
+	    this.vMaxY = 2;
+	    this.zIndex = 5;
+	</script>
 </head>
 <body>
 <div id="Container">
