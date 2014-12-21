@@ -2453,6 +2453,26 @@ gitCmd=""
 gESPMountPrefix="ctmTempMp"
 export zeroUUID="00000000-0000-0000-0000-000000000000"
 
+
+# For updateID 5
+if [ -f "${PUBLIC_DIR}"/.updateID ]; then
+    checkUpdate=$( cat "${PUBLIC_DIR}"/.updateID )
+    if [ $checkUpdate == "5" ]; then
+        # Remove users previous index.git and prefs file.
+        if [ -f "$gUserPrefsFile".plist ]; then
+            fixedEpoch=1419175216
+            prefsFileEpoch=$( stat -f "%m" "$gUserPrefsFile".plist )
+            if [ $prefsFileEpoch -lt $fixedEpoch ]; then
+                rm "${gUserPrefsFile}.plist"
+                if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
+                    rm -rf /Users/nick/Library/Application\ Support/CloverThemeManager/index.git
+                fi
+            fi
+        fi
+    fi
+fi
+
+
 # Get versions of js scripts
 jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
 jsScriptInitVersion="${jsScriptInitVersion##*=}"
