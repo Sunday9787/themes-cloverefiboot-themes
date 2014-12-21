@@ -998,9 +998,9 @@ RespondToUserUpdateApp()
 CheckForAppUpdate()
 {
     # Remove app files from a previous run
-    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
-        WriteToLog "Removing previous CloverThemeManagerApp directory"
-        rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
+    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager ]; then
+        WriteToLog "Removing previous CloverThemeManagerApp/CloverThemeManager directory"
+        rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager
     fi
 
     # Get current internal app version
