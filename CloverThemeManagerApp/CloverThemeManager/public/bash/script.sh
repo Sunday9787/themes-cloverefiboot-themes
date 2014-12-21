@@ -2728,6 +2728,7 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 entry=$( FindArrayIdFromTarget )
+                CreateAndSendVolumeDropDownMenu
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
                 SendToUI "Target@$entry"
                 GetListOfInstalledThemesAndSendToUI
