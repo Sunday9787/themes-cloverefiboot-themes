@@ -17,7 +17,7 @@
 # Any directories found have the following info saved to file:
 # - Disk identifier
 # - Slice number
-# - Partition UUID
+# - Unique Partition GUID
 # - Mount point
 # - Content (type - Apple_HFS, EFI etc.)
 # - Full theme path
@@ -66,6 +66,7 @@ TMPDIR="/tmp/CloverThemeManager"
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
 themeDirInfo="${TMPDIR}/themeDirInfo.txt"
 espList="${TMPDIR}/espList.txt"
+zeroUUID="00000000-0000-0000-0000-000000000000"
 
 [[ ! -d "$TMPDIR" ]] && mkdir -p "$TMPDIR"
 [[ -f "$themeDirInfo" ]] && rm "$themeDirInfo"
@@ -82,14 +83,11 @@ declare -a dfMountpoints
 
 # Get List of mounted devices and mountpoints
 WriteToLog "Getting list of mounted devices"
-dfMountpoints+=( $( df -laH | awk '{print $9}' | tail -n +2  ))
+oIFS="$IFS"; IFS=$'\r\n'
+dfMountpoints+=( /$( df -laH | cut -d'/' -f 4- | tail -n +2 ))
 dfMounts+=( $( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3  ))
-#for (( m=0; m<${#dfMounts[@]}; m++ ))
-#do
-#    dfMounts[$m]="${dfMounts[$m]##*/}" # Remove /dev/
-#done
-
-echo "${#dfMounts[@]} | ${#dfMountpoints[@]}" 
+IFS="$oIFS"
+WriteToLog "Check: dfMounts=${#dfMounts[@]} | dfMountpoints =${#dfMountpoints[@]}" 
 
 # Read Diskutil command in to array and loop through each that's mounted
 WriteToLog "Getting diskutil info for mounted devices"
@@ -103,7 +101,6 @@ do
     isMounted=0
     for (( m=0; m<${#dfMounts[@]}; m++ ))
     do
-        #echo "Checking ${allDisks[$s]} == ${dfMounts[$m]}" 
         if [ "${dfMounts[$m]}" == "${allDisks[$s]}" ]; then
            isMounted=1
            break
@@ -112,9 +109,19 @@ do
     
     slice="${allDisks[$s]##*s}"
     if [ $isMounted -eq 1 ]; then
-                
+    
+        # If mountpoint is / then populate
+        if [ "${dfMountpoints[$m]}" == "/" ]; then
+            for vol in /Volumes/*
+            do
+                [[ "$(readlink "$vol")" = / ]] && tmp="$vol"
+            done
+            dfMountpoints[$m]="${tmp#*/}"
+            echo "${dfMountpoints[$m]}"
+        fi
+
         # Does this device contain /efi/clover/themes directory?
-        themeDir=$( find "${dfMountpoints[$m]}"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
+        themeDir=$( find "/${dfMountpoints[$m]}"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
         if [ "$themeDir" ]; then
 
             unset diskUtilSliceInfo
@@ -123,18 +130,20 @@ do
             IFS="$oIFS"
 
             _content=$( FindMatchInPlist "Content" "string" "diskUtilSliceInfo[@]" "Single" )
-            _volName=$( FindMatchInPlist "VolumeName" "string" "diskUtilSliceInfo[@]" "Single" )        
+            # Read and save Volume Name
+            tmp=$( FindMatchInPlist "VolumeName" "string" "diskUtilSliceInfo[@]" "Single" )
+            _volName="$tmp"
 
-            WriteToLog "Volume $_volName on mountpoint ${dfMountpoints[$m]} contains Clover themes directory" 
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${allDisks[$s]} | slice=$slice | $_volName | ${dfMountpoints[$m]} | $_content"
+            WriteToLog "Volume $_volName on mountpoint /${dfMountpoints[$m]} contains Clover themes directory" 
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${allDisks[$s]} | slice=$slice | $_volName | /${dfMountpoints[$m]} | $_content"
 
-            # Read and save Volume UUID
-            tmp=$( FindMatchInPlist "VolumeUUID" "string" "diskUtilSliceInfo[@]" "Single" )
-            [[ $tmp == "" ]] && tmp="$zeroUUID" # FAT format partitions on MBR partitioned device do not have UUID's. Fill with zeros
-            _volUuid="$tmp"
+            # Read and save Unique partition GUID
+            tmp=$( ioreg -lxw0 -pIODeviceTree | grep -A 10 ${dfMounts[$m]} | sed -ne 's/.*UUID" = //p' | tr -d '"' | head -n1)
+            [[ $tmp == "" ]] && tmp="$zeroUUID" # MBR partitioned device do not have UUID's. Fill with zeros
+            _uniquePartitionGuid="$tmp"
             
             # Write data to file.
-            echo "${dfMounts[$m]}@${slice}@${_volName}@${dfMountpoints[$m]}@${_content}@${_volUuid}@${themeDir}" >> "$themeDirInfo"
+            echo "${dfMounts[$m]}@${slice}@${_volName}@/${dfMountpoints[$m]}@${_content}@${_uniquePartitionGuid}@${themeDir}" >> "$themeDirInfo"
         fi
     fi
     

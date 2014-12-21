@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.74.9"
+VERS="0.75.0"
 
 export DEBUG=1
 #set -x
@@ -127,7 +127,7 @@ ResetNewlyInstalledThemeVars()
     gNewInstalledThemeName=""
     gNewInstalledThemePath=""
     gNewInstalledThemePathDevice=""
-    gNewInstalledThemeVolumeUUID=""
+    gNewinstalledThemePartitionGUID=""
 }
 
 # ---------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ ResetUnInstalledThemeVars()
     gUnInstalledThemeName=""
     gUnInstalledThemePath=""
     gUnInstalledThemePathDevice=""
-    gUnInstalledThemeVolumeUUID=""
+    gUninstalledThemePartitionGUID=""
 }
 
 # ---------------------------------------------------------------------------------------
@@ -147,8 +147,8 @@ ResetInternalThemeArrays()
     unset installedThemeName
     unset installedThemePath
     unset installedThemePathDevice
-    unset installedThemeVolumeUUID
-    unset installedThemeUpdateAvailable
+    unset installedThemePartitionGUID
+    #unset installedThemeUpdateAvailable
 }
 
 # ---------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ ResetInternalDiskArrays()
     unset duVolumeName
     unset duVolumeMountPoint
     unset duContent
-    unset duVolumeUuid
+    unset duPartitionGuid
     unset themeDirPaths
     unset unmountedEsp
 }
@@ -176,8 +176,8 @@ ClearUpdateFromPrefs()
     
     for ((p=0; p<${#installedThemeName[@]}; p++));
     do
-        if [ "${installedThemeName[$p]}" == "$passedThemeName" ] && [ "${installedThemeVolumeUUID[$p]}" == "$TARGET_THEME_VOLUMEUUID" ]  && [ "${installedThemeUpdateAvailable[$p]}" == "Yes" ] ; then
-            WriteToLog "Clearing available update prefs flag for theme $passedThemeName on $TARGET_THEME_VOLUMEUUID"
+        if [ "${installedThemeName[$p]}" == "$passedThemeName" ] && [ "${installedThemePartitionGUID[$p]}" == "$TARGET_THEME_PARTITIONGUID" ]; then #  && [ "${installedThemeUpdateAvailable[$p]}" == "Yes" ] ; then
+            WriteToLog "Clearing available update prefs flag for theme $passedThemeName on $TARGET_THEME_PARTITIONGUID"
             installedThemeUpdateAvailable[$p]=""
             break
         fi
@@ -212,6 +212,8 @@ MaintainInstalledThemeListInPrefs()
     # When themes are UnInstalled/deleted by the user, the pref
     # entry is also removed.
     
+    chmod 755 "$gUserPrefsFile".plist 
+
     openArray="<array>"
     closeArray="</array>"
     openDict="<dict>"
@@ -237,15 +239,16 @@ MaintainInstalledThemeListInPrefs()
         arrayString="${arrayString}<string>$passedDevice</string>"
         arrayString="${arrayString}<key>VolumeUUID</key>"
         arrayString="${arrayString}<string>$passedUuid</string>"
-        arrayString="${arrayString}<key>UpdateAvailable</key>"
-        arrayString="${arrayString}<string>$passedUpdate</string>"
+        #arrayString="${arrayString}<key>UpdateAvailable</key>"
+        #arrayString="${arrayString}<string>$passedUpdate</string>"
 
         # close dictionary
         arrayString="${arrayString}$closeDict"
     }
         
     # Is there a newly installed theme to add?
-    if [ "$gNewInstalledThemeName" != "" ]; then
+    # And on a partition with a unique partition GUID?
+    if [ "$gNewInstalledThemeName" != "" ] && [ "$gNewinstalledThemePartitionGUID" != "$zeroUUID" ]; then
         WriteToLog "Newly installed theme to be added to prefs: $gNewInstalledThemeName"
         # Is this new theme already installed elsewhere?
         local themeToAppend=0
@@ -261,13 +264,25 @@ MaintainInstalledThemeListInPrefs()
 
     # Is there an UnInstalled theme to remove?
     local dontReAddThemeId=9999
-    if [ "$gUnInstalledThemeName" != "" ]; then
+    if [ "$gUnInstalledThemeName" != "" ] && [ "$gNewinstalledThemePartitionGUID" != "$zeroUUID" ]; then
         WriteToLog "UnInstalled theme to be removed: $gUnInstalledThemeName"
+        
+        # Check for ESP mountpoint
+        local pathToCheck
+        if [[ "$gUnInstalledThemePath" == *$gESPMountPrefix* ]]; then
+            local tmpStrip="${themeDirPaths[$entry]#*/}"
+            tmpStrip="${tmpStrip#*/}"
+            tmpStrip="${tmpStrip#*/}"
+            pathToCheck="/Volumes/EFI/${tmpStrip}"
+        else
+            pathToCheck="$gUnInstalledThemePath"
+        fi
+            
         # Loop though array of installed themes to find ID of theme to remove.
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
-        do
-            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && [ "${installedThemePath[$n]}" == "$gUnInstalledThemePath" ] && [ "${installedThemeVolumeUUID[$n]}" == "$gUnInstalledThemeVolumeUUID" ]; then
-                WriteToLog "Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemeVolumeUUID[$n]}"
+        do 
+            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && [ "${installedThemePath[$n]}" == "$pathToCheck" ] && [ "${installedThemePartitionGUID[$n]}" == "$gUninstalledThemePartitionGUID" ]; then
+                WriteToLog "Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemePartitionGUID[$n]}"
                 dontReAddThemeId=$n
                 ResetUnInstalledThemeVars
                 break
@@ -294,7 +309,7 @@ MaintainInstalledThemeListInPrefs()
                     # Check if there's a newly installed theme to append to this current array
                     if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
                         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Appending $gNewInstalledThemeName dictionary to existing array."
-                        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID" ""
+                        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID" ""
                         themeToAppend=0
                         ResetNewlyInstalledThemeVars
                     fi
@@ -311,7 +326,7 @@ MaintainInstalledThemeListInPrefs()
                     arrayString="${arrayString}$openArray"
                     lastAddedThemeName="${installedThemeName[$n]}"
                 fi
-                InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemeVolumeUUID[$n]}" "${installedThemeUpdateAvailable[$n]}" 
+                InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemePartitionGUID[$n]}" #"${installedThemeUpdateAvailable[$n]}" 
             fi
         fi
     done
@@ -320,7 +335,7 @@ MaintainInstalledThemeListInPrefs()
     # Check if there's a newly installed theme to append to this current array
     if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Append didn't happen. Attempting to appending $gNewInstalledThemeName now."
-        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID"
+        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID"
         themeToAppend=0
         ResetNewlyInstalledThemeVars
     fi
@@ -338,7 +353,7 @@ MaintainInstalledThemeListInPrefs()
         # open array
         arrayString="${arrayString}$openArray"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Append still hasn't completed. Appending $gNewInstalledThemeName now."
-        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewInstalledThemeVolumeUUID"
+        InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID"
         # close array
         arrayString="${arrayString}$closeArray"
         lastAddedThemeName="$gNewInstalledThemeName"
@@ -354,7 +369,7 @@ MaintainInstalledThemeListInPrefs()
         [[ DEBUG -eq 1 ]] && WriteToLog "Inserting InstalledThemes array in to prefs file"
         defaults write "$gUserPrefsFile" InstalledThemes -array "$openDict$arrayString$closeDict"
     fi
-    
+    chmod 755 "$gUserPrefsFile".plist 
     ReadPrefsFile
 }
 
@@ -428,9 +443,25 @@ RunThemeAction()
                                 else
                                     WriteToLog "Error. UnPack dir does not exist."
                                 fi
+                                
+                                # Read current hash from packed-refs file.
+                                local currentThemeHash=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git/packed-refs | grep refs/heads/master )
+                                currentThemeHash="${currentThemeHash% refs*}"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash=$currentThemeHash"
                             fi
 
                             if [ ${successFlag} -eq 0 ]; then 
+                            
+                                # Write hash to file in to unpacked theme dir.
+                                local addFile=0
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
+                                echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
+                                if [ $addFile -eq 1 ]; then
+                                    WriteToLog "${debugIndent}Added hash successfully"
+                                    chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
+                                    # Enable glob to match dot files.
+                                    shopt -s dotglob
+                                fi
                                 
                                 # Create theme dir on target and move unpacked theme files to the target dir.
                                 targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
@@ -462,10 +493,18 @@ RunThemeAction()
                                 if [ -d "$UNPACKDIR"/themes ]; then
                                     rm -rf "$UNPACKDIR"/themes 
                                 fi
+                                
+                                # Disable glob to match dot files.
+                                shopt -u dotglob
                             fi
                             ;;
                             
                "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
+
+                            # Check if theme needs elevated privileges to remove
+                            CheckPathIsWriteable "${TARGET_THEME_DIR}/$themeTitleToActOn"
+                            local isPathWriteable=$? # 1 = not writeable / 0 = writeable
+
                             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                 WriteToLog "path is not writeable. Asking for password"
                                 GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
@@ -486,9 +525,22 @@ RunThemeAction()
                             ;;
                  
                 "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
-                            # Note: The bare git repo will have already been updated when the fetch command was run
-                            # from CheckForThemeUpdates() to discover the update.
-                            # All we need to do is checkout the bare repo to the unpack dir then replace on target dir.
+
+                            # Check if bare git repo for this theme exists and delete if yes.
+                            if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
+                                WriteToLog "bare repo for $themeTitleToActOn exists. Deleting"
+                                cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                                rm -rf "$themeTitleToActOn".git
+                            fi
+
+                            # Clone theme from repo.
+                            WriteToLog "Creating a bare git clone of $themeTitleToActOn"
+                            local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/g' )
+                            cd "${WORKING_PATH}/${APP_DIR_NAME}"
+                            feedbackCheck=$("$gitCmd" clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Install git clone: $feedbackCheck"
+
+                            # Checkout the bare repo to the unpack dir then replace on target dir.
                             if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
 
                                 WriteToLog "Force checking out bare git clone of ${themeTitleToActOn}."
@@ -496,8 +548,25 @@ RunThemeAction()
                                 feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout --force 2>&1) && successFlag=0
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout git clone: $feedbackCheck"
                                 
-                                if [ $successFlag -eq 0 ]; then 
-                                
+                                if [ $successFlag -eq 0 ]; then
+
+                                    # Read current hash from packed-refs file.
+                                    local currentThemeHash=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git/packed-refs | grep refs/heads/master )
+                                    #currentThemeHash="${currentThemeHash% refs*}"
+                                    currentThemeHash="${currentThemeHash:0:40}"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash=$currentThemeHash"
+
+                                    # Write hash to file in to unpacked theme dir.
+                                    local addFile=0
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
+                                    echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
+                                    if [ $addFile -eq 1 ]; then
+                                        WriteToLog "${debugIndent}Added hash successfully"
+                                        chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
+                                        # Enable glob to match dot files.
+                                        shopt -s dotglob
+                                    fi
+                                                                
                                     targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
                             
                                     if [ $isPathWriteable -eq 1 ]; then # Not Writeable
@@ -530,9 +599,11 @@ RunThemeAction()
                                     if [ -d "$UNPACKDIR"/themes ]; then
                                         rm -rf "$UNPACKDIR"/themes 
                                     fi
+
+                                    # Disable glob to match dot files.
+                                    shopt -u dotglob
                                 fi
                             fi
-                            ClearUpdateFromPrefs "$themeTitleToActOn"
                             ;;
     esac
 
@@ -543,22 +614,22 @@ RunThemeAction()
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Success@${passedAction}@$themeTitleToActOn"
             SendToUI "Success@${passedAction}@$themeTitleToActOn"
             
-            if [ "$passedAction" == "Install" ]; then
+            if [ "$passedAction" == "Install" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 WriteToLog "Saving settings for newly installed theme."
                 # Save new theme details for adding to prefs file
                 gNewInstalledThemeName="$themeTitleToActOn"
                 gNewInstalledThemePath="$TARGET_THEME_DIR"
                 gNewInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
-                gNewInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+                gNewinstalledThemePartitionGUID="$TARGET_THEME_PARTITIONGUID"
             fi
 
-            if [ "$passedAction" == "UnInstall" ]; then
+            if [ "$passedAction" == "UnInstall" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 WriteToLog "Saving settings for UnInstalled theme."
                 # Save new theme details for adding to prefs file
                 gUnInstalledThemeName="$themeTitleToActOn"
                 gUnInstalledThemePath="$TARGET_THEME_DIR"
                 gUnInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
-                gUnInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+                gUninstalledThemePartitionGUID="$TARGET_THEME_PARTITIONGUID"
             fi     
                  
             # Record what theme was installed where.
@@ -701,15 +772,15 @@ ResolveMountPointFromUUID()
     if [ "$1" != "$zeroUUID" ]; then
         for (( u=0; u<${#themeDirPaths[@]}; u++ ))
         do
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Matching ${duVolumeUuid[$u]} : $1"
-            if [[ "${duVolumeUuid[$u]}" == "$1" ]]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Matching ${duPartitionGuid[$u]} : $1"
+            if [[ "${duPartitionGuid[$u]}" == "$1" ]]; then
                 mountpoint="${themeDirPaths[$u]}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match: Mountpoint=$mountpoint"
                 break
             fi
         done
     else
-        mountpoint="${TARGET_THEME_DIR}"
+        mountpoint=""
     fi
     echo "$mountpoint"
 }
@@ -739,7 +810,7 @@ FindArrayIdFromTarget()
     
     for ((a=0; a<${#duIdentifier[@]}; a++))
     do
-        if [ "${duIdentifier[$a]}" == "${TARGET_THEME_DIR_DEVICE}" ] && [ "${duVolumeUuid[$a]}" == "${TARGET_THEME_VOLUMEUUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
+        if [ "${duIdentifier[$a]}" == "${TARGET_THEME_DIR_DEVICE}" ] && [ "${duPartitionGuid[$a]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
             echo $a
             success=1
             break
@@ -1286,20 +1357,20 @@ ReadThemeDirList()
             duVolumeName+=( $( cut -d@ -f3 <<<"${line}" ))
             duVolumeMountPoint+=( $( cut -d@ -f4 <<<"${line}" ))
             duContent+=( $( cut -d@ -f5 <<<"${line}" ))
-            duVolumeUuid+=( $( cut -d@ -f6 <<<"${line}" ))
+            duPartitionGuid+=( $( cut -d@ -f6 <<<"${line}" ))
             themeDirPaths+=( $( cut -d@ -f7 <<<"${line}" ))
         done < "$themeDirInfo"
         IFS="$oIFS"
             
         # Check array contents match and send message to UI via log
         local total=${#duIdentifier[@]}
-        if [ ${#duSlice[@]} -ne $total ] || [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duVolumeUuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
+        if [ ${#duSlice[@]} -ne $total ] || [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
             WriteToLog "CTM_ThemeDirsFail"
         
             # Print results
             for (( s=0; s<${#duIdentifier[@]}; s++ ))
             do
-                WriteToLog "${duIdentifier[$s]} | ${duSlice[$s]} | ${duVolumeName[$s]} | ${duVolumeMountPoint[$s]} | ${duContent[$s]} | ${duVolumeUuid[$s]} | ${themeDirPaths[$s]}"
+                WriteToLog "${duIdentifier[$s]} | ${duSlice[$s]} | ${duVolumeName[$s]} | ${duVolumeMountPoint[$s]} | ${duContent[$s]} | ${duPartitionGuid[$s]} | ${themeDirPaths[$s]}"
             done   
             exit 1 
         else
@@ -1391,7 +1462,7 @@ CreateAndSendVolumeDropDownMenu()
         else
             pathToPrint="${themeDirPaths[$p]}"
         fi
-        local newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duVolumeUuid[$p]}]"
+        local newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duPartitionGuid[$p]}]"
     done
 
     if [ "$newPathList" != "" ]; then
@@ -1447,36 +1518,36 @@ ReadPrefsFile()
     WriteToLog "Read user preferences file"
     # Check for preferences file
     if [ -f "$gUserPrefsFile".plist ]; then
-    
-        gLastSelectedPath=$( defaults read "$gUserPrefsFile".plist LastSelectedPath )
+
+        gLastSelectedPath=$( defaults read "$gUserPrefsFile" LastSelectedPath )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPath=$gLastSelectedPath"
         
-        gLastSelectedPathDevice=$( defaults read "$gUserPrefsFile".plist LastSelectedPathDevice )
+        gLastSelectedPathDevice=$( defaults read "$gUserPrefsFile" LastSelectedPathDevice )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPathDevice=$gLastSelectedPathDevice"
         
-        gLastSelectedVolumeUUID=$( defaults read "$gUserPrefsFile".plist LastSelectedVolumeUUID )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedVolumeUUID=$gLastSelectedVolumeUUID"
+        gLastSelectedPartitionGUID=$( defaults read "$gUserPrefsFile" LastSelectedPartitionGUID )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPartitionGUID=$gLastSelectedPartitionGUID"
      
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Resetting internal theme arrays"
         ResetInternalThemeArrays
         
-        local tmp=$( defaults read "$gUserPrefsFile".plist Thumbnail )
+        local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
         gThumbSizeX="${tmp% *}"
         gThumbSizeY="${tmp#* }"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
         
-        gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile".plist UnInstalledButton )
+        gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile" UnInstalledButton )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
         
-        gUISettingViewThumbnails=$( defaults read "$gUserPrefsFile".plist ViewThumbnails )
+        gUISettingViewThumbnails=$( defaults read "$gUserPrefsFile" ViewThumbnails )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewThumbnails=${gUISettingViewThumbnails}"
         
-        gUISettingViewPreviews=$( defaults read "$gUserPrefsFile".plist ShowPreviewsButton )
+        gUISettingViewPreviews=$( defaults read "$gUserPrefsFile" ShowPreviewsButton )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewPreviews=${gUISettingViewPreviews}"
         
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
-        local readVar=( $( defaults read "$gUserPrefsFile".plist InstalledThemes | grep = ) )
+        local readVar=( $( defaults read "$gUserPrefsFile" InstalledThemes | grep = ) )
         IFS="$oIFS"
 
         # get total count of lines, less one for zero based index.
@@ -1494,8 +1565,8 @@ ReadPrefsFile()
                            "ThemePath"       )   installedThemeName+=( "$themeName" )
                                                  installedThemePath+=("$tmpValue") ;;
                            "ThemePathDevice" )   installedThemePathDevice+=("$tmpValue") ;;
-                           "UpdateAvailable" )   installedThemeUpdateAvailable+=("$tmpValue") ;;
-                           "VolumeUUID"      )   installedThemeVolumeUUID+=("$tmpValue")
+                           #"UpdateAvailable" )   installedThemeUpdateAvailable+=("$tmpValue") ;;
+                           "VolumeUUID"      )   installedThemePartitionGUID+=("$tmpValue")
                                                  ;;
                 esac
             fi
@@ -1509,19 +1580,20 @@ ReadPrefsFile()
             fi
         done
         
-        # Map $gLastSelectedPath against $gLastSelectedVolumeUUID to catch differences
+        # Map $gLastSelectedPath against $gLastSelectedPartitionGUID to catch differences
         # which will occur when using ESP. Internal random mountpoint gets written to 
         # prefs as /Volumes/EFI because random mountpoint will not happen again.
-        if [ "$gLastSelectedVolumeUUID" != "" ] && [ "$gLastSelectedPath" != "" ] && [ "$gLastSelectedPathDevice" != "" ]; then
+        if [ "$gLastSelectedPartitionGUID" != "" ] && [ "$gLastSelectedPath" != "" ] && [ "$gLastSelectedPathDevice" != "" ]; then
             
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Mapping lastSelectedUUID against mountpoint"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Mapping last selected partition GUID against mounted partition GUIDs"
             local checkPath=""
             for (( u=0; u<${#themeDirPaths[@]}; u++ ))
             do
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duVolumeUuid[$u]} to $gLastSelectedVolumeUUID"
-                if [[ "${duVolumeUuid[$u]}" == "$gLastSelectedVolumeUUID" ]]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duPartitionGuid[$u]} = $gLastSelectedPartitionGUID"
+                if [ "${duPartitionGuid[$u]}" == "$gLastSelectedPartitionGUID" ]; then
                     checkPath="${themeDirPaths[$u]}"
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
+                    
                 fi
             done
             
@@ -1530,13 +1602,12 @@ ReadPrefsFile()
             else
                 TARGET_THEME_DIR="$gLastSelectedPath"
             fi
-            
             TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
-            TARGET_THEME_VOLUMEUUID="$gLastSelectedVolumeUUID"
+            TARGET_THEME_PARTITIONGUID="$gLastSelectedPartitionGUID"
         else
             TARGET_THEME_DIR="-"
             TARGET_THEME_DIR_DEVICE="-"
-            TARGET_THEME_VOLUMEUUID="-"
+            TARGET_THEME_PARTITIONGUID="-"
         fi
         
         # Add message in to log for initialise.js to detect.
@@ -1547,10 +1618,10 @@ ReadPrefsFile()
         WriteLog "Creating initial prefs file: $gUserPrefsFile"
         defaults write "$gUserPrefsFile" "LastSelectedPath" "-"
         defaults write "$gUserPrefsFile" "LastSelectedPathDevice" "-"
-        defaults write "$gUserPrefsFile" "LastSelectedVolumeUUID" "-"
+        defaults write "$gUserPrefsFile" "LastSelectedPartitionGUID" "-"
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
-        TARGET_THEME_VOLUMEUUID="-"
+        TARGET_THEME_PARTITIONGUID="-"
         
         # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_ReadPrefsCreate"
@@ -1558,7 +1629,7 @@ ReadPrefsFile()
     
     WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
     WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-    WriteToLog "TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
+    WriteToLog "TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
         
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
 }
@@ -1574,7 +1645,7 @@ SendInternalThemeArraysToLogFile()
     WriteLinesToLog
     local totalPath="${#installedThemePath[@]}"
     local totalPathDevice="${#installedThemePathDevice[@]}"
-    local totalVolUuid="${#installedThemeVolumeUUID[@]}"
+    local totalVolUuid="${#installedThemePartitionGUID[@]}"
     if [ $totalPath -ne $totalPathDevice ] && [ $totalPath -ne $totalVolUuid ]; then
         WriteToLog "${debugIndent}Error. Preferences are corrupt"
         exit 1
@@ -1582,7 +1653,7 @@ SendInternalThemeArraysToLogFile()
         WriteToLog "${debugIndent}Prefs shows total number of installed themes=${#installedThemeName[@]}"
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
-            WriteToLog "${debugIndent}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemeVolumeUUID[$n]}, Update=${installedThemeUpdateAvailable[$n]}"
+            WriteToLog "${debugIndent}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemePartitionGUID[$n]}" #, Update=${installedThemeUpdateAvailable[$n]}"
         done
     fi  
     WriteLinesToLog 
@@ -1608,9 +1679,8 @@ SendUIInitData()
             GetFreeSpaceOfTargetDeviceAndSendToUI
         fi
         
-        # Run these regardless of path chosen as JS is waiting to hear it. 
-        CheckAndRecordOrphanedThemesAndSendToUI
-        CheckForAnyUpdatesStoredInPrefsAndSendToUI
+        # Run this regardless of path chosen as JS is waiting to hear it. 
+        CheckAndRecordUnManagedThemesAndSendToUI
 
         # Set redirect from initial page
         #WriteToLog "Redirect managethemes.html"
@@ -1684,20 +1754,20 @@ RespondToUserDeviceSelection()
     # Check user did actually change from default
     if [ ! "$pathOption" == "-" ]; then
 
-        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with UUID ${duVolumeUuid[$pathOption]}" 
+        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with UUID ${duPartitionGuid[$pathOption]}" 
 
-        local mountpoint=$( ResolveMountPointFromUUID "${duVolumeUuid[$pathOption]}" )
+        local mountpoint=$( ResolveMountPointFromUUID "${duPartitionGuid[$pathOption]}" )
         if [ "$mountpoint" != "" ]; then
             TARGET_THEME_DIR="$mountpoint"
         else
             TARGET_THEME_DIR="${themeDirPaths[$pathOption]}"
         fi
         TARGET_THEME_DIR_DEVICE="${duIdentifier[$pathOption]}"
-        TARGET_THEME_VOLUMEUUID="${duVolumeUuid[$pathOption]}"
+        TARGET_THEME_PARTITIONGUID="${duPartitionGuid[$pathOption]}"
 
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR=$TARGET_THEME_DIR"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_VOLUMEUUID=$TARGET_THEME_VOLUMEUUID"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
         
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
@@ -1705,25 +1775,26 @@ RespondToUserDeviceSelection()
         
             UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"  
             UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
-            UpdatePrefsKey "LastSelectedVolumeUUID" "$TARGET_THEME_VOLUMEUUID"
+            UpdatePrefsKey "LastSelectedPartitionGUID" "$TARGET_THEME_PARTITIONGUID"
         
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
-            CheckAndRecordOrphanedThemesAndSendToUI
-            CheckForAnyUpdatesStoredInPrefsAndSendToUI
+            CheckAndRecordUnManagedThemesAndSendToUI
+            #CheckForAnyUpdatesStoredInPrefsAndSendToUI
             CheckAndRemoveBareClonesNoLongerNeeded
             ReadAndSendCurrentNvramTheme
             CheckForThemeUpdates &
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
-            CheckAndRecordOrphanedThemesAndSendToUI
-            CheckForAnyUpdatesStoredInPrefsAndSendToUI
+            CheckAndRecordUnManagedThemesAndSendToUI
+            #CheckForAnyUpdatesStoredInPrefsAndSendToUI
+            CheckForThemeUpdates &
         fi
     else
         WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
-        TARGET_THEME_VOLUMEUUID="-"
+        TARGET_THEME_PARTITIONGUID="-"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
     fi
@@ -1763,7 +1834,18 @@ RespondToUserThemeAction()
 # ---------------------------------------------------------------------------------------
 CheckThemePathIsStillValid()
 {
-    if [ ! -d "$TARGET_THEME_DIR" ]; then
+    local checkUUID=""
+    local stillMounted=0
+    
+    # Check if device is still mounted.
+    local checkMounted=$( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3 | grep $TARGET_THEME_DIR_DEVICE )
+    for c in $checkMounted
+    do
+        checkUUID=$( ioreg -lxw0 -pIODeviceTree | grep -A 10 $c | grep $TARGET_THEME_PARTITIONGUID )
+        [[ checkUUID != "" ]] && stillMounted=1
+    done
+        
+    if [ $stillMounted -eq 0 ]; then
         WriteToLog "Theme directory $TARGET_THEME_DIR does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
@@ -1777,8 +1859,8 @@ CheckThemePathIsStillValid()
                 pathToPrint="/Volumes/EFI/${tmpStrip}"
             fi
         fi
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_VOLUMEUUID}@${pathToPrint}@$entry"
-        SendToUI "NotExist@${TARGET_THEME_VOLUMEUUID}@${pathToPrint}@$entry"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
+        SendToUI "NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
 
         WriteToLog "NoPathSelected"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
@@ -1811,7 +1893,7 @@ GetListOfInstalledThemesAndSendToUI()
     unset installedThemesFoundAfterSearch
     unset installedThemesOnCurrentVolume
     if [ "$TARGET_THEME_DIR" != "" ] && [ "$TARGET_THEME_DIR" != "-" ]; then
-        WriteToLog "Looking for installed themes at $TARGET_THEME_DIR"
+        WriteToLog "Looking for installed themes at $TARGET_THEME_DIR on $TARGET_THEME_DIR_DEVICE"
         oIFS="$IFS"; IFS=$'\r\n'
         installedThemesFoundAfterSearch=( $( find "$TARGET_THEME_DIR"/* -type d -depth 0 ))
         for ((i=0; i<${#installedThemesFoundAfterSearch[@]}; i++))
@@ -1833,6 +1915,7 @@ GetListOfInstalledThemesAndSendToUI()
 }
 
 # ---------------------------------------------------------------------------------------
+# NO LONGER CALLED
 CheckForAnyUpdatesStoredInPrefsAndSendToUI()
 {
     # If an update to a theme has been found by CheckForThemeUpdates()
@@ -1848,7 +1931,7 @@ CheckForAnyUpdatesStoredInPrefsAndSendToUI()
         ReadPrefsFile
         for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
         do
-            if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
+            if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemePartitionGUID[$n]}" == "$TARGET_THEME_PARTITIONGUID" ]; then
                 updateAvailThemeStr="${updateAvailThemeStr},${installedThemeName[$n]}"
             fi
         done
@@ -1876,14 +1959,8 @@ CheckThemeIsInPrefs()
     
     for ((n=0; n<${#installedThemeName[@]}; n++ ))
     do
-        if [ "$TARGET_THEME_VOLUMEUUID" == "$zeroUUID" ]; then
-            if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
-                inPrefs=1
-            fi
-        else
-            if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemeVolumeUUID[$n]}" == "$TARGET_THEME_VOLUMEUUID" ]; then
-                inPrefs=1
-            fi
+        if [ "${installedThemeName[$n]}" == "$themeToFind" ] && [ "${installedThemePartitionGUID[$n]}" == "$TARGET_THEME_PARTITIONGUID" ]; then
+            inPrefs=1
         fi
     done
     
@@ -1895,7 +1972,7 @@ CheckThemeIsInPrefs()
         gNewInstalledThemeName="$themeToFind"
         gNewInstalledThemePath="$TARGET_THEME_DIR"
         gNewInstalledThemePathDevice="$TARGET_THEME_DIR_DEVICE"
-        gNewInstalledThemeVolumeUUID="$TARGET_THEME_VOLUMEUUID"
+        gNewinstalledThemePartitionGUID="$TARGET_THEME_PARTITIONGUID"
         
         # Run routine to update prefs file.
         MaintainInstalledThemeListInPrefs  
@@ -1903,40 +1980,48 @@ CheckThemeIsInPrefs()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckAndRecordOrphanedThemesAndSendToUI()
+CheckAndRecordUnManagedThemesAndSendToUI()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
-    # Plan: loop through this array and check for parent bare clone .git dir in Support Dir.
-    #       Create list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
+    # Plan: loop through this array and check for existence of .hash file
+    #       Create list of any installed themes missing a .hash file in $unversionedThemeStr
     # Send the list to the UI so a cross is drawn to the right of the 'UnInstall' button.
     
     if [ ! "$TARGET_THEME_DIR" == "-" ]; then
-        WriteToLog "Checking $TARGET_THEME_DIR for any orphaned themes (without a bare clone)."
+        WriteToLog "Checking $TARGET_THEME_DIR for any unmanaged themes (without a .hash)."
         unversionedThemeStr=""
         local prefsNeedUpdating=0
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
-            if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-                WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
+        
+            #if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
+                #WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} is missing parent bare clone from support dir!"
+                
+            # Check for .hash inside installed theme dir
+            if [ ! -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
+                WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has no hash"
+        
                 # Append to list of themes that cannot be checked for updates
                 unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
             
                 # Remove any pref entry for this theme
                 for ((d=0; d<${#installedThemeName[@]}; d++))
                 do
-                    if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && [ "${installedThemePath[$d]}" == "${TARGET_THEME_DIR}" ]; then
+                    if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && [ "${installedThemePartitionGUID[$d]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                         # Doing this will effectively delete the theme from prefs as it 
                         # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
-                        WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} in $TARGET_THEME_DIR"
+                        WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} on $TARGET_THEME_PARTITIONGUID"
                         prefsNeedUpdating=1
                         installedThemeName[$d]="-"
                     fi
                 done
             else
-                #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
                 # Match - theme dir in users theme path that also has a parent bare clone in app support dir.
                 # Double check this is also in user prefs file.
-                CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
+                if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
+                    CheckThemeIsInPrefs "${installedThemesOnCurrentVolume[$t]}"
+                fi
             fi
         done
     
@@ -2038,7 +2123,8 @@ CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
     done
     if [ $foundTheme -eq 0 ]; then
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git ]; then
-            WriteToLog "Local bare repo ${passedThemeName}.git is no longer in use. Deleting."
+            #WriteToLog "Local bare repo ${passedThemeName}.git is no longer in use. Deleting."
+            WriteToLog "Local bare repo ${passedThemeName}.git is now being deleted."
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git
         fi
     fi
@@ -2051,44 +2137,52 @@ CheckForThemeUpdates()
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
     #       If parent-repo theme.git is found then cd in to it and run a git fetch. 
     # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
-    # Also append list of any installed themes missing a parent bare-repo theme.git to $unversionedThemeStr
 
-    unversionedThemeStr=""
-    local updateWasFound=0
+    #local updateWasFound=0
     
+    # Send UI a blank update message to enable UI.
+    SendToUI "UpdateAvailThemes@@"
+    
+    local updateAvailThemeStr=""
+
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
         WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
     
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
-            if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git" ]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking for update to ${installedThemesOnCurrentVolume[$t]}"
-                cd "${WORKING_PATH}/${APP_DIR_NAME}"/"${installedThemesOnCurrentVolume[$t]}.git"
-                local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
-                if [[ "$updateCheck" == *done.* ]]; then
-                    # Theme was updated.
-                    WriteToLog "bare .git repo ${installedThemesOnCurrentVolume[$t]} has been updated."
-                    updateWasFound=1
-                    # Mark update as available for all instances of this theme.
-                    # This will get written to prefs.
-                    for ((n=0; n<${#installedThemeName[@]}; n++ ));
-                    do
-                        if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
-                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting installedThemeUpdateAvailable[$n] to Yes"
-                            installedThemeUpdateAvailable[$n]="Yes" 
-                        fi
-                    done 
+            # read hash from currently installed theme
+            if [ -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
+                local themeHashLocal=$( cat "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash )
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashLocal=$themeHashLocal"
+
+                # get hash of theme in the repo
+                local themeHashRepo=$( git ls-remote git://git.code.sf.net/p/cloverefiboot/themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master )
+                themeHashRepo="${themeHashRepo:0:40}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashRepo=$themeHashRepo"
+
+                if [ "$themeHashRepo" != "" ]; then
+                    if [ "$themeHashLocal" != "$themeHashRepo" ]; then
+                        # Theme has been updated.
+                        WriteToLog "${installedThemesOnCurrentVolume[$t]} has an update available."
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash diff: $themeHashLocal | $themeHashRepo"
+                        updateAvailThemeStr="${updateAvailThemeStr},${installedThemesOnCurrentVolume[$t]}" 
+                    else
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash matches. No update for ${installedThemesOnCurrentVolume[$t]}"
+                    fi
                 else
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No update found for ${installedThemesOnCurrentVolume[$t]}"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Failed to read hash for ${installedThemesOnCurrentVolume[$t]} from repository."
                 fi
             fi
         done
-    
-        # Run routine to update prefs file.
-        if [ $updateWasFound -eq 1 ]; then
-            MaintainInstalledThemeListInPrefs  
+        
+        if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
+            # Remove leading comma from string
+            updateAvailThemeStr="${updateAvailThemeStr#?}"
         fi
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
+        SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
     fi
     
     WriteToLog "Checking for updates complete."
@@ -2110,15 +2204,15 @@ CheckAndRemoveBareClonesNoLongerNeeded()
         # Loop through themes installed in prefs file
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
-            # Check current path in prefs matches current theme dir
-            if [ "${installedThemePath[$n]}" == "$TARGET_THEME_DIR" ]; then
-        
+            # Check current partition GUID in prefs matches current partition GUID
+            if [ "${installedThemePartitionGUID[$n]}" == "$TARGET_THEME_PARTITIONGUID" ]; then
                 # Is theme installed in current theme dir?
                 local themeIsInDir=0
                 for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
                 do
                     if [ "${installedThemeName[$n]}" == "${installedThemesOnCurrentVolume[$t]}" ]; then
                         themeIsInDir=1
+                        break
                     fi
                 done
                 if [ $themeIsInDir -eq 0 ]; then
@@ -2171,7 +2265,7 @@ CleanInstalledThemesPrefEntries()
     # This should not happen in the first place but I have found some examples
     # during my local testing here. Could be a bug that needs finding!
     
-    foundEntryToDelete=0
+    #foundEntryToDelete=0
     for ((n=0; n<${#installedThemeName[@]}; n++ ));
     do
         for ((m=0; m<${#installedThemeName[@]}; m++ ));
@@ -2179,9 +2273,9 @@ CleanInstalledThemesPrefEntries()
             if [ $m -ne $n ] && [ "${installedThemeName[$n]}" == "${installedThemeName[$m]}" ]; then
                 # Found another theme entry by same name
                 # Is this installed elsewhere or a duplicate entry?
-                if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && [ "${installedThemeVolumeUUID[$n]}" == "${installedThemeVolumeUUID[$m]}" ]; then
+                if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && [ "${installedThemePartitionGUID[$n]}" == "${installedThemePartitionGUID[$m]}" ]; then
                     # Duplicate entry. Remove
-                    foundEntryToDelete=1
+                    #foundEntryToDelete=1
                     WriteToLog "Housekeeping: Removing duplicate prefs entry for ${installedThemeName[$n]} at ${installedThemePath[$n]}."
                     installedThemeName[$n]="-"
                 fi
@@ -2329,7 +2423,7 @@ WORKING_PATH="${HOME}/Library/Application Support"
 APP_DIR_NAME="CloverThemeManager"
 TARGET_THEME_DIR=""
 TARGET_THEME_DIR_DEVICE=""
-TARGET_THEME_VOLUMEUUID=""
+TARGET_THEME_PARTITIONGUID=""
 TMPDIR="/tmp/CloverThemeManager"
 UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
 COMMANDLINE=0
@@ -2357,7 +2451,7 @@ gFirstRun=0
 gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
-zeroUUID="00000000-0000-0000-0000-000000000000"
+export zeroUUID="00000000-0000-0000-0000-000000000000"
 
 # Get versions of js scripts
 jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
@@ -2451,7 +2545,7 @@ if [ "$gitCmd" != "" ]; then
         declare -a duVolumeName
         declare -a duVolumeMountPoint
         declare -a duContent
-        declare -a duVolumeUuid
+        declare -a duPartitionGuid
         declare -a unmountedEsp
     
         # Arrays for theme
@@ -2463,8 +2557,8 @@ if [ "$gitCmd" != "" ]; then
         declare -a installedThemeName
         declare -a installedThemePath
         declare -a installedThemePathDevice
-        declare -a installedThemeVolumeUUID
-        declare -a installedThemeUpdateAvailable
+        declare -a installedThemePartitionGUID
+        #declare -a installedThemeUpdateAvailable
 
         # Globals for newly installed theme before adding to prefs
         ResetNewlyInstalledThemeVars
@@ -2482,6 +2576,14 @@ if [ "$gitCmd" != "" ]; then
         RefreshHtmlTemplates "managethemes.html"
         IsRepositoryLive
         EnsureLocalSupportDir
+
+        # Clean any old files from support dir from previous app versions
+        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}" ]; then
+            rm "${WORKING_PATH}/${APP_DIR_NAME}"/*.plist
+            rm "${WORKING_PATH}/${APP_DIR_NAME}"/dropdown_html
+            rm "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html
+        fi
+
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
         WriteToLog "CTM_ThemeDirsScan"
@@ -2559,8 +2661,9 @@ if [ "$gitCmd" != "" ]; then
                     # Operation was successful
                     GetListOfInstalledThemesAndSendToUI
                     GetFreeSpaceOfTargetDeviceAndSendToUI
-                    CheckAndRecordOrphanedThemesAndSendToUI
-                    CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                    CheckAndRecordUnManagedThemesAndSendToUI
+                    #CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                    CheckForThemeUpdates &
                     ReadAndSendCurrentNvramTheme
                 fi 
 
@@ -2629,8 +2732,9 @@ if [ "$gitCmd" != "" ]; then
                 SendToUI "Target@$entry"
                 GetListOfInstalledThemesAndSendToUI
                 GetFreeSpaceOfTargetDeviceAndSendToUI
-                CheckAndRecordOrphanedThemesAndSendToUI
-                CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                CheckAndRecordUnManagedThemesAndSendToUI
+                #CheckForAnyUpdatesStoredInPrefsAndSendToUI
+                CheckForThemeUpdates &
                 ReadAndSendCurrentNvramTheme
                 SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
                 SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
