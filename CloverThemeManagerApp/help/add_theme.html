@@ -48,7 +48,8 @@ a:hover {
 }
 .textTitleSubHeading {
     color: #98e5ea;
-    font-size: 16px;
+    font-size: 20px;
+    line-height: 140%;
     font-weight: 300;
 }
 .textSectionHeading {
@@ -138,7 +139,7 @@ code a:hover {
         <a name="3"></a>
         <div class="section2">
             <h1 class="textSectionHeading">3 - Clone the existing repository</h1>
-            <p class="textSectionBody">Decide where on your local hard drive you wish to store the Clover theme repository.<br>Load Terminal.app and <span class="highlight">cd</span> to that directory.<p>
+            <p class="textSectionBody">Decide where on your local hard drive you wish to store the Clover theme repository.<br>Load Terminal.app and <span class="highlight">cd</span> to that directory.</p>
             <p class="textSectionBody">As an example, here I wish to clone the repository to my HDD partition named Data.</p>
             <p class="terminal">cd /Volumes/Data/</p>
             <p class="textSectionBody">Then enter the following, replacing USERNAME with your sourceforge username:</p>
@@ -177,7 +178,7 @@ nothing added to commit but untracked files present (use "git add" to track)<br>
             <h1 class="textSectionHeading">5 - Stage your change</h1>
             <p class="textSectionBody">The previous message tells you there are untracked files. You can now follow the suggestion and <span class="highlight">git add</span> your theme to git's staging area. To continue my example from above:</p>
             <p class="terminal">git add themes/myNewTheme/</p>
-            <p class="textSectionBody">You wont see any feedback after running this command but if you wish to check all is good then you could run <span class="highlight">git status</span> again:</p>
+            <p class="textSectionBody">You won't see any feedback after running this command but if you wish to check all is good then you could run <span class="highlight">git status</span> again:</p>
             <p class="terminal">On branch master<br>
 Your branch is up-to-date with 'origin/master'.<br>
 <br>
@@ -205,9 +206,9 @@ Changes to be committed:<br>
         <a name="6"></a>
         <div class="section1">
             <h1 class="textSectionHeading">6 - Commit your change</h1>
-            <p class="textSectionBody">You can now commit this change with a descriptive message using the <span class="highlight">git commit</span> command with the <span class="highlight">-m</span> option.<p>
+            <p class="textSectionBody">You can now commit this change with a descriptive message using the <span class="highlight">git commit</span> command with the <span class="highlight">-m</span> option.</p>
             <p class="terminal">git commit -m "Adding my new theme."</p>
-            <p class="textSectionBody">After pressing return you will see something like this:<p>
+            <p class="textSectionBody">After pressing return you will see something like this:</p>
             <p class="terminal">[master d4ac14d] Adding my new theme.<br>
  47 files changed, 51 insertions(+)<br>
  create mode 100755 themes/myNewTheme/banner.png<br>
@@ -227,9 +228,9 @@ Changes to be committed:<br>
         <a name="7"></a>
         <div class="section2">
             <h1 class="textSectionHeading">7 - Push your changes</h1>
-            <p class="textSectionBody">The final step is to push your changes to the repository. You do this with the <span class="highlight">git push</span> command.<p>
+            <p class="textSectionBody">The final step is to push your changes to the repository. You do this with the <span class="highlight">git push</span> command.</p>
             <p class="terminal">git push origin master</p>
-            <p class="textSectionBody">You will asked to enter your sourceforge account password. Type it and press return.<br>All being well you will see something like this:<p>
+            <p class="textSectionBody">You will asked to enter your sourceforge account password. Type it and press return.<br>All being well you will see something like this:</p>
             <p class="terminal">Counting objects: 6, done.<br>
 Delta compression using up to 8 threads.<br>
 Compressing objects: 100% (4/4), done.<br>
@@ -261,10 +262,22 @@ To ssh://USERNAME@git.code.sf.net/p/cloverefiboot/themes<br>
         <a name="8"></a>
         <div class="section1">
             <h1 class="textSectionHeading">8 - Complete</h1>
-            <p class="textSectionBody">Congratulations. You have just added your theme to the repository. The next time you or anybody else launches Clover Theme Manager, your theme will be available for installation.<p>
+            <p class="textSectionBody">Congratulations. You have just added your theme to the repository. The next time you or anybody else launches Clover Theme Manager, your theme will be available for installation.</p>
+        </div>
+              
+        <a name="9"></a>
+        <div class="section1">
+            <h1 class="textSectionHeading">9 - Keeping your local repo up to date</h1>
+            <p class="textSectionBody">Other users can make changes to the repository on the server. To keep your local repository in sync with the server, <span class="highlight">cd</span> in to cloverefiboot-themes directory and run the <span class="highlight">git pull</span> command.</p>
         </div>
         
-        <div class="sectionEnd"></div
+        <a name="10"></a>
+        <div class="section1">
+            <h1 class="textSectionHeading">10 - Making changes to your theme</h1>
+            <p class="textSectionBody">If you later make a change to your theme files in your local repository and want to update the main repository then follow <a href="#4">step 4</a> from <span class="highlight">git status</span> onwards to stage, commit and push the changes.</p>
+        </div>
+        
+        <div class="sectionEnd"></div>
         
     </div>
     
