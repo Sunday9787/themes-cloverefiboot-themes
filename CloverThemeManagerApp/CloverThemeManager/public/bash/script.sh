@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.0"
+VERS="0.75.1"
 
 export DEBUG=1
 #set -x
@@ -467,16 +467,7 @@ RunThemeAction()
                                 targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
 
                                 if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                    WriteToLog "path is not writeable. Asking for password"
-                                    GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
-                                    returnValueRoot=$? # 1 = not root / 0 = root
-                                    if [ ${returnValueRoot} = 0 ]; then 
-                                        echo "$gPw" | sudo -S "$uiSudoChanges" "Move" "$themeTitleToActOn" "$targetThemeDir" "$UNPACKDIR" && gPw=""     
-                                        returnValue=$?
-                                        if [ ${returnValue} -eq 0 ]; then
-                                            successFlag=0
-                                        fi
-                                    fi
+                                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                 else
                                     chckDir=0
                                     mkdir "$targetThemeDir" && chckDir=1
@@ -506,16 +497,7 @@ RunThemeAction()
                             local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
                             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                WriteToLog "path is not writeable. Asking for password"
-                                GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
-                                returnValueRoot=$? # 1 = not root / 0 = root
-                                if [ ${returnValueRoot} = 0 ]; then 
-                                    echo "$gPw" | sudo -S "$uiSudoChanges" "UnInstall" "$themeTitleToActOn" "${TARGET_THEME_DIR}" && gPw=""
-                                    returnValue=$?
-                                    if [ ${returnValue} -eq 0 ]; then
-                                        successFlag=0
-                                    fi
-                                fi
+                                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
                             else
                                 cd "${TARGET_THEME_DIR}"
                                 if [ -d "$themeTitleToActOn" ]; then
@@ -570,16 +552,7 @@ RunThemeAction()
                                     targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
                             
                                     if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                        WriteToLog "path is not writeable. Asking for password"
-                                        GetAndCheckUIPassword "Clover Theme Manager requires your password to $passedAction $themeTitleToActOn. Type your password to allow this."
-                                        returnValueRoot=$? # 1 = not root / 0 = root
-                                        if [ ${returnValueRoot} = 0 ]; then 
-                                            echo "$gPw" | sudo -S "$uiSudoChanges" "Update" "$themeTitleToActOn" "$targetThemeDir" "$UNPACKDIR" && gPw=""     
-                                            returnValue=$?
-                                            if [ ${returnValue} -eq 0 ]; then
-                                                successFlag=0
-                                            fi
-                                        fi
+                                        successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                     else
                                         if [ -d "$targetThemeDir" ]; then
                                             chckDir=0
@@ -1187,17 +1160,7 @@ PerformUpdates()
 
             WriteToLog "Performing Updates"
             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                WriteToLog "Public DIR is not writeable. Asking for password"
-
-                GetAndCheckUIPassword "Clover Theme Manager requires your password to update the app. Type your password to allow this."
-                returnValueRoot=$? # 1 = not root / 0 = root
-                if [ ${returnValueRoot} = 0 ]; then 
-                    echo "$gPw" | sudo -S "$uiSudoChanges" "UpdateApp" "$updateScript" && gPw=""     
-                    returnValue=$?
-                    if [ ${returnValue} -eq 0 ]; then
-                        successFlag=0
-                    fi
-                fi
+                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
             else
                 WriteToLog "Public DIR is writeable"
                 "$updateScript" && successFlag=0
@@ -1405,38 +1368,9 @@ ManageESP()
             successFlag=1
             local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
             if [ ! "$mountPoint" == "" ]; then
-                GetAndCheckUIPassword "Clover Theme Manager requires your password to mount the EFI system partition at /dev/${unmountedEsp[$s]}. Type your password to allow this."
-                returnValueRoot=$? # 1 = not root / 0 = root
-                if [ ${returnValueRoot} = 0 ]; then 
-                    echo "$gPw" | sudo -S "$uiSudoChanges" "MountESP" "/dev/${unmountedEsp[$s]}" "$mountPoint"
-                    returnValue=$?
-                    if [ ${returnValue} -eq 0 ]; then
-                        successFlag=0
-                    fi
-                fi
-
+                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
                 if [ $successFlag -eq 0 ]; then
-                    WriteToLog "Mounted ${unmountedEsp[$s]} successfully. Checking for /EFI/Clover/Themes"
                     (( gEspMounted++ ))
-                    
-                    # Does this device contain /efi/clover/themes directory?
-                    local themeDir=$( find "$mountPoint"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
-                    if [ ! "$themeDir" ]; then
-                    
-                        # Unmount ESP
-                        echo "$gPw" | sudo -S "$uiSudoChanges" "UnMountESP" "$mountPoint" && gPw=""
-                        returnValue=$?
-                        if [ ${returnValue} -eq 0 ]; then
-                            WriteToLog "Unmounted ${unmountedEsp[$s]} successfully."
-                            (( gEspMounted-- ))
-                        else
-                            WriteToLog "Failed to unmount ${unmountedEsp[$s]}."
-                        fi
-                    else
-                        WriteToLog "/EFI/Clover/Themes directory found on ${unmountedEsp[$s]}"
-                    fi
-                else
-                    WriteToLog "Failed to mount ${unmountedEsp[$s]}."
                 fi
             fi
         done
@@ -2069,32 +2003,8 @@ SetNvramTheme()
     # remove everything up until, and including, the first @
     messageFromUi="${messageFromUi#*@}"
     chosenTheme="${messageFromUi%%@*}"
-
-    WriteToLog "Asking for user password."
-    
-    GetAndCheckUIPassword "Clover Theme Manager requires your password to set the Clover.Theme NVRAM variable."
-    local returnValueRoot=$? # 1 = not root / 0 = root
-
-    if [ ${returnValueRoot} = 0 ]; then 
-
-       WriteToLog "Password gives elevated access"
-
-        # RUN COMMAND WITH ROOT PRIVILEGES        
-        WriteToLog "Setting Clover.theme NVRAM variable to $chosenTheme"
-        echo "$gPw" | sudo -S "$uiSudoChanges" "SetNVRAMVar" "$chosenTheme" && gPw=""
-        returnValue=$?
-        if [ ${returnValue} -eq 0 ]; then
-            successFlag=0
-        fi
-            
-    elif [ ${returnValueRoot} = 1 ]; then 
-        # password did not give elevated privileges. Run this routine again.
-        WriteToLog "User entered incorrect password."
-    else
-        WriteToLog "User cancelled password entry."
-    fi
-    
-    # Was install operation a success?
+    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+    # Was operation a success?
     if [ $successFlag -eq 0 ]; then
         WriteToLog "Setting NVRAM Variable was successful."
     else

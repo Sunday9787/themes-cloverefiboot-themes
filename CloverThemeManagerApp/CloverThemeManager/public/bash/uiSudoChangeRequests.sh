@@ -44,15 +44,13 @@ MoveThemeToTarget()
         # Move unpacked files to target theme path.
         cd "$unPackDir"/themes
         if [ -d "$themeName" ]; then
+            shopt -s dotglob
             mv "$themeName"/* "$targetThemeDir" && successFlag=0
+            shopt -u dotglob
         fi
     fi
         
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
@@ -65,11 +63,7 @@ UnInstallTheme()
         rm -rf "$themeName" && WriteToLog "Deletion was successful." && successFlag=0
     fi
     
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
@@ -87,40 +81,25 @@ UpdateTheme()
             cd "$unPackDir"/themes
             if [ -d "$themeName" ]; then
                 WriteToLog "Moving updated $themeName theme files to $targetThemeDir"
+                shopt -s dotglob
                 mv "$themeName"/* "$targetThemeDir" && successFlag=0
+                shopt -u dotglob
             fi
         fi
     fi
         
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-SetPathUnderVersionControl()
-{
-    svn checkout "$repositoryPath" --depth empty "$themePath" && successFlag=0
-    
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
 SetNVRAMVariable()
 {
+    local successFlag=1
+    
+    WriteToLog "Setting Clover.Theme NVRAM Variable"
     nvram Clover.Theme="$themeName" && successFlag=0
     
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
@@ -133,15 +112,11 @@ UpdateApp()
         "$scriptToRun" && successFlag=0
     fi
         
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
-MountESP()
+MountESPwithThemesDir()
 {
     local successFlag=1
     local targetFormat=$( fstyp "$device" )
@@ -149,70 +124,64 @@ MountESP()
     if [ "$device" != "" ] && [ "$targetFormat" != "" ] && [ "$mountPoint" != "" ]; then
         mount -t "$targetFormat" "$device" "$mountPoint" && successFlag=0
     fi
-        
+
     if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
+        WriteToLog "Mounted $device successfully. Checking for /EFI/Clover/Themes"
+        # Does this device contain /efi/clover/themes directory?
+        local themeDir=$( find "$mountPoint"/EFI/Clover -depth 1 -type d -iname "Themes" 2>/dev/null )
+        if [ ! "$themeDir" ]; then
+            WriteToLog "No /EFI/Clover/Themes directory found on $device"
+            umount -f "$mountPoint" && successFlag=1
+            [[ successFlag -eq 1 ]] && WriteToLog "unmounted $device"
+        else
+            WriteToLog "/EFI/Clover/Themes directory found on $device"
+        fi
     fi
     
+    echo $successFlag
 }
 
 # ---------------------------------------------------------------------------------------
-UnMountESP()
-{
-    local successFlag=1
 
-    if [ "$mountPoint" != "" ]; then
-        umount -f "$mountPoint" && successFlag=0
-    fi
-        
-    if [ $successFlag -eq 0 ]; then
-        exit 0
-    else
-        exit 1
-    fi
-    
-}
+# Passing strings with spaces fails as that's used as a delimiter.
+# Instead, I pass each argument delimited by character @
 
-# ---------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------
+# Parse arguments
+declare -a "arguments"
+passedArguments="$@"
+numFields=$( grep -o "@" <<< "$passedArguments" | wc -l )
+(( numFields++ ))
+for (( f=2; f<=$numFields; f++ ))
+do
+    arguments[$f]=$( echo "$passedArguments" | cut -d '@' -f$f )
+    WriteToLog "arguments[$f]=${arguments[$f]}"
+done
 
-whichFunction="$1"
-echo ""
+whichFunction="${arguments[2]}"
 
 case "$whichFunction" in                             
-     "Move"                       ) themeName="$2"
-                                    targetThemeDir="$3"
-                                    unPackDir="$4"
+     "Move"                       ) targetThemeDir="${arguments[3]}"
+                                    unPackDir="${arguments[4]}"
+                                    themeName="${arguments[5]}"
                                     MoveThemeToTarget
                                     ;;
-     "UnInstall"                  ) themeName="$2"
-                                    targetThemeDir="$3"
+     "UnInstall"                  ) targetThemeDir="${arguments[3]}"
+                                    themeName="${arguments[4]}"
                                     UnInstallTheme
                                     ;;
-     "Update"                     ) themeName="$2"
-                                    targetThemeDir="$3"
-                                    unPackDir="$4"
+     "Update"                     ) targetThemeDir="${arguments[3]}"
+                                    unPackDir="${arguments[4]}"
+                                    themeName="${arguments[5]}"
                                     UpdateTheme
                                     ;;
-     "SetPathUnderVersionControl" ) repositoryPath="$2"
-                                    themePath="$3"
-                                    SetPathUnderVersionControl
-                                    ;;
-     "SetNVRAMVar"                ) themeName="$2"
+     "SetNVRAMVar"                ) themeName="${arguments[3]}"
                                     SetNVRAMVariable
                                     ;;
-     "UpdateApp"                  ) scriptToRun="$2"
+     "UpdateApp"                  ) scriptToRun="${arguments[3]}"
                                     UpdateApp
                                     ;;
-     "MountESP"                   ) device="$2"
-                                    mountPoint="$3"
-                                    MountESP
-                                    ;;
-     "UnMountESP"                   ) mountPoint="$2"
-                                    UnMountESP
+     "MountESP"                   ) device="${arguments[3]}"
+                                    mountPoint="${arguments[4]}"
+                                    MountESPwithThemesDir
                                     ;;
 esac
-
-
