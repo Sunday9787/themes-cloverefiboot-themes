@@ -132,7 +132,11 @@ do
             _content=$( FindMatchInPlist "Content" "string" "diskUtilSliceInfo[@]" "Single" )
             # Read and save Volume Name
             tmp=$( FindMatchInPlist "VolumeName" "string" "diskUtilSliceInfo[@]" "Single" )
-            _volName="$tmp"
+            if [ "$tmp" == "" ]; then
+                _volName=" "
+            else
+                _volName="$tmp"
+            fi
 
             WriteToLog "Volume $_volName on mountpoint /${dfMountpoints[$m]} contains Clover themes directory" 
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${allDisks[$s]} | slice=$slice | $_volName | /${dfMountpoints[$m]} | $_content"
