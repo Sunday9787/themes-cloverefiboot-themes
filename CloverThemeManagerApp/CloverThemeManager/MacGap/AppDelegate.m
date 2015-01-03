@@ -103,4 +103,13 @@
     return result;
 }
 
+// Blackosx added to respond to menu item action to open log file in Finder
+// ref: http://stackoverflow.com/questions/15842226/how-to-enable-main-menu-item-copy
+- (IBAction)openLog:(id)sender; {
+    NSString * path    = @"/tmp/CloverThemeManager/CloverThemeManagerLog.txt";
+    NSURL    * fileURL = [NSURL fileURLWithPath: path];
+    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
+    [ws openURL: fileURL];
+}
+
 @end

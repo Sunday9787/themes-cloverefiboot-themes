@@ -1020,7 +1020,7 @@ DownloadPublicDirFromServer()
     local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     cd "${WORKING_PATH}/${APP_DIR_NAME}"
-    git archive --remote="${gitRepositoryUrl}themes" HEAD "$filePath" | tar -x && success=1
+    "$gitCmd" archive --remote="${gitRepositoryUrl}themes" HEAD "$filePath" | tar -x && success=1
     if [ $success -eq 1 ]; then
         WriteToLog "Downloading app files from the repo was successful."
         return 0
@@ -1257,37 +1257,49 @@ GetLatestIndexAndEnsureThemeHtml()
             WriteToLog "CTM_IndexFail"
         fi
     }
-    
-    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
+
+    GetIndexAndProcessThemeList()
+    {
         CloneAndCheckoutIndex
         BuildThemeTextInformation
         CreateThemeListHtml
         InsertThemeListHtmlInToManageThemes
+    }
+    
+    if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
+        GetIndexAndProcessThemeList
     else
         # Check for updates to index.git
         WriteToLog "Checking for update to index.git"
         cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
-        local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
-        if [[ "$updateCheck" == *done.*  ]]; then
-            WriteToLog "index.git has been updated. Re-downloading"
-            CloneAndCheckoutIndex
-            BuildThemeTextInformation
-            CreateThemeListHtml
-            InsertThemeListHtmlInToManageThemes
-        else
-            WriteToLog "No updates to index.git"
-            WriteToLog "CTM_IndexOK"
-            
-            # Use previously saved theme.html
-            if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
-                WriteToLog "CTM_ThemeListOK"
-                InsertThemeListHtmlInToManageThemes "file"
-            else
-                WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
+        # check FETCH_HEAD is not empty
+        local isEmpty=$( cat FETCH_HEAD )
+        if [ "$isEmpty" != "" ]; then
+            local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
+            if [[ "$updateCheck" == *done.*  ]]; then
+                WriteToLog "index.git has been updated. Re-downloading"
+                CloneAndCheckoutIndex
                 BuildThemeTextInformation
                 CreateThemeListHtml
                 InsertThemeListHtmlInToManageThemes
-            fi 
+            else
+                WriteToLog "No updates to index.git"
+                WriteToLog "CTM_IndexOK"
+            
+                # Use previously saved theme.html
+                if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
+                    WriteToLog "CTM_ThemeListOK"
+                    InsertThemeListHtmlInToManageThemes "file"
+                else
+                    WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
+                    BuildThemeTextInformation
+                    CreateThemeListHtml
+                    InsertThemeListHtmlInToManageThemes
+                fi 
+            fi
+        else
+            WriteToLog "index.git FETCH_HEAD is empty. Deleting index.git"
+            GetIndexAndProcessThemeList
         fi
     fi
 
@@ -2067,7 +2079,7 @@ CheckForThemeUpdates()
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashLocal=$themeHashLocal"
 
                 # get hash of theme in the repo
-                local themeHashRepo=$( git ls-remote git://git.code.sf.net/p/cloverefiboot/themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master )
+                local themeHashRepo=$( "$gitCmd" ls-remote git://git.code.sf.net/p/cloverefiboot/themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master )
                 themeHashRepo="${themeHashRepo:0:40}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashRepo=$themeHashRepo"
 

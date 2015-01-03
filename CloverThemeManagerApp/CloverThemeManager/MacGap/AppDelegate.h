@@ -15,4 +15,10 @@
 
 @property (retain, nonatomic) WindowController *windowController;
 
+// Blackosx added
+// ref: http://stackoverflow.com/questions/15842226/how-to-enable-main-menu-item-copy
+@property (assign) IBOutlet NSWindow *window;
+@property (strong) IBOutlet NSMenuItem *openLog;
+
+
 @end
