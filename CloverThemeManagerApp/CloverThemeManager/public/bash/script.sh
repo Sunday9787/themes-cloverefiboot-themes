@@ -156,7 +156,7 @@ ResetInternalDiskArrays()
 {
     # Reset arrays for newly installed theme
     unset duIdentifier
-    unset duSlice
+    #unset duSlice
     unset duVolumeName
     unset duVolumeMountPoint
     unset duContent
@@ -1355,24 +1355,24 @@ ReadThemeDirList()
         while read -r line
         do
             duIdentifier+=( $( cut -d@ -f1 <<<"${line}" ))
-            duSlice+=( $( cut -d@ -f2 <<<"${line}" ))
-            duVolumeName+=( $( cut -d@ -f3 <<<"${line}" ))
-            duVolumeMountPoint+=( $( cut -d@ -f4 <<<"${line}" ))
-            duContent+=( $( cut -d@ -f5 <<<"${line}" ))
-            duPartitionGuid+=( $( cut -d@ -f6 <<<"${line}" ))
-            themeDirPaths+=( $( cut -d@ -f7 <<<"${line}" ))
+            #duSlice+=( $( cut -d@ -f2 <<<"${line}" ))
+            duVolumeName+=( $( cut -d@ -f2 <<<"${line}" ))
+            duVolumeMountPoint+=( $( cut -d@ -f3 <<<"${line}" ))
+            duContent+=( $( cut -d@ -f4 <<<"${line}" ))
+            duPartitionGuid+=( $( cut -d@ -f5 <<<"${line}" ))
+            themeDirPaths+=( $( cut -d@ -f6 <<<"${line}" ))
         done < "$themeDirInfo"
         IFS="$oIFS"
             
         # Check array contents match and send message to UI via log
         local total=${#duIdentifier[@]}
-        if [ ${#duSlice[@]} -ne $total ] || [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
+        if [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
             WriteToLog "CTM_ThemeDirsFail"
         
             # Print results
             for (( s=0; s<${#duIdentifier[@]}; s++ ))
             do
-                WriteToLog "${duIdentifier[$s]} | ${duSlice[$s]} | ${duVolumeName[$s]} | ${duVolumeMountPoint[$s]} | ${duContent[$s]} | ${duPartitionGuid[$s]} | ${themeDirPaths[$s]}"
+                WriteToLog "${duIdentifier[$s]} | ${duVolumeName[$s]} | ${duVolumeMountPoint[$s]} | ${duContent[$s]} | ${duPartitionGuid[$s]} | ${themeDirPaths[$s]}"
             done   
             exit 1 
         else
@@ -2377,6 +2377,7 @@ PUBLIC_DIR="${PUBLIC_DIR%/*}"
 ASSETS_DIR="$PUBLIC_DIR"/assets
 SCRIPTS_DIR="$PUBLIC_DIR"/bash
 JSSCRIPTS_DIR="$PUBLIC_DIR"/scripts
+TOOLS_DIR="$PUBLIC_DIR"/tools
 WORKING_PATH="${HOME}/Library/Application Support"
 APP_DIR_NAME="CloverThemeManager"
 TARGET_THEME_DIR=""
@@ -2409,7 +2410,9 @@ gFirstRun=0
 gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
+
 export zeroUUID="00000000-0000-0000-0000-000000000000"
+export partutil="$TOOLS_DIR"/partutil
 
 # Get versions of js scripts
 jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
@@ -2499,7 +2502,7 @@ if [ "$gitCmd" != "" ]; then
         # Arrays for saving volume info
         declare -a diskUtilPlist
         declare -a duIdentifier
-        declare -a duSlice
+        #declare -a duSlice
         declare -a duVolumeName
         declare -a duVolumeMountPoint
         declare -a duContent
