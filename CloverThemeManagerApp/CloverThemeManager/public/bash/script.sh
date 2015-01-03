@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.1"
+VERS="0.75.2"
 
 export DEBUG=1
 #set -x
@@ -467,7 +467,11 @@ RunThemeAction()
                                 targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
 
                                 if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                    if [ $(CheckOsVersion) -ge 13 ]; then
+                                        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                    else
+                                        successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                    fi  
                                 else
                                     chckDir=0
                                     mkdir "$targetThemeDir" && chckDir=1
@@ -497,7 +501,11 @@ RunThemeAction()
                             local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
                             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                if [ $(CheckOsVersion) -ge 13 ]; then
+                                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                else
+                                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                fi 
                             else
                                 cd "${TARGET_THEME_DIR}"
                                 if [ -d "$themeTitleToActOn" ]; then
@@ -552,7 +560,11 @@ RunThemeAction()
                                     targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
                             
                                     if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                                        successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                       if [ $(CheckOsVersion) -ge 13 ]; then
+                                            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                        else
+                                            successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                        fi
                                     else
                                         if [ -d "$targetThemeDir" ]; then
                                             chckDir=0
@@ -702,6 +714,11 @@ InsertThemeListHtmlInToManageThemes()
     fi
 }
 
+CheckOsVersion()
+{
+    local osVer=$( uname -r )
+    echo ${osVer%%.*}
+}
 
 
 # =======================================================================================
@@ -1160,8 +1177,12 @@ PerformUpdates()
 
             WriteToLog "Performing Updates"
             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
-            else
+               if [ $(CheckOsVersion) -ge 13 ]; then
+                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
+                else
+                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
+                fi
+           else
                 WriteToLog "Public DIR is writeable"
                 "$updateScript" && successFlag=0
             fi
@@ -1269,19 +1290,28 @@ GetLatestIndexAndEnsureThemeHtml()
     if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
         GetIndexAndProcessThemeList
     else
-        # Check for updates to index.git
-        WriteToLog "Checking for update to index.git"
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
-        # check FETCH_HEAD is not empty
-        local isEmpty=$( cat FETCH_HEAD )
-        if [ "$isEmpty" != "" ]; then
+        # Check existing index.git is not older than when repo was rebuilt
+        # Clover Theme Repo was rebuilt on 14th December 2014. Any index.git
+        # from before then will not fetch and needs to be deleted.
+        # To be safe I am using 15th December 2104 as date to check.
+        # epoch for that is calculated with: date -j -f "%d-%B-%y" 15-DEC-14 +%s
+        # Giving epoch of: 1418667240
+        repoRebuildEpoch=1418667240
+
+        # Get epoch of existing index.git
+        indexFileEpoch=$( stat -f "%m" "${WORKING_PATH}/${APP_DIR_NAME}"/index.git )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}indexFileEpoch=$indexFileEpoch"
+        if [ $indexFileEpoch -lt $repoRebuildEpoch ]; then
+            WriteToLog "index.git is from before repo was rebuilt"
+            GetIndexAndProcessThemeList
+        else
+            # Check for updates to index.git
+            WriteToLog "Checking for update to index.git"
+            cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
             local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
             if [[ "$updateCheck" == *done.*  ]]; then
                 WriteToLog "index.git has been updated. Re-downloading"
-                CloneAndCheckoutIndex
-                BuildThemeTextInformation
-                CreateThemeListHtml
-                InsertThemeListHtmlInToManageThemes
+                GetIndexAndProcessThemeList
             else
                 WriteToLog "No updates to index.git"
                 WriteToLog "CTM_IndexOK"
@@ -1297,9 +1327,6 @@ GetLatestIndexAndEnsureThemeHtml()
                     InsertThemeListHtmlInToManageThemes
                 fi 
             fi
-        else
-            WriteToLog "index.git FETCH_HEAD is empty. Deleting index.git"
-            GetIndexAndProcessThemeList
         fi
     fi
 
@@ -1380,8 +1407,12 @@ ManageESP()
             successFlag=1
             local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
             if [ ! "$mountPoint" == "" ]; then
-                successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
-                if [ $successFlag -eq 0 ]; then
+               if [ $(CheckOsVersion) -ge 13 ]; then
+                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
+                else
+                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
+                fi
+               if [ $successFlag -eq 0 ]; then
                     (( gEspMounted++ ))
                 fi
             fi
@@ -2015,7 +2046,12 @@ SetNvramTheme()
     # remove everything up until, and including, the first @
     messageFromUi="${messageFromUi#*@}"
     chosenTheme="${messageFromUi%%@*}"
-    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+    if [ $(CheckOsVersion) -ge 13 ]; then
+        # com.apple.security.agentStub on Mavericks?
+        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+    else
+        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+    fi
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
         WriteToLog "Setting NVRAM Variable was successful."
@@ -2374,26 +2410,6 @@ gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
 export zeroUUID="00000000-0000-0000-0000-000000000000"
-
-
-# For updateID 5
-if [ -f "${PUBLIC_DIR}"/.updateID ]; then
-    checkUpdate=$( cat "${PUBLIC_DIR}"/.updateID )
-    if [ $checkUpdate == "5" ]; then
-        # Remove users previous index.git and prefs file.
-        if [ -f "$gUserPrefsFile".plist ]; then
-            fixedEpoch=1419175216
-            prefsFileEpoch=$( stat -f "%m" "$gUserPrefsFile".plist )
-            if [ $prefsFileEpoch -lt $fixedEpoch ]; then
-                rm "${gUserPrefsFile}.plist"
-                if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
-                    rm -rf /Users/nick/Library/Application\ Support/CloverThemeManager/index.git
-                fi
-            fi
-        fi
-    fi
-fi
-
 
 # Get versions of js scripts
 jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
