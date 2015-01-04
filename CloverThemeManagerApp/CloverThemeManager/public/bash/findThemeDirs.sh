@@ -33,13 +33,14 @@ logFile="${TMPDIR}/CloverThemeManagerLog.txt"
 themeDirInfo="${TMPDIR}/themeDirInfo.txt"
 espList="${TMPDIR}/espList.txt"
 #zeroUUID="00000000-0000-0000-0000-000000000000"
-#partutil="/Users/nick/Desktop/new/partutil"
+#partutil="/tmp/partutil"
 
 [[ ! -d "$TMPDIR" ]] && mkdir -p "$TMPDIR"
 [[ -f "$themeDirInfo" ]] && rm "$themeDirInfo"
 [[ -f "$espList" ]] && rm "$espList"
 
 declare -a dfMounts
+declare -a dfMountpoints
 declare -a gpt
 declare -a espFound
 
@@ -50,6 +51,7 @@ declare -a espFound
 WriteToLog "Getting list of mounted devices"
 oIFS="$IFS"; IFS=$'\r\n'
 dfMounts+=( $( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3  ))
+dfMountpoints+=( /$( df -laH | cut -d'/' -f 4- | tail -n +2 ))
 gpt+=( $( diskutil list | grep "GUID_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
 IFS="$oIFS"
 WriteToLog "Check: dfMounts=${#dfMounts[@]}" 
@@ -58,7 +60,6 @@ WriteToLog "Check: dfMounts=${#dfMounts[@]}"
 for (( s=0; s<${#dfMounts[@]}; s++ ))
 do
     mp=$( "$partutil" --show-mountpoint /dev/${dfMounts[$s]} )
-
     # If mountpoint is / then populate
     if [ "$mp" == "/" ]; then
         for vol in /Volumes/*
@@ -66,6 +67,8 @@ do
             [[ "$(readlink "$vol")" = / ]] && tmp="$vol"
         done
         mp="${tmp#*/}"
+    elif [ "$mp" == "" ]; then # partutil does not return mountpoint under OS X 10.7
+        mp=/${dfMountpoints[$s]}
     fi
 
     # Does this device contain /efi/clover/themes directory?
@@ -92,7 +95,6 @@ do
         # Write data to file.
         echo "${dfMounts[$s]}@${_volName}@${mp}@ @${_uniquePartitionGuid}@${themeDir}" >> "$themeDirInfo"
     fi
-    #fi
     
     _content=$( "$partutil" --show-contenttype /dev/${dfMounts[$s]} )
     # Record mounted esp info to file.
@@ -106,14 +108,18 @@ done
 # Find any unmounted ESP's
 for (( s=0; s<${#gpt[@]}; s++ ))
 do
-    if [[ ! ${espFound[$s]} == *${gpt[$s]}* ]]; then
-        # Found a disk using GUID_partition_scheme without a mounted ESP
-        # Does this disk have an ESP?
-        _content=$( "$partutil" --show-contenttype /dev/${gpt[$s]}s1 )
-        if [ "$_content" == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" ]; then
-            echo "${gpt[$s]}s1@U" >> "$espList"
+
+    for (( e=0; e<=${#espFound[@]}; e++ ))
+    do
+        if [[ ! ${espFound[$e]} == *${gpt[$s]}* ]]; then
+            # Found a disk using GUID_partition_scheme without a mounted ESP
+            # Does this disk have an ESP?
+            _content=$( "$partutil" --show-contenttype /dev/${gpt[$s]}s1 )
+            if [ "$_content" == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" ]; then
+                echo "${gpt[$s]}s1@U" >> "$espList"
+            fi
         fi
-    fi
+    done
 done
 
 

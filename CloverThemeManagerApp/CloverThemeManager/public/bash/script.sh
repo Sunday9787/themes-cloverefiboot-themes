@@ -1819,7 +1819,9 @@ CheckThemePathIsStillValid()
     for c in $checkMounted
     do
         checkUUID=$( ioreg -lxw0 -pIODeviceTree | grep -A 10 $c | grep $TARGET_THEME_PARTITIONGUID )
-        [[ checkUUID != "" ]] && stillMounted=1
+        if [ "$checkUUID" != "" ]; then
+            stillMounted=1
+        fi
     done
         
     if [ $stillMounted -eq 0 ]; then
