@@ -800,7 +800,7 @@ FindArrayIdFromTarget()
     
     for ((a=0; a<${#duIdentifier[@]}; a++))
     do
-        if [ "${duIdentifier[$a]}" == "${TARGET_THEME_DIR_DEVICE}" ] && [ "${duPartitionGuid[$a]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
+        if [ "${duPartitionGuid[$a]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
             echo $a
             success=1
             break
@@ -1338,8 +1338,30 @@ GetFreeSpaceOfTargetDeviceAndSendToUI()
 {
     # Read available space on volume and send to the UI.
     WriteToLog "Getting free space on target device $TARGET_THEME_DIR_DEVICE"
-    local freeSpace=$(df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $4}')
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: FreeSpace:$freeSpace"
+
+    oIFS="$IFS"; IFS=$'\r\n'
+    deviceResult=( $( df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $1}' ))
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}deviceResult=$deviceResult"
+    IFS="$oIFS"
+
+    local found=99
+    for (( d=0; d<${#deviceResult[@]}; d++ ))
+    do
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}In Loop: d=$d"
+        if [ "${deviceResult[$d]##*/}" == "$TARGET_THEME_DIR_DEVICE" ]; then
+           found=$d
+           [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}found=$found"
+        fi
+    done
+
+    if [ $found -lt 99 ]; then
+        local freeSpace=$(df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $4}' | head -n$(( found + 1 )) | tail -n1)
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: FreeSpace:$freeSpace"
+    else
+        local freeSpace="0M"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}*Couldn't get free space."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: FreeSpace:$freeSpace"
+    fi
     SendToUI "FreeSpace@${freeSpace}@"
 }
 
@@ -1566,11 +1588,22 @@ ReadPrefsFile()
             local checkPath=""
             for (( u=0; u<${#themeDirPaths[@]}; u++ ))
             do
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duPartitionGuid[$u]} = $gLastSelectedPartitionGUID"
-                if [ "${duPartitionGuid[$u]}" == "$gLastSelectedPartitionGUID" ]; then
-                    checkPath="${themeDirPaths[$u]}"
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
-                    
+                # Note: Two MBR partitioned, FAT32 formatted USB sticks will both have zero UUID.
+                if [ $gLastSelectedPartitionGUID == $zeroUUID ]; then
+                    if [ "${duPartitionGuid[$u]}" == "$zeroUUID" ]; then
+                        # Attempt to match theme path
+                        if [ "${themeDirPaths[$u]}" == "$TARGET_THEME_DIR" ]; then
+                            checkPath="${themeDirPaths[$u]}"
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
+                            break
+                        fi
+                    fi
+                else
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duPartitionGuid[$u]} = $gLastSelectedPartitionGUID"
+                    if [ "${duPartitionGuid[$u]}" == "$gLastSelectedPartitionGUID" ]; then
+                        checkPath="${themeDirPaths[$u]}"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
+                    fi
                 fi
             done
             
@@ -1811,21 +1844,32 @@ RespondToUserThemeAction()
 # ---------------------------------------------------------------------------------------
 CheckThemePathIsStillValid()
 {
-    local checkUUID=""
+    local findDevice=""
     local stillMounted=0
     
     # Check if device is still mounted.
-    local checkMounted=$( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3 | grep $TARGET_THEME_DIR_DEVICE )
-    for c in $checkMounted
-    do
-        checkUUID=$( ioreg -lxw0 -pIODeviceTree | grep -A 10 $c | grep $TARGET_THEME_PARTITIONGUID )
-        if [ "$checkUUID" != "" ]; then
-            stillMounted=1
-        fi
-    done
-        
+    # Find device by previously used UUID.
+    if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
+        findDevice=$( "$partutil" --search-uuid $TARGET_THEME_PARTITIONGUID )
+    else
+        findDevice="$TARGET_THEME_DIR_DEVICE"
+    fi
+    
+    # Match device list of mounted partitions with theme paths
+    if [ "$findDevice" != "" ]; then
+        for ((i=0; i<${#duIdentifier[@]}; i++))
+        do
+            if [ $findDevice == ${duIdentifier[$i]} ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Device $TARGET_THEME_PARTITIONGUID is ${duIdentifier[$i]}"
+                stillMounted=1
+                # Ensure current TARGET_THEME_DIR_DEVICE matches device
+                TARGET_THEME_DIR_DEVICE=${duIdentifier[$i]}
+            fi
+        done
+    fi
+            
     if [ $stillMounted -eq 0 ]; then
-        WriteToLog "Theme directory $TARGET_THEME_DIR does not exist! Setting to -"
+        WriteToLog "Theme directory $TARGET_THEME_DIR on $TARGET_THEME_PARTITIONGUID does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
@@ -2497,14 +2541,8 @@ if [ "$gitCmd" != "" ]; then
         declare -a dfMounts
         declare -a tmpArray
     
-        # Arrays for reading and recording diskutil info
-        declare -a allDisks
-        declare -a diskUtilSliceInfo
-    
         # Arrays for saving volume info
-        declare -a diskUtilPlist
         declare -a duIdentifier
-        #declare -a duSlice
         declare -a duVolumeName
         declare -a duVolumeMountPoint
         declare -a duContent
@@ -2521,7 +2559,6 @@ if [ "$gitCmd" != "" ]; then
         declare -a installedThemePath
         declare -a installedThemePathDevice
         declare -a installedThemePartitionGUID
-        #declare -a installedThemeUpdateAvailable
 
         # Globals for newly installed theme before adding to prefs
         ResetNewlyInstalledThemeVars

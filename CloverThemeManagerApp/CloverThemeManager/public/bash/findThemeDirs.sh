@@ -32,9 +32,13 @@ TMPDIR="/tmp/CloverThemeManager"
 logFile="${TMPDIR}/CloverThemeManagerLog.txt"
 themeDirInfo="${TMPDIR}/themeDirInfo.txt"
 espList="${TMPDIR}/espList.txt"
+
+# Enable for local testing
 #zeroUUID="00000000-0000-0000-0000-000000000000"
 #partutil="/tmp/partutil"
+#DEBUG=1
 
+[[ ! -f "$partutil" ]] && exit 1
 [[ ! -d "$TMPDIR" ]] && mkdir -p "$TMPDIR"
 [[ -f "$themeDirInfo" ]] && rm "$themeDirInfo"
 [[ -f "$espList" ]] && rm "$espList"
@@ -66,7 +70,7 @@ do
         do
             [[ "$(readlink "$vol")" = / ]] && tmp="$vol"
         done
-        mp="${tmp#*/}"
+        mp="${tmp}"
     elif [ "$mp" == "" ]; then # partutil does not return mountpoint under OS X 10.7
         mp=/${dfMountpoints[$s]}
     fi
@@ -102,25 +106,29 @@ do
         echo "${dfMounts[$s]}@M" >> "$espList"
         espFound+=( ${dfMounts[$s]} )
     fi
-
 done
 
 # Find any unmounted ESP's
 for (( s=0; s<${#gpt[@]}; s++ ))
 do
-
-    for (( e=0; e<=${#espFound[@]}; e++ ))
+    toBeChecked=0
+    for (( e=0; e<${#espFound[@]}; e++ ))
     do
-        if [[ ! ${espFound[$e]} == *${gpt[$s]}* ]]; then
-            # Found a disk using GUID_partition_scheme without a mounted ESP
-            # Does this disk have an ESP?
-            _content=$( "$partutil" --show-contenttype /dev/${gpt[$s]}s1 )
-            if [ "$_content" == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" ]; then
-                echo "${gpt[$s]}s1@U" >> "$espList"
-            fi
-        fi
+        [[ ! ${espFound[$e]} == *${gpt[$s]}* ]] && toBeChecked=1
     done
+
+    if [ $toBeChecked -eq 0 ]; then
+        # Found a disk using GUID_partition_scheme without a mounted ESP
+        # Does this disk have an ESP?
+        _content=$( "$partutil" --show-contenttype /dev/${gpt[$s]}s1 )
+        if [ "$_content" == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${gpt[$s]}s1@U = unmounted ESP"
+            echo "${gpt[$s]}s1@U" >> "$espList"
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${gpt[$s]} does not contain ESP"
+        fi
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}$e | Already found mounted ESP for ${gpt[$s]}. Skipping"
+    fi
 done
-
-
 exit 0
