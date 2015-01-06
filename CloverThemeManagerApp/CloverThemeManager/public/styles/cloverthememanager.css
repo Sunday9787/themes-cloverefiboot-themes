@@ -109,6 +109,7 @@ select.custom-dropdown {
 
 select.custom-dropdown:hover {
     background: #b6b6b6 url(../assets/dropdown_arrow.png) no-repeat right center;
+    background-size: 19px 19px;
     color: #333;
 }
 
@@ -758,6 +759,27 @@ table {
     max-width: 98% !important;
 }
 
+select.nvram-dropdown {
+    -webkit-appearance: none;
+    border: 0 !important;
+    outline: none;
+    color: #000;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 2px 24px 2px 10px;
+    cursor: pointer;
+    background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
+    background-size: 19px 19px;
+    opacity: 0.8;
+}
+
+select.nvram-dropdown:hover {
+    background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
+    background-size: 19px 19px;
+    opacity: 1;
+}
+
 #Footer {
     position: fixed;
     width: 100%;
@@ -840,6 +862,10 @@ a.boxclose {
     margin-top:-30px;
     margin-right:-30px;
     cursor:pointer;
+}
+
+a.boxclose:hover {
+    background:transparent url(../assets/cancel_o.png) repeat top left;
 }
 
 .box h1 {

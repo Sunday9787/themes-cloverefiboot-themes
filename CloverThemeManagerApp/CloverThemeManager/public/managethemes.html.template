@@ -99,7 +99,7 @@
         <!--<p class="textBody">Change to:</p>-->
                     
         <div id="NvramThemeSelector">
-            <select name="dropdown_config" id="installedThemeDropDown">
+            <select name="dropdown_config" id="installedThemeDropDown" class="nvram-dropdown">
                 <!--Menu entres will be appended here by cloverthememanager.js -->
             </select>
         </div> <!-- End NvramThemeSelector -->
