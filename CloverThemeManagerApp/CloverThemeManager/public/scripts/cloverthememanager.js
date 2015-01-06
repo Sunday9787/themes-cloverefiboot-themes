@@ -843,7 +843,7 @@ function SetThemeBandHeight(setting)
             // Show spacer sml buttons to retain spacing of other buttons
             $(".spacerButtonSml").css("display","block");
             // Move theme titles up
-            $("[id=ThemeText]").css("top","74%");
+            $("[id=ThemeText]").css("top","68%");
             // Hide all theme descriptions
             $(".themeDescription").css("display","none");
             // Hide all theme authors
