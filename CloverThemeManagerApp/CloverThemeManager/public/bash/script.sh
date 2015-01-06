@@ -84,7 +84,7 @@ SendToUIUVersionedDir() {
 
 # ---------------------------------------------------------------------------------------
 FindStringInPlist() {
-    # Check if file contains carriage returns (CR)
+    # Check if file contains carriage returns (CR) as opposed to Line Feed (LF)
     checkForCR=$( tr -cd '\r' < "$2" | wc -c )
     if [ $checkForCR -gt 0 ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${2##*/} contains carriage returns (CR)"
@@ -148,7 +148,6 @@ ResetInternalThemeArrays()
     unset installedThemePath
     unset installedThemePathDevice
     unset installedThemePartitionGUID
-    #unset installedThemeUpdateAvailable
 }
 
 # ---------------------------------------------------------------------------------------
@@ -156,32 +155,12 @@ ResetInternalDiskArrays()
 {
     # Reset arrays for newly installed theme
     unset duIdentifier
-    #unset duSlice
     unset duVolumeName
     unset duVolumeMountPoint
     unset duContent
     unset duPartitionGuid
     unset themeDirPaths
     unset unmountedEsp
-}
-
-# ---------------------------------------------------------------------------------------
-ClearUpdateFromPrefs()
-{
-    # After the user has chosen to update a theme, this is called
-    # to remove any 'Yes' strings from the UpdateAvailable key for
-    # this theme with current UUID from prefs.
-    
-    local passedThemeName="$1"
-    
-    for ((p=0; p<${#installedThemeName[@]}; p++));
-    do
-        if [ "${installedThemeName[$p]}" == "$passedThemeName" ] && [ "${installedThemePartitionGUID[$p]}" == "$TARGET_THEME_PARTITIONGUID" ]; then #  && [ "${installedThemeUpdateAvailable[$p]}" == "Yes" ] ; then
-            WriteToLog "Clearing available update prefs flag for theme $passedThemeName on $TARGET_THEME_PARTITIONGUID"
-            installedThemeUpdateAvailable[$p]=""
-            break
-        fi
-    done
 }
 
 # ---------------------------------------------------------------------------------------
@@ -326,7 +305,7 @@ MaintainInstalledThemeListInPrefs()
                     arrayString="${arrayString}$openArray"
                     lastAddedThemeName="${installedThemeName[$n]}"
                 fi
-                InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemePartitionGUID[$n]}" #"${installedThemeUpdateAvailable[$n]}" 
+                InsertDictionaryIntoArray "${installedThemePath[$n]}" "${installedThemePathDevice[$n]}" "${installedThemePartitionGUID[$n]}"
             fi
         fi
     done
@@ -927,39 +906,6 @@ EnsureSymlinks()
 }
 
 # ---------------------------------------------------------------------------------------
-CheckoutImages()
-{
-    # This was used when getting themes from bitbucket.
-    # However, the index.git from clover repo now has pics too.
-    # This is no longer called.
-    
-    CheckoutGitPics()
-    {
-        local targetdir="${WORKING_PATH}/${APP_DIR_NAME}/images/previews"
-        if [ ! -d "$targetdir" ]; then
-            WriteToLog "Creating $targetdir"
-            mkdir -p "$targetdir"
-        fi
-        cd "${WORKING_PATH}/${APP_DIR_NAME}/images/previews"
-        for url in "${repositoryUrls[@]}"; do
-            theme=${url##*/}
-            curl --silent "$url/raw/HEAD/screenshot.png" -o "${WORKING_PATH}/${APP_DIR_NAME}/images"/previews/preview_"$theme".png &
-        done
-        wait
-    }
-    
-    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/images ]; then
-        WriteToLog "${WORKING_PATH}/${APP_DIR_NAME}/images exists."
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"/images
-        CheckoutGitPics
-    else
-        WriteToLog "Downloading thumbnail and preview images."
-        # Checkout images
-        CheckoutGitPics
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
 RespondToUserUpdateApp()
 {
     local messageFromUi="$1"
@@ -1377,7 +1323,6 @@ ReadThemeDirList()
         while read -r line
         do
             duIdentifier+=( $( cut -d@ -f1 <<<"${line}" ))
-            #duSlice+=( $( cut -d@ -f2 <<<"${line}" ))
             duVolumeName+=( $( cut -d@ -f2 <<<"${line}" ))
             duVolumeMountPoint+=( $( cut -d@ -f3 <<<"${line}" ))
             duContent+=( $( cut -d@ -f4 <<<"${line}" ))
@@ -1564,7 +1509,6 @@ ReadPrefsFile()
                            "ThemePath"       )   installedThemeName+=( "$themeName" )
                                                  installedThemePath+=("$tmpValue") ;;
                            "ThemePathDevice" )   installedThemePathDevice+=("$tmpValue") ;;
-                           #"UpdateAvailable" )   installedThemeUpdateAvailable+=("$tmpValue") ;;
                            "VolumeUUID"      )   installedThemePartitionGUID+=("$tmpValue")
                                                  ;;
                 esac
@@ -1663,7 +1607,7 @@ SendInternalThemeArraysToLogFile()
         WriteToLog "${debugIndent}Prefs shows total number of installed themes=${#installedThemeName[@]}"
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
-            WriteToLog "${debugIndent}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemePartitionGUID[$n]}" #, Update=${installedThemeUpdateAvailable[$n]}"
+            WriteToLog "${debugIndent}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemePartitionGUID[$n]}"
         done
     fi  
     WriteLinesToLog 
@@ -1700,7 +1644,6 @@ SendUIInitData()
         SendToUI "NoPathSelected@@"
         
         # Send list of updated themes to UI otherwise the UI interface will not be enabled.
-        # This is normally done in CheckForAnyUpdatesStoredInPrefsAndSendToUI()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@@"
         SendToUI "UpdateAvailThemes@@"
     fi
@@ -1790,14 +1733,12 @@ RespondToUserDeviceSelection()
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordUnManagedThemesAndSendToUI
-            #CheckForAnyUpdatesStoredInPrefsAndSendToUI
             CheckAndRemoveBareClonesNoLongerNeeded
             ReadAndSendCurrentNvramTheme
             CheckForThemeUpdates &
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
-            #CheckForAnyUpdatesStoredInPrefsAndSendToUI
             CheckForThemeUpdates &
         fi
     else
@@ -1847,7 +1788,6 @@ CheckThemePathIsStillValid()
     local findDevice=""
     local stillMounted=0
     
-    # Check if device is still mounted.
     # Find device by previously used UUID.
     if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
         findDevice=$( "$partutil" --search-uuid $TARGET_THEME_PARTITIONGUID )
@@ -1855,7 +1795,7 @@ CheckThemePathIsStillValid()
         findDevice="$TARGET_THEME_DIR_DEVICE"
     fi
     
-    # Match device list of mounted partitions with theme paths
+    # Match device to current list of mounted partitions with valid theme paths.
     if [ "$findDevice" != "" ]; then
         for ((i=0; i<${#duIdentifier[@]}; i++))
         do
@@ -1935,38 +1875,6 @@ GetListOfInstalledThemesAndSendToUI()
     
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@${installedThemeStr}@"
     SendToUI "InstalledThemes@${installedThemeStr}@"
-}
-
-# ---------------------------------------------------------------------------------------
-# NO LONGER CALLED
-CheckForAnyUpdatesStoredInPrefsAndSendToUI()
-{
-    # If an update to a theme has been found by CheckForThemeUpdates()
-    # an update notification would have been written to the prefs file under each
-    # instance of installed theme.
-    # Here we read prefs, loop through the installedThemeUpdateAvailable[] array,
-    # checking for 'Yes', but only for the currently selected volume.
-    # Send the list of available updates to the UI.
-
-    updateAvailThemeStr=""
-    
-    if [ ! "$TARGET_THEME_DIR" == "-" ]; then
-        ReadPrefsFile
-        for ((n=0; n<${#installedThemeUpdateAvailable[@]}; n++));
-        do
-            if [ "${installedThemeUpdateAvailable[$n]}" == "Yes" ] && [ "${installedThemePartitionGUID[$n]}" == "$TARGET_THEME_PARTITIONGUID" ]; then
-                updateAvailThemeStr="${updateAvailThemeStr},${installedThemeName[$n]}"
-            fi
-        done
-    
-        if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
-            # Remove leading comma from string
-            updateAvailThemeStr="${updateAvailThemeStr#?}"
-        fi
-    fi
-    
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
-    SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2139,8 +2047,7 @@ CheckForThemeUpdates()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
-    #       If parent-repo theme.git is found then cd in to it and run a git fetch. 
-    # Any themes with updates are recorded in the internal array installedThemeUpdateAvailable[]
+    #       If parent-repo theme.git is found then cd in to it and run a git fetch.
 
     #local updateWasFound=0
     
@@ -2662,7 +2569,6 @@ if [ "$gitCmd" != "" ]; then
                     GetListOfInstalledThemesAndSendToUI
                     GetFreeSpaceOfTargetDeviceAndSendToUI
                     CheckAndRecordUnManagedThemesAndSendToUI
-                    #CheckForAnyUpdatesStoredInPrefsAndSendToUI
                     CheckForThemeUpdates &
                     ReadAndSendCurrentNvramTheme
                 fi 
@@ -2734,7 +2640,6 @@ if [ "$gitCmd" != "" ]; then
                 GetListOfInstalledThemesAndSendToUI
                 GetFreeSpaceOfTargetDeviceAndSendToUI
                 CheckAndRecordUnManagedThemesAndSendToUI
-                #CheckForAnyUpdatesStoredInPrefsAndSendToUI
                 CheckForThemeUpdates &
                 ReadAndSendCurrentNvramTheme
                 SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
