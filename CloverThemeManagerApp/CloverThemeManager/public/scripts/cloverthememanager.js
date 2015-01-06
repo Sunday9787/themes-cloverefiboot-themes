@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.7
+//Version=0.74.8
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -762,6 +762,21 @@ $(function()
         if(chosenNvramTheme != "-") {
             // Send massage to bash script to notify setting of NVRAM variable.
             macgap.app.launch("CTM_chosenNvramTheme@" + chosenNvramTheme);
+        }
+    });
+    
+    //-----------------------------------------------------
+    // On clicking the Snow button
+    $("#SnowToggleButton").on('click', function() {
+    
+        // Change text of button
+        var textState = $(this).text();
+        if (textState.indexOf("Snow Off") >= 0) {
+            snowStorm.stop()
+            $("#SnowToggleButton").text("Snow On");
+        } else {  
+            snowStorm.resume()
+            $("#SnowToggleButton").text("Snow Off");
         }
     });
 });
