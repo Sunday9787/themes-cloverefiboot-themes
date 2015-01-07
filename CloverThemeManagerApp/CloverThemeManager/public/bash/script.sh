@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.2"
+VERS="0.75.3"
 
 export DEBUG=1
 #set -x
@@ -1274,7 +1274,13 @@ GetLatestIndexAndEnsureThemeHtml()
                 fi 
             fi
         fi
-    fi
+        
+        # Check for help directory and add_theme.html file.
+        addThemeHelpFile=$( find "${WORKING_PATH}/${APP_DIR_NAME}"/ -type f -name "add_theme.html" 2>/dev/null )
+        if [ ! "$addThemeHelpFile" ]; then
+            "$gitCmd" --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force
+        fi  
+    fi  
 
     WriteLinesToLog
 }
