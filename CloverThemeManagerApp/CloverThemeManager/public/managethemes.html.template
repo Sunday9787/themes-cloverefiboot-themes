@@ -13,6 +13,7 @@
 	<script src="scripts/cloverthememanager.js"></script>
 	<script src="http://www.schillmania.com/projects/snowstorm/snowstorm.js"></script>
 	<script>
+	    snowStorm.autoStart = false;
 	    snowStorm.animationInterval = 256;
 	    snowStorm.followMouse = false;
 	    this.freezeOnBlur = false;

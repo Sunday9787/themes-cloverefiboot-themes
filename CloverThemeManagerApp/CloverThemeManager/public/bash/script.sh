@@ -1481,6 +1481,9 @@ ReadPrefsFile()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Resetting internal theme arrays"
         ResetInternalThemeArrays
         
+        gSnow=$( defaults read "$gUserPrefsFile" Snow )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gSnow=$gSnow"
+        
         local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
         gThumbSizeX="${tmp% *}"
         gThumbSizeY="${tmp#* }"
@@ -1587,6 +1590,10 @@ ReadPrefsFile()
         WriteToLog "CTM_ReadPrefsCreate"
     fi
     
+    if [ "$gSnow" == "" ]; then
+        gSnow="On"
+    fi
+    
     WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
     WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
     WriteToLog "TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
@@ -1671,6 +1678,10 @@ SendUIInitData()
     # Send UI view choice for Previews
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
     SendToUI "PreviewView@${gUISettingViewPreviews}@"
+    
+    # Send UI setting for Snow
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Snow@${gSnow}@"
+    SendToUI "Snow@${gSnow}@"
     
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
@@ -1784,6 +1795,29 @@ RespondToUserThemeAction()
             return $?
         else
             return 1
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+RespondToUserSnowToggle()
+{
+    local messageFromUi="$1"
+
+    # remove everything up until, and including, the first @
+    messageFromUi="${messageFromUi#*@}"
+    chosenOption="${messageFromUi##*:}"
+
+    if [ ! "$chosenOption" == "" ]; then
+        WriteLinesToLog
+        if [ "$chosenOption" == "On" ]; then
+            WriteToLog "User chose to set enable Snow."
+            gSnow="On"
+            UpdatePrefsKey "Snow" "On"
+        elif [ "$chosenOption" == "Off" ]; then
+            WriteToLog "User chose to set disable Snow."
+            gSnow="Off"
+            UpdatePrefsKey "Snow" "Off"
         fi
     fi
 }
@@ -2182,7 +2216,7 @@ CleanInstalledThemesPrefEntries()
     # This should not happen in the first place but I have found some examples
     # during my local testing here. Could be a bug that needs finding!
     
-    #foundEntryToDelete=0
+    foundEntryToDelete=0
     for ((n=0; n<${#installedThemeName[@]}; n++ ));
     do
         for ((m=0; m<${#installedThemeName[@]}; m++ ));
@@ -2192,7 +2226,7 @@ CleanInstalledThemesPrefEntries()
                 # Is this installed elsewhere or a duplicate entry?
                 if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && [ "${installedThemePartitionGUID[$n]}" == "${installedThemePartitionGUID[$m]}" ]; then
                     # Duplicate entry. Remove
-                    #foundEntryToDelete=1
+                    foundEntryToDelete=1
                     WriteToLog "Housekeeping: Removing duplicate prefs entry for ${installedThemeName[$n]} at ${installedThemePath[$n]}."
                     installedThemeName[$n]="-"
                 fi
@@ -2369,6 +2403,7 @@ gFirstRun=0
 gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
+gSnow="On"
 
 export zeroUUID="00000000-0000-0000-0000-000000000000"
 export partutil="$TOOLS_DIR"/partutil
@@ -2634,11 +2669,21 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_updateApp* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 RespondToUserUpdateApp "$logLine"
+                
+            # Has user chosen to toggle snow?
+            elif [[ "$logLine" == *CTM_Snow* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                RespondToUserSnowToggle "$logLine"
             
             # Has user returned back from help page?
             # Send back what's needed to restore state.
             elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
+                SendToUI "Snow@${gSnow}@"
+                SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+                SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
+                SendToUI "PreviewView@${gUISettingViewPreviews}@"
                 entry=$( FindArrayIdFromTarget )
                 CreateAndSendVolumeDropDownMenu
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
@@ -2648,10 +2693,6 @@ if [ "$gitCmd" != "" ]; then
                 CheckAndRecordUnManagedThemesAndSendToUI
                 CheckForThemeUpdates &
                 ReadAndSendCurrentNvramTheme
-                SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
-                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
-                SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
-                SendToUI "PreviewView@${gUISettingViewPreviews}@"
 
             elif [[ "$logLine" == *started* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"     
