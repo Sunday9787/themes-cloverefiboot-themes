@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.3"
+VERS="0.75.4"
 
 export DEBUG=1
 #set -x
@@ -2686,13 +2686,18 @@ if [ "$gitCmd" != "" ]; then
                 SendToUI "PreviewView@${gUISettingViewPreviews}@"
                 entry=$( FindArrayIdFromTarget )
                 CreateAndSendVolumeDropDownMenu
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-                SendToUI "Target@$entry"
-                GetListOfInstalledThemesAndSendToUI
-                GetFreeSpaceOfTargetDeviceAndSendToUI
-                CheckAndRecordUnManagedThemesAndSendToUI
-                CheckForThemeUpdates &
+                if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+                    SendToUI "Target@$entry"
+                    GetListOfInstalledThemesAndSendToUI
+                    GetFreeSpaceOfTargetDeviceAndSendToUI
+                    CheckAndRecordUnManagedThemesAndSendToUI
+                else
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
+                    SendToUI "NoPathSelected@@"
+                fi
                 ReadAndSendCurrentNvramTheme
+                CheckForThemeUpdates &
 
             elif [[ "$logLine" == *started* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"     
