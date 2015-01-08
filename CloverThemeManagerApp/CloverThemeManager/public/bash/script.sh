@@ -2679,11 +2679,10 @@ if [ "$gitCmd" != "" ]; then
             # Send back what's needed to restore state.
             elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
+                ReadPrefsFile
                 SendToUI "Snow@${gSnow}@"
                 SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
-                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
                 SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
-                SendToUI "PreviewView@${gUISettingViewPreviews}@"
                 entry=$( FindArrayIdFromTarget )
                 CreateAndSendVolumeDropDownMenu
                 if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
@@ -2698,7 +2697,8 @@ if [ "$gitCmd" != "" ]; then
                 fi
                 ReadAndSendCurrentNvramTheme
                 CheckForThemeUpdates &
-
+                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+                SendToUI "PreviewView@${gUISettingViewPreviews}@"
             elif [[ "$logLine" == *started* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"     
             fi
