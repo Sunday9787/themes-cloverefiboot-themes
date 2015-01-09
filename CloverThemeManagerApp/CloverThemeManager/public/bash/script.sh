@@ -774,12 +774,13 @@ CheckPathIsWriteable()
 # ---------------------------------------------------------------------------------------
 FindArrayIdFromTarget()
 {
-    local passedVolumeName="$1"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}FindArrayIdFromTarget()"
     local success=0
-    
     for ((a=0; a<${#duIdentifier[@]}; a++))
     do
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Does ${duPartitionGuid[$a]}=${TARGET_THEME_PARTITIONGUID} && ${themeDirPaths[$a]}=${TARGET_THEME_DIR}"
         if [ "${duPartitionGuid[$a]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found. Returning $a"
             echo $a
             success=1
             break
@@ -2691,7 +2692,7 @@ if [ "$gitCmd" != "" ]; then
                 SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
                 CreateAndSendVolumeDropDownMenu
                 if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
-                    local entry=$( FindArrayIdFromTarget )
+                    entry=$( FindArrayIdFromTarget )
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
                     CheckThemePathIsStillValid
                     retVal=$? # returns 1 if invalid / 0 if valid
