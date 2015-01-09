@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.4"
+VERS="0.75.5"
 
 export DEBUG=1
 #set -x
@@ -1720,7 +1720,7 @@ RespondToUserDeviceSelection()
     # remove everything up until, and including, the first @
     local messageFromUi="${messageFromUi#*@}"
     local pathOption="${messageFromUi##*@}"
-
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserDeviceSelection() messageFromUi=$messageFromUi | pathOption=$pathOption"
     # Check user did actually change from default
     if [ ! "$pathOption" == "-" ]; then
 
@@ -1763,6 +1763,12 @@ RespondToUserDeviceSelection()
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_PARTITIONGUID="-"
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting prefs for default dir,path & GUID to -"
+        UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"  
+        UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
+        UpdatePrefsKey "LastSelectedPartitionGUID" "$TARGET_THEME_PARTITIONGUID"
+        
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
     fi
@@ -2683,17 +2689,23 @@ if [ "$gitCmd" != "" ]; then
                 SendToUI "Snow@${gSnow}@"
                 SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
                 SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
-                entry=$( FindArrayIdFromTarget )
                 CreateAndSendVolumeDropDownMenu
                 if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-                    SendToUI "Target@$entry"
-                    GetListOfInstalledThemesAndSendToUI
-                    GetFreeSpaceOfTargetDeviceAndSendToUI
+                    local entry=$( FindArrayIdFromTarget )
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
+                    CheckThemePathIsStillValid
+                    retVal=$? # returns 1 if invalid / 0 if valid
+                    if [ $retVal -eq 0 ]; then
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+                        SendToUI "Target@$entry"
+                        GetListOfInstalledThemesAndSendToUI
+                        GetFreeSpaceOfTargetDeviceAndSendToUI
+                    fi
                     CheckAndRecordUnManagedThemesAndSendToUI
                 else
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
                     SendToUI "NoPathSelected@@"
+                    SendToUI "Target@-@"
                 fi
                 ReadAndSendCurrentNvramTheme
                 CheckForThemeUpdates &
