@@ -2681,39 +2681,9 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_Snow* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 RespondToUserSnowToggle "$logLine"
-            
-            # Has user returned back from help page?
-            # Send back what's needed to restore state.
-            elif [[ "$logLine" == *ReloadToPreviousState* ]]; then
-                ClearTopOfMessageLog "$logJsToBash"
-                ReadPrefsFile
-                SendToUI "Snow@${gSnow}@"
-                SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
-                SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
-                CreateAndSendVolumeDropDownMenu
-                if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
-                    entry=$( FindArrayIdFromTarget )
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
-                    CheckThemePathIsStillValid
-                    retVal=$? # returns 1 if invalid / 0 if valid
-                    if [ $retVal -eq 0 ]; then
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
-                        SendToUI "Target@$entry"
-                        GetListOfInstalledThemesAndSendToUI
-                        GetFreeSpaceOfTargetDeviceAndSendToUI
-                    fi
-                    CheckAndRecordUnManagedThemesAndSendToUI
-                else
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
-                    SendToUI "NoPathSelected@@"
-                    SendToUI "Target@-@"
-                fi
-                ReadAndSendCurrentNvramTheme
-                CheckForThemeUpdates &
-                SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
-                SendToUI "PreviewView@${gUISettingViewPreviews}@"
+                
             elif [[ "$logLine" == *started* ]]; then
-                ClearTopOfMessageLog "$logJsToBash"     
+                ClearTopOfMessageLog "$logJsToBash"  
             fi
 
             # Get process ID of parent

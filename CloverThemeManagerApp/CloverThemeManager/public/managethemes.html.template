@@ -43,7 +43,7 @@
          <!-- Javascript will show or hide this when necessary. -->
          <div id="AnimatedBar" class="meter"><span style="width: 100%"></span></div>
     </div>
-
+    
     <div id="TopOfPage">
         <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
         <div id="PathSelector">
@@ -108,7 +108,7 @@
     </div> <!-- End Footer -->  
     
     <div id="Footer">
-        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="help.html">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>
+        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>
     </div> <!-- End Footer -->  
                                                          
 </div> <!-- End Container -->

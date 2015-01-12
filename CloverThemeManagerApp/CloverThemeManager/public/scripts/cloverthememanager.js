@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.9
+//Version=0.75.0
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -52,6 +52,34 @@ function GetFileContents(filename)
         return 0;
     }
 }
+
+/*
+// Called when returning back from help page
+//-------------------------------------------------------------------------------------
+$(window).bind("pageshow", function(event) {
+    if (event.originalEvent.persisted) {
+        alert("From bfcache");
+        // check if macgap API works or generates an error
+        if ('macgap.app.launch' in window) {
+            try {
+                alert("trying");
+            } catch (e) {
+                alert("catch");
+            }     
+            alert("macgap working");
+        } else {
+            try {
+                alert("trying");
+                macgap.app.activate(); 
+            } catch (e) {
+                alert("catch");
+            }
+            alert("macgap not working");
+            //window.location.reload();
+        }
+    }
+});
+*/
 
 //-------------------------------------------------------------------------------------
 // Check for incoming messages from bash script
@@ -745,7 +773,7 @@ $(function()
     $("[id^=indicator]").on('click', function() {
         // Show a message to the user
         ChangeMessageBoxHeaderColour("blue");                            
-        SetMessageBoxText("Untracked Theme","This theme has no bare git clone in the app support dir. This means you will not be notified of any updates for this theme unless you UnInstall and then re-install it.");
+        SetMessageBoxText("Untracked Theme","This theme was not installed by Clover Theme Manager. This means you will not be notified of any updates for this theme unless you UnInstall and then re-install it.");
         ShowMessageBoxClose();
         ShowMessageBox();
     });
@@ -1276,7 +1304,8 @@ function SetUnVersionedControlIndicator(themeName)
     // themeName will be the name of an installed theme
 
     // Display indicator to show theme is unversioned
-    $("[id='indicator_" + themeName + "']").html("\u2715");
+    //$("[id='indicator_" + themeName + "']").html("\u2715");
+    $("[id='indicator_" + themeName + "']").html("?");
     $("[id='indicator_" + themeName + "']").css("pointer-events","auto");
 }
 

@@ -18,4 +18,10 @@
 - (void) bounce;
 - (void) setCustomUserAgent:(NSString *)userAgentString;
 - (NSNumber*) systemIdleTime;
+
+// blackosx add these lines - are these required? may delete them...
+- (void) open;
+- (void) launch;
+- (void) WriteStringtoFile;
+- (void) removeMessage:(NSString *)messageToRemove;
 @end
