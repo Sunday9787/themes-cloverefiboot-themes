@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.5"
+VERS="0.75.6"
 
 export DEBUG=1
 #set -x
@@ -927,6 +927,8 @@ RespondToUserUpdateApp()
             fi
         else
             WriteToLog "User chose not to update app."
+            # As the user decided to not update right now then now check for theme updates
+            CheckForThemeUpdates &
         fi
     fi
 }
@@ -961,9 +963,12 @@ CheckForAppUpdate()
     
     if [ $serverVersion -gt $currentVersion ]; then
         WriteToLog "App update available. Current=$currentVersion | Server=$serverVersion"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverVersion}@"
         SendToUI "UpdateAvailApp@${serverVersion}@"
+        return 0
     else
         WriteToLog "No app update available. Current=$currentVersion | Server=$serverVersion"
+        return 1
     fi
     
     cd "${WORKING_PATH}"
@@ -2569,8 +2574,12 @@ if [ "$gitCmd" != "" ]; then
         parentId=$appPid
 
         CheckAndRemoveBareClonesNoLongerNeeded
-        CheckForThemeUpdates &
-        CheckForAppUpdate &
+        CheckForAppUpdate
+        retVal=$? # returns 1 if no update / 0 if valid is available
+        # If update available then user will be notified so do not check for theme updates.
+        if [ $retVal -eq 1 ]; then
+            CheckForThemeUpdates &
+        fi
 
         # The messaging system is event driven and quite simple.
         # Run a loop for as long as the parent process ID still exists

@@ -9,8 +9,9 @@
     <meta name="copyright" content="Copyright 2014 org.black.CloverThemeManager. All rights reserved.">    
     <link rel="stylesheet" type="text/css" href="styles/cloverthememanager.css"/>
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
-	<script src="scripts/jquery-2.1.1.min.js"></script>
+	<script src="scripts/jquery-2.1.3.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
+	<script src="scripts/snabbt.min.js"></script>
 	<script src="http://www.schillmania.com/projects/snowstorm/snowstorm.js"></script>
 	<script>
 	    snowStorm.autoStart = false;

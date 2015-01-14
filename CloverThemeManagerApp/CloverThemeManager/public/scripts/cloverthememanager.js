@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.0
+//Version=0.75.1
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -33,6 +33,7 @@ $(document).ready(function() {
 // Called when the process is to close.
 function terminate() {
     clearTimeout(timerReadMessageFile);
+    macgap.notice.close("*"); // Remove all notifications sent by app
     macgap.app.terminate();    
 }
 
@@ -378,7 +379,9 @@ function DisplayAppUpdates(updateID)
         HideMessageBoxClose();
         AddYesNoButtons();
         ShowMessageBox();
-        //}
+        
+        // Send native notification
+        sendNotification("Application Update Available.");
     }
 }
 
@@ -399,7 +402,10 @@ function actOnUpdates(themeList)
                 ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
                         
                 // Prepare text for pretty print
-                printString=(printString + "<br>" + localThemeUpdates[t])
+                printString=(printString + "<br>" + localThemeUpdates[t]);
+                
+                // Send native notification
+                sendNotification("Theme update available for " + localThemeUpdates[t] + ".");
             }
                     
             // Show a message to the user
@@ -515,7 +521,10 @@ function themeActionSuccess(action,themeName)
         HideProgressBar();
         SetMessageBoxText("Success:","The theme " + themeName + " was successfully " + printText + ".");
         ShowMessageBoxClose();
-                
+        
+        // Send native notification
+        sendNotification("Success: The theme " + themeName + " was successfully " + printText + ".");
+        
         // Reset current theme list, bands and buttons
         ResetButtonsAndBandsToDefault();
         hideButtons();
@@ -544,6 +553,9 @@ function themeActionFail(action,themeName)
         HideProgressBar();
         SetMessageBoxText("Failure:","The theme " + themeName + " was not " + printText + ".");
         ShowMessageBoxClose();
+        
+        // Send native notification
+        sendNotification("Failure: The theme " + themeName + " was not " + printText + ".");
     }
 }
 
@@ -1193,7 +1205,16 @@ function ShowMessageBox()
     var position = $('#box').position();
     if (position.top = -300) {   // starting position = should match .box top in css
         $('#overlay').fadeIn('fast',function(){
-             $('#box').animate({'top':'150px'},500); // move box from current position so top=150px
+             // move box from current position so top=150px
+             $('#box').animate({'top':'150px'},500, function(){
+                 // Bounce
+                 // http://daniel-lundin.github.io/snabbt.js/index.html
+                 $("#box").snabbt("attention", {
+                     position: [0, 50, 0],
+                     springConstant: 2.4,
+                     springDeacceleration: 0.9,
+                 });
+             }); 
         });
     }
 }
@@ -1466,4 +1487,14 @@ function ToggleSnow(action)
         snowStorm.resume();
         $("#SnowToggleButton").text("Snow Off");
     }
+}
+
+//-------------------------------------------------------------------------------------
+function sendNotification(messageBody)
+{
+    macgap.notice.notify({
+        title: "Clover Theme Manager",
+        content: messageBody,
+        sound: true // optional
+    });
 }
