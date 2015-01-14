@@ -942,33 +942,64 @@ CheckForAppUpdate()
         rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager
     fi
 
-    # Get current internal app version
-    if [ -f "${PUBLIC_DIR}"/.updateID ]; then
-        local currentVersion=$( cat "${PUBLIC_DIR}"/.updateID )
-    else
-        local currentVersion=0
-    fi
-    
-    # Get server version  
-    local updateIDFilePath="CloverThemeManagerApp/CloverThemeManager/public/.updateID"
-    local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
+    # ======================================
+    # Get the version of main app on server.
+    local themeManagerInfoPlistPath="CloverThemeManagerApp/CloverThemeManager/MacGap"
+    local themeManagerInfoPlistFile="CloverThemeManager-Info.plist"
+    local pathToWorkingInfoPlist="${WORKING_PATH}/${APP_DIR_NAME}"/"${themeManagerInfoPlistPath}"
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     cd "${WORKING_PATH}/${APP_DIR_NAME}"
-    git archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
-    if [ -f "${pathToWorkingPublicDir}"/.updateID ]; then
-        local serverVersion=$( cat "${pathToWorkingPublicDir}"/.updateID )
+    git archive --remote="${gitRepositoryUrl}themes" HEAD "${themeManagerInfoPlistPath}"/"${themeManagerInfoPlistFile}" | tar -x
+    if [ -f "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" ]; then
+        serverAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" )
+        rm "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}"
     else
-        local serverVersion=0
+        local serverAppVersion=$mainAppVersion
     fi
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}serverAppVersion=$serverAppVersion"
     
-    if [ $serverVersion -gt $currentVersion ]; then
-        WriteToLog "App update available. Current=$currentVersion | Server=$serverVersion"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverVersion}@"
-        SendToUI "UpdateAvailApp@${serverVersion}@"
+    # Compare local vs server main app versions
+    if [ $serverAppVersion != $mainAppVersion ]; then
+        # If this differs then prompt user to download a new version of the app.
+        # This is because I can't replace the currently running binary.
+        WriteToLog "Main app update available. Current=$mainAppVersion | Server=$serverAppVersion"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverAppVersion}@"
+        SendToUI "UpdateAvailApp@${serverAppVersion}@"
         return 0
     else
-        WriteToLog "No app update available. Current=$currentVersion | Server=$serverVersion"
-        return 1
+        # The main app version is the same.
+        # Continue to check if the public dir has changed as that can be updated still.
+        WriteToLog "Main app is at latest version: $serverAppVersion"
+   
+        # ======================================
+        # Get current app update version for the public DIR
+        if [ -f "${PUBLIC_DIR}"/.updateID ]; then
+            local currentVersion=$( cat "${PUBLIC_DIR}"/.updateID )
+        else
+            local currentVersion=0
+        fi
+    
+        # Get server version  
+        local updateIDFilePath="CloverThemeManagerApp/CloverThemeManager/public/.updateID"
+        local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
+        local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+        cd "${WORKING_PATH}/${APP_DIR_NAME}"
+        git archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
+        if [ -f "${pathToWorkingPublicDir}"/.updateID ]; then
+            local serverVersion=$( cat "${pathToWorkingPublicDir}"/.updateID )
+        else
+            local serverVersion=0
+        fi
+    
+        if [ $serverVersion -gt $currentVersion ]; then
+            WriteToLog "App update available. Current=$currentVersion | Server=$serverVersion"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverVersion}@"
+            SendToUI "UpdateAvailApp@${serverVersion}@"
+            return 0
+        else
+            WriteToLog "No app update available. Current=$currentVersion | Server=$serverVersion"
+            return 1
+        fi
     fi
     
     cd "${WORKING_PATH}"

@@ -355,33 +355,35 @@ function actOnFreeSpace(availableSpace)
 
 //-------------------------------------------------------------------------------------
 function DisplayAppUpdates(updateID)
-{    
+{
+    // The app can be updated in two ways.
+    //
+    // 1 - The main outer MacGap app which requires a new CloverThemeManager binary. This does not get updated often.
+    // 2 - The inner public directory containing the html,css,js and associated files. These will change more frequently.
+    //
+    // Updates for 1 will be identified in the form of X.XX.X. For example: 0.75.6
+    // Updates for 2 will be identified by a single integer X. For example: 7
+
     if (updateID != "") {
         disableInterface();
-        appUpdateFileList = (updateID).split(',');
-        var printString="";
-        if (appUpdateFileList != "") {
         
-            // Update only installed themes with uninstall buttons
-            for (var t = 0; t < appUpdateFileList.length; t++) {
-                    
-                // Here we change any installed themes to have an uninstall button.
-                ChangeButtonAndBandToUpdate(appUpdateFileList[t]);
-                        
-                // Prepare text for pretty print
-                printString=(printString + appUpdateFileList[t] + "<br><br>");
-            }
+        // Does updateID contain a period?
+        if (updateID.indexOf(".") >= 0) {
+            // Show a message to the user
+            ChangeMessageBoxHeaderColour("blue");                            
+            SetMessageBoxText("Application Framework Update:",'A new version of the main app (v' + updateID + ') is available.<br><br>Please download a new version of the app. You can find latest versions at either <a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Projectosx</a> or <a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Insanleymac</a>');
+            // Send native notification
+            sendNotification("Application framework update available. Please download a new version of the app.");
+        } else {
+            // Show a message to the user
+            ChangeMessageBoxHeaderColour("blue");                            
+            SetMessageBoxText("Application Scripts Update:","There are updated scripts available (updateID: " + updateID + ").<br><br>It's recommended to update to the latest version.<br>Do you wish to update the Clover Theme Manager scripts?");
+            // Send native notification
+            sendNotification("Application scripts update available.");
+            HideMessageBoxClose();
+            AddYesNoButtons();
         }
-        
-        // Show a message to the user
-        ChangeMessageBoxHeaderColour("blue");                            
-        SetMessageBoxText("Application Update Available:","updateID: " + printString + "It's recommended to update to the latest version.<br>Do you wish to update Clover Theme Manager?");
-        HideMessageBoxClose();
-        AddYesNoButtons();
         ShowMessageBox();
-        
-        // Send native notification
-        sendNotification("Application Update Available.");
     }
 }
 
