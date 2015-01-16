@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.8
+//Version=0.74.9
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -88,15 +88,19 @@ function ShowMessageBox()
         $('#overlay').fadeIn('fast',function(){
              $('#box').animate({'top':'150px'},500, function(){
                  // Bounce
-                 // http://daniel-lundin.github.io/snabbt.js/index.html
-                 $("#box").snabbt("attention", {
-                     position: [0, 50, 0],
-                     springConstant: 2.4,
-                     springDeacceleration: 0.9,
-                 });
+                 doBounce($('.box'), 2, '10px', 100);  
              }); 
         });
     }
+}
+
+//-------------------------------------------------------------------------------------
+// from http://stackoverflow.com/questions/10363671/jquery-bounce-effect-on-click-no-jquery-ui
+function doBounce(element, times, distance, speed) {
+    for(var i = 0; i < times; i++) {
+        element.animate({marginTop: '-='+distance}, speed)
+            .animate({marginTop: '+='+distance}, speed);
+    }        
 }
 
 //-------------------------------------------------------------------------------------
@@ -176,8 +180,6 @@ function printLogtoScreen()
                            SetMessageBoxText('Attention: git is not installed' , 'git is a requirement for this app and it cannot continue without it.<br><br>To install only git, you can download an installer from <a href="http://git-scm.com" target="_blank">http://git-scm.com</a>, double click the .dmg and run the .pkg.<br><br>Alternatively you can install the Xcode command line developer tools by loading up Terminal and typing <b>xcode-select --install</b><br><br>This app will quit once you close this box.');
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
-                           // Send native notification
-                           sendNotification("Problem: git is not installed.");
 
                 } else if (/CTM_HTMLTemplateOK/i.test(splitContent[i])) {
                            $("#check_HtmlTemplate").append( "  \u2713" );
@@ -194,8 +196,6 @@ function printLogtoScreen()
                            SetMessageBoxText('Attention: Repository' , 'The remote Clover Theme repository is not responding. This app cannot continue. Exiting.');
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
-                           // Send native notification
-                           sendNotification("Problem: The remote Clover Theme repository is not responding.");
                            terminate();
                            
                 } else if (/CTM_SupportDirOK/i.test(splitContent[i])) {
@@ -294,14 +294,4 @@ function printLogtoScreen()
         if(eof==0)
             timerCheckEof = setTimeout(printLogtoScreen, 250);
     }
-}
-
-//-------------------------------------------------------------------------------------
-function sendNotification(messageBody)
-{
-    macgap.notice.notify({
-        title: "Clover Theme Manager",
-        content: messageBody,
-        sound: true // optional
-    });
 }

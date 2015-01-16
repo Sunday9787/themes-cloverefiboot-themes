@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.6"
+VERS="0.75.7"
 
 export DEBUG=1
 #set -x
@@ -693,6 +693,26 @@ InsertThemeListHtmlInToManageThemes()
     fi
 }
 
+# ---------------------------------------------------------------------------------------
+InsertNotificationCodeInToJS()
+{
+    local check=1
+    
+    codeToInsert="macgap.notice.notify({ title: 'Clover Theme Manager', content: messageBody, sound: true});"
+    
+    # Insert Html in to placeholder
+    WriteToLog "Inserting JS notification code in to cloverthememanager.js"
+    LANG=C sed -ie "s/\/\/ INSERT_NOTIFICATION_CODE_HERE/${codeToInsert}/g" "${PUBLIC_DIR}"/scripts/cloverthememanager.js && check=0
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ $check -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Inserting notification code was successful."
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Inserting notification code failed."
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
 CheckOsVersion()
 {
     local osVer=$( uname -r )
@@ -1522,9 +1542,12 @@ ReadPrefsFile()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gSnow=$gSnow"
         
         local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
-        gThumbSizeX="${tmp% *}"
-        gThumbSizeY="${tmp#* }"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
+        if [ "$tmp" != "" ]; then
+            echo "$tmp" >> ~/Desktop/a.txt
+            gThumbSizeX="${tmp% *}"
+            gThumbSizeY="${tmp#* }"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
+        fi
         
         gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile" UnInstalledButton )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
@@ -2391,6 +2414,10 @@ CleanUp()
     if [ -f "${PUBLIC_DIR}"/managethemes.html ]; then
         rm "${PUBLIC_DIR}"/managethemes.html
     fi
+    if [ -f "${PUBLIC_DIR}"/scripts/cloverthememanager.jse ]; then
+        rm "${PUBLIC_DIR}"/scripts/cloverthememanager.js
+        mv "${PUBLIC_DIR}"/scripts/cloverthememanager.jse "${PUBLIC_DIR}"/scripts/cloverthememanager.js
+    fi
 }
 
 #===============================================================
@@ -2452,10 +2479,11 @@ export zeroUUID="00000000-0000-0000-0000-000000000000"
 export partutil="$TOOLS_DIR"/partutil
 
 # Get versions of js scripts
-jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
-jsScriptInitVersion="${jsScriptInitVersion##*=}"
-jsScriptCtmVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/cloverthememanager.js )
-jsScriptCtmVersion="${jsScriptCtmVersion##*=}"
+#jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
+#jsScriptInitVersion="${jsScriptInitVersion##*=}"
+#jsScriptCtmVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/cloverthememanager.js )
+#jsScriptCtmVersion="${jsScriptCtmVersion##*=}"
+updateIdVersion=$( cat "${PUBLIC_DIR}"/.updateID )
 
 # Find version of main app.
 mainAppInfoFilePath="${SELF_PATH%Resources*}"
@@ -2463,7 +2491,7 @@ mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString"
 
 # Begin log file
 RemoveFile "$logFile"
-WriteToLog "CTM_VersionApp ${mainAppVersion} / BashScript ${VERS} / JSinit ${jsScriptInitVersion} / JSctm ${jsScriptCtmVersion}"
+WriteToLog "CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
 WriteToLog "Started Clover Theme Manager script"
 WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
@@ -2480,7 +2508,7 @@ IsGitInstalled
 
 # Only continue if git is installed
 if [ "$gitCmd" != "" ]; then
-        
+
     # Was this script called from a script or the command line
     identityCallerCheck=`ps -o stat= -p $$`
     if [ "${identityCallerCheck:1:1}" == "+" ]; then
@@ -2562,19 +2590,23 @@ if [ "$gitCmd" != "" ]; then
         #tmp_dir=$(mktemp -d -t theme_manager)
         #ReadRepoUrlList
 
-        # Begin
+        # Begin        
         "$findThemeDirs" &
         RefreshHtmlTemplates "managethemes.html"
         IsRepositoryLive
         EnsureLocalSupportDir
 
         # Clean any old files from support dir from previous app versions
-        if [ -d "${WORKING_PATH}/${APP_DIR_NAME}" ]; then
+        if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/*.plist ]; then
             rm "${WORKING_PATH}/${APP_DIR_NAME}"/*.plist
+        fi
+        if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/dropdown_html ]; then
             rm "${WORKING_PATH}/${APP_DIR_NAME}"/dropdown_html
+        fi
+        if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html ]; then
             rm "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html
         fi
-
+        
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
         WriteToLog "CTM_ThemeDirsScan"
@@ -2592,12 +2624,17 @@ if [ "$gitCmd" != "" ]; then
 
         # Read current Clover.Theme Nvram variable and send to UI.
         ReadAndSendCurrentNvramTheme
+        
+        # If OS is newer than Lion then enable notifications
+        if [ $(CheckOsVersion) -gt 11 ]; then
+            InsertNotificationCodeInToJS
+        fi
     
         # Write string to mark the end of init file.
         # initialise.js looks for this to signify initialisation is complete.
         # At which point it then redirects to the main UI page.
-        WriteToLog "Complete!"
-
+        WriteToLog "Complete!"      
+        
         # Feedback for command line
         echo "Initialisation complete. Entering loop."
 

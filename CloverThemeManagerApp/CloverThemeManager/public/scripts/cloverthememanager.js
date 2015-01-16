@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.1
+//Version=0.75.2
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -1210,17 +1210,21 @@ function ShowMessageBox()
              // move box from current position so top=150px
              $('#box').animate({'top':'150px'},500, function(){
                  // Bounce
-                 // http://daniel-lundin.github.io/snabbt.js/index.html
-                 $("#box").snabbt("attention", {
-                     position: [0, 50, 0],
-                     springConstant: 2.4,
-                     springDeacceleration: 0.9,
-                 });
+                 doBounce($('.box'), 2, '10px', 100);   
              }); 
         });
     }
 }
 
+//-------------------------------------------------------------------------------------
+// from http://stackoverflow.com/questions/10363671/jquery-bounce-effect-on-click-no-jquery-ui
+function doBounce(element, times, distance, speed) {
+    for(var i = 0; i < times; i++) {
+        element.animate({marginTop: '-='+distance}, speed)
+            .animate({marginTop: '+='+distance}, speed);
+    }        
+}
+             
 //-------------------------------------------------------------------------------------
 function CloseMessageBox()
 {
@@ -1494,9 +1498,5 @@ function ToggleSnow(action)
 //-------------------------------------------------------------------------------------
 function sendNotification(messageBody)
 {
-    macgap.notice.notify({
-        title: "Clover Theme Manager",
-        content: messageBody,
-        sound: true // optional
-    });
+    // INSERT_NOTIFICATION_CODE_HERE
 }
