@@ -1543,7 +1543,6 @@ ReadPrefsFile()
         
         local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
         if [ "$tmp" != "" ]; then
-            echo "$tmp" >> ~/Desktop/a.txt
             gThumbSizeX="${tmp% *}"
             gThumbSizeY="${tmp#* }"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
