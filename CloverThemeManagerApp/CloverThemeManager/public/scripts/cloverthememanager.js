@@ -1,5 +1,5 @@
 // A script for Clover Theme Manager
-// Copyright (C) 2014 Blackosx
+// Copyright (C) 2014-2015 Blackosx
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.2
+//Version=0.75.3
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -201,6 +201,11 @@ function readBashToJsMessageFile()
                 // Bash sends: "Snow@${gSnow}@"
                 macgap.app.removeMessage(firstLine);
                 ToggleSnow(firstLineSplit[1]);
+                break;
+            case "BootlogView":
+                // Bash sends: "BootlogView@${gBootlogState}@"
+                macgap.app.removeMessage(firstLine);
+                SetBootLogState(firstLineSplit[1]);
                 break;
             default:
                 alert("Found else:"  + firstLine);
@@ -461,14 +466,14 @@ function actOnNvramThemeVar(nvramThemeVar)
             // Print message
             $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
             // Change background colour to green
-            $("#AboveFooter").attr('class', 'nvramFillInstalled');
+            $("#NvramBand").attr('class', 'nvramFillInstalled');
             // Change nvram dropdown option to match nvram var
             $("#installedThemeDropDown").val(nvramThemeVar);
         } else {
             // Print message
             $("#currentNVRAMMessage").text("Not Installed on this volume"); 
             // Change background colour to red
-            $("#AboveFooter").attr('class', 'nvramFillNotInstalled');
+            $("#NvramBand").attr('class', 'nvramFillNotInstalled');
             // Change nvram dropdown option to "-"
             $("#installedThemeDropDown").val("-");
         }
@@ -717,6 +722,19 @@ $(function()
     });
     
     //-----------------------------------------------------
+    // On clicking the bootlog band
+    $('#BootLogTitleBar').click(function() {
+        var hidden = $('#BootLogContainer').is(":hidden");
+        if (!hidden) {
+            SetBootLogState("Close");
+            macgap.app.launch("CTM_bootlog@Close");
+        } else {
+            SetBootLogState("Open");
+            macgap.app.launch("CTM_bootlog@Open");
+        }
+    });
+    
+    //-----------------------------------------------------
     // On clicking the Hide / Show Thumbnails button
     $("#BandsHeightToggleButton").on('click', function() {
     
@@ -825,6 +843,45 @@ $(function()
         }
     });
 });
+
+//-------------------------------------------------------------------------------------
+function SetBootLogState(state)
+{
+    var bootLogContainerHeight = $('#BootLogContainer').height();
+    var currentFooterHeight = $('#footer').height();
+    
+    if(state == "Hide") { // There is no bootlog to show so hide the bootlog section
+        var bootLogTitleBarHeight = $('#BootLogTitleBar').height();
+        var bootlogTotalHeight = bootLogTitleBarHeight + bootLogContainerHeight;
+        var newFooterHeight = (currentFooterHeight - bootlogTotalHeight);
+        $('#BootLogTitleBar').hide();
+        $('#BootLogContainer').hide();
+        window.resizeBy(0, - bootlogTotalHeight);
+        $('#footer').height(newFooterHeight);
+        $('#content').css("bottom","-="+bootlogTotalHeight);
+    } else {
+        var hidden = $('#BootLogContainer').is(":hidden"); 
+        if(state == "Open") {
+            // check it's not already open
+            if (hidden) {
+                $('#BootLogContainer').show();
+                var newFooterHeight = (currentFooterHeight + bootLogContainerHeight);
+                window.resizeBy(0, bootLogContainerHeight);
+                $('#footer').height(newFooterHeight);
+                $('#content').css("bottom","+="+bootLogContainerHeight);
+            }
+        } else {
+            // check it's not already closed
+            if (!hidden) {
+                $('#BootLogContainer').hide();
+                var newFooterHeight = (currentFooterHeight - bootLogContainerHeight);
+                window.resizeBy(0, - bootLogContainerHeight);
+                $('#footer').height(newFooterHeight);
+                $('#content').css("bottom","-="+bootLogContainerHeight);
+            }
+        }
+    }
+}
 
 //-------------------------------------------------------------------------------------
 function SetShowHidePreviews(state)
@@ -1224,7 +1281,7 @@ function doBounce(element, times, distance, speed) {
             .animate({marginTop: '+='+distance}, speed);
     }        
 }
-             
+
 //-------------------------------------------------------------------------------------
 function CloseMessageBox()
 {
@@ -1449,7 +1506,7 @@ function RemoveYesNoButtons(){
 function SetNvramFooterToNotSet(){
     $("#currentNVRAMvar").text("NVRAM theme: Not set:"); 
     $("#currentNVRAMMessage").text(""); 
-    $("#AboveFooter").css("background-image","-webkit-linear-gradient(top, rgba(195,195,195,1) 0%,rgba(123,123,123,1) 100%)");
+    $("#NvramBand").css("background-image","-webkit-linear-gradient(top, rgba(195,195,195,1) 0%,rgba(123,123,123,1) 100%)");
 }
 
 //-------------------------------------------------------------------------------------

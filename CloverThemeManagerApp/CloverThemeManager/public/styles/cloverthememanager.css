@@ -14,35 +14,19 @@ p {
     font-family: 'Roboto', sans-serif;
 }
 
-#Container {
-    /* min-height: 100%; */
-    /* position:relative; */
-}
 
-#TopOfPage {
-    position: fixed;
-    width: 100%;
-    top: 0px;
-    height:67px;
-    background-color: #333;
-    z-index:2;
-    box-shadow: 0px 4px 4px #111;
-    opacity: 0.95;
-}
 
-#InitTopOfPage {
-    position: fixed;
-    width: 100%;
-    top: 0px;
-    height:74px;
-    border-bottom: 2px solid #333;
-    padding: 16px 0 8px 28px;
-    background-color: #737075;
-    background-image: -webkit-linear-gradient(top, #737075, #59565b);
-}
+/* ===================================================================== */
+/*                               INIT PAGE                               */
+/* ===================================================================== */
 
 #StatusArea {
     margin: 40px 0px 0px 248px;
+}
+
+#homePageProgressBar {
+    height: 12px;
+    margin: 0px 330px 12px 330px;
 }
 
 .statusLine {
@@ -54,21 +38,61 @@ p {
 
 .checkMark {
     color: #33FF33;
-    font-family: Helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 18px;
     float:right;
     margin-right: 240px;
 }
 
-#TopOfHelpPage {
+#WelcomeMessage {
+    margin: 100px 0px 0px 0px;
+    line-height: 2px;
+}
+
+.textHeading {
+    font-family: 'Roboto', sans-serif;
+    font-size: 28px;
+    font-weight:700;
+    color: #FFF;
+    text-align:center;
+}
+
+.textSubHeading {
+    font-family: 'Roboto', sans-serif;
+    font-size: 20px;
+    color: #a7a7a7;
+    text-align:center;
+    margin-top: 22px;
+}
+
+.textVersion {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    color: #CCC;
+    text-align:center;
+    margin-bottom: 28px;
+}
+
+#footerInitPage {
     position: fixed;
-    width: 100%;
-    top: 0px;
-    height:24px;
-    background-color: #333;
-    z-index:2;
-    box-shadow: 0px 4px 4px #111;
-    opacity: 0.95;
+    height: 36px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #000;
+}
+
+/* ===================================================================== */
+/*                               HEADER                                  */
+/* ===================================================================== */
+
+#header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 66px;
+    background-color: #000;
 }
 
 #CheckingUpdatesMessage {
@@ -128,7 +152,7 @@ select.custom-dropdown:hover {
     border: none;
     border-radius: 4px;
     color: #FFF;
-    font-family: helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 11px;
     font-weight: bold;
     height: 19px;
@@ -154,7 +178,7 @@ select.custom-dropdown:hover {
     border: none;
     border-radius: 4px;
     color: #FFF;
-    font-family: helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 11px;
     font-weight: bold;
     height: 19px;
@@ -181,64 +205,11 @@ select.custom-dropdown:hover {
     float: right;
 }
 
-.textMessage {
-    font-family: Helvetica;
-    font-size: 14px;
-    color: #FFF;
-    text-align:center;
-    padding-top:9px;
-    height: 100%;
-}
-
-#cornerBanner {
-    position: fixed;
-    z-index: 1000;
-    top: 0px;
-    left: 0px;
-}
-
-#LogoHeader {
-    width:100%;
-    height:128px;
-    background: url(../assets/cloverthememanagericon_128px.png); background-repeat: no-repeat;
-    background-position:center;
-    margin-top: 16px;
-}
-
-#homePageProgressBar {
-    height: 12px;
-    margin: 0px 330px 12px 330px;
-}
-
-#InitLog {
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color:#222;
-    border: 1px solid #333;
-    top: 132px;
-    bottom: 275px;
-    width:440px;
-    height: 292px;
-    /* margin: 48px 207px 48px 207px; */
-    margin: 48px 207px 48px 160px;    
-    position: fixed;
-    opacity: 0.5;
-}
-
-.initLogText {
-    font-family: Helvetica;
-    font-size: 8px;
-    line-height: 9px;
-    color: #FFF; /*#3ef14b;*/
-    text-align:left;
-    padding: 4px 0px 4px 16px;
-}
-
 #HeaderBar {
     height: 24px;
     background-image: -webkit-linear-gradient(top, rgba(111,111,111,1) 0%,rgba(0,0,0,1) 100%); 
     padding: 5px 20px 5px 20px;
-    font-family: Helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
     line-height: 0px;
     color: #FFF;
@@ -246,151 +217,115 @@ select.custom-dropdown:hover {
     opacity: 0.85;
 }
 
-#ThemeList {
-    /*margin-top: 68px;
-    margin-bottom: 74px;*/
-}
-
-#OptionsBar {
-    height: 24px;
-    background-color: #888888;
-    padding:5px 0 5px 20px;
-}
-
-#WelcomeMessage {
-    margin: 100px 0px 0px 0px;
-    line-height: 2px;
-}
-
-.textHeading {
-    font-family: 'Roboto', sans-serif;
-    font-size: 28px;
-    font-weight:700;
+.spacerButton {
     color: #FFF;
-    text-align:center;
-}
-
-.textSubHeading {
-    font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #a7a7a7;
-    text-align:center;
-    margin-top: 22px;
-}
-
-.textSubSubHeading {
-    font-family: 'Roboto', sans-serif;
-    font-size: 14px;
-    color: #CCC;
-    text-align:center;
-    margin-top: 28px;
-}
-
-.textVersion {
-    font-family: 'Roboto', sans-serif;
-    font-size: 12px;
-    color: #CCC;
-    text-align:center;
-    margin-bottom: 28px;
-}
-
-.textBody {
-    font-family: Helvetica;
-    font-size: 12px;
-    color: #FFF;
-    text-align:left;
-}
-
-.textHeaderSmall {
-    font-family: Helvetica;
-    font-size: 10px;
-    color: #a1a1a1;
-    -webkit-user-select: none;
-}
-
-.textFreeSpace {
-    font-family: Helvetica;
-    font-size: 12px;
-    color: #3ef14b;
-    vertical-align: bottom;
-    -webkit-user-select: none;
-}
-
-.textThemeCount {
-    font-family: Helvetica;
-    font-size: 12px;
-    color: #FFF;
-    vertical-align: bottom;
-    -webkit-user-select: none;
-}
-
-.textThemeCountQuery {
-    font-family: Helvetica;
+    float: right;
     font-size: 12px;
     font-weight: bold;
-    color: #FFF;
-    text-align: right;
-    vertical-align: bottom;
-    margin-left:6px;
-    display: none;
-    cursor:pointer;
-}
-
-.textFooter {
-    font-family: Helvetica;
-    font-size: 12px;
-    color: #FFF;
+    height: 20px;
+    margin: 1px 40px 0px 0px;
+    width: 64px;
     text-align: center;
-    margin-top:10px;
+    line-height: 20px;
+    -webkit-user-select: none;
 }
 
-.textHeaderPreview {
-    margin: 0px 0px 0px 40px;
-    float: left;
-}
-
-.textHeaderDescription {
-    margin: 13px 0px 0px 44px;
-    float: left;
-}
-
-.textHeaderInstalled {
-    margin: 13px 50px 0px 0px;
-    float: right;
-}
-
-.textHeaderOptions {
-    margin: 13px 60px 0px 80px;
-    float: right;
-}
-
-a:link, a:visited {
-    color: #BBB;
-    text-decoration: none;
-}
-
-a:hover {
+.toggleButton {
+    background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
+    border: 1px solid #282828;
+    border-radius: 4px;
     color: #FFF;
+    float: right;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 12px 0px 0px;
+    width: 120px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    -webkit-user-select: none;
 }
 
-#ThemeListSpacerTop {
-    height: 68px;
-    clear: both;
+.toggleButton:hover {
+    border: 1px solid #AAA !important;
 }
 
-#ThemeListSpacerBottom {
-    height: 74px;
-    clear: both;
+.toggleButton:active {
+    background: #888 !important;
 }
 
-#SpacerTop {
-    height: 34px;
-    clear: both;
+.spacerButtonSml {
+    float: right;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 12px 0px 0px;
+    width: 40px;
+    text-align: center;
+    line-height: 20px;
+    -webkit-user-select: none;
+    display: none;
 }
 
-#SpacerBottom {
-    height: 37px;
-    clear: both;
+.toggleButtonSml {
+    background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
+    border: 1px solid #282828;
+    border-radius: 4px;
+    color: #FFF;
+    float: right;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 1px 12px 0px 0px;
+    width: 40px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    -webkit-user-select: none;
+}
+
+.toggleButtonSml:hover {
+    border: 1px solid #AAA !important;
+}
+
+.toggleButtonSml:active {
+    background: #888 !important;
+}
+
+
+/* ===================================================================== */
+/*                               CONTENT                                 */
+/* ===================================================================== */
+
+#content {
+    position: fixed;
+    top: 66px;
+    bottom: 265px;
+    left: 0;
+    right: 0;
+    background-color: #000;
+    overflow: auto;
+}
+
+.accordion {
+    background-image: -webkit-linear-gradient(top, #4b4e51, #2f3134);
+}
+
+.accordionInstalled {
+    background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
+}
+
+.accordionUpdate {
+    background-image: -webkit-linear-gradient(top, #6ec0eb, #55abeb);
+}
+
+.accordionContent {	
+	width: 100%;
+	float: left;
+	background: #FFF;
+	display: none;
+	line-height: 0;
 }
 
 #ThemeBand {
@@ -422,7 +357,7 @@ a:hover {
 .versionControl {
     margin: 28px 12px 0px 0px;
     float: right;
-    font-family: Helvetica;
+    font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: bold;
     line-height: 18px;
@@ -575,145 +510,35 @@ a:hover {
     border: 1px solid #687956;
 }
 
-.feedbackButton {
-    background-color: #a198e2;
-    background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
-    border: 1px solid #9686dd;
-    border-radius: 4px;
-    color: #ffffff;
-    float: right;
-    font-family: 'Roboto', sans-serif;
-    font-size: 12px;
-    font-weight: bold;
-    height: 20px;
-    margin: 24px 8px 0 0;
-    padding: 2px;
-    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
-    width: 72px;
-    text-align: center;
-    line-height: 20px;
-    cursor: pointer;
-}
 
-.feedbackButton:hover {
-    background-color: #c7c1ee;
-    background-image: -moz-linear-gradient(center top , #c7c1ee, #bfb8e6);
-    background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
-    border: 1px solid #c0b6eb;
-}
 
-.spacerButton {
-    color: #FFF;
-    float: right;
-    font-size: 12px;
-    font-weight: bold;
-    height: 20px;
-    margin: 1px 40px 0px 0px;
-    width: 64px;
-    text-align: center;
-    line-height: 20px;
-    -webkit-user-select: none;
-}
 
-.toggleButton {
-    background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
-    border: 1px solid #282828;
-    border-radius: 4px;
-    color: #FFF;
-    float: right;
-    font-size: 12px;
-    font-weight: bold;
-    height: 20px;
-    margin: 1px 12px 0px 0px;
-    width: 120px;
-    text-align: center;
-    line-height: 20px;
-    cursor: pointer;
-    -webkit-user-select: none;
-}
+/* ===================================================================== */
+/*                               FOOTER                                  */
+/* ===================================================================== */
 
-.toggleButton:hover {
-    border: 1px solid #AAA !important;
-}
-
-.toggleButton:active {
-    background: #888 !important;
-}
-
-.spacerButtonSml {
-    float: right;
-    font-size: 12px;
-    font-weight: bold;
-    height: 20px;
-    margin: 1px 12px 0px 0px;
-    width: 40px;
-    text-align: center;
-    line-height: 20px;
-    -webkit-user-select: none;
-    display: none;
-}
-
-.toggleButtonSml {
-    background-image: -webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%); 
-    border: 1px solid #282828;
-    border-radius: 4px;
-    color: #FFF;
-    float: right;
-    font-size: 12px;
-    font-weight: bold;
-    height: 20px;
-    margin: 1px 12px 0px 0px;
-    width: 40px;
-    text-align: center;
-    line-height: 20px;
-    cursor: pointer;
-    -webkit-user-select: none;
-}
-
-.toggleButtonSml:hover {
-    border: 1px solid #AAA !important;
-}
-
-.toggleButtonSml:active {
-    background: #888 !important;
-}
-
-.accordion {
-    background-image: -webkit-linear-gradient(top, #4b4e51, #2f3134);
-
-}
-
-.accordionInstalled {
-    background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
-}
-
-.accordionUpdate {
-    background-image: -webkit-linear-gradient(top, #6ec0eb, #55abeb);
-}
-
-.accordionContent {	
-	width: 100%;
-	float: left;
-	background: #FFF;
-	display: none;
-	line-height: 0;
-}
-
-#ConfigureContent {
-    margin:5% 10% 0% 10%;
-}
-
-table {
-    border-collapse:collapse    /* Remove table borders */
-}
-
-#AboveFooter {
+#footer {
     position: fixed;
+    height: 265px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #000;
+}
+
+a:link, a:visited {
+    color: #BBB;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #FFF;
+}
+
+#NvramBand {
     width: 100%;
-    bottom: 36px;
-    height: 36px;
+    height: 33px;
     border-top: 2px solid #333;
-    z-index:2;
     opacity: 0.95;
 }
 
@@ -722,12 +547,10 @@ table {
 }
 
 .nvramFillInstalled {
-   /* background-image: -webkit-linear-gradient(top, rgba(81,199,56,1) 0%,rgba(28,127,42,1) 100%); */
    background-image: -webkit-linear-gradient(top, #5ea55c 0%, #3d6c3c 100%);
 }
 
 .nvramFillNotInstalled {
-    /* background-image: -webkit-linear-gradient(top, rgba(193,34,20,1) 0%,rgba(117,2,4,1) 100%); */
     background-image: -webkit-linear-gradient(top, #ac5458 0%, #713739 100%); 
 }
 
@@ -735,7 +558,6 @@ table {
     width: 38%;
     margin: 7px 8px 5px 24px;
     float: left;
-    font-weight: bold;
     -webkit-user-select: none;
 }
 
@@ -767,7 +589,7 @@ select.nvram-dropdown {
     -webkit-border-radius: 4px;
     border-radius: 4px;
     font-size: 12px;
-    padding: 2px 24px 2px 10px;
+    padding: 1px 24px 2px 10px;
     cursor: pointer;
     background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
     background-size: 19px 19px;
@@ -780,38 +602,148 @@ select.nvram-dropdown:hover {
     opacity: 1;
 }
 
-#Footer {
-    position: fixed;
+#BootLogTitleBar {
     width: 100%;
-    bottom: 0px;
+    height: 33px;
+    border-top: 2px solid #333;
+    opacity: 0.95;
+    cursor: pointer;
+}
+
+.bootlogBandFill {
+    background-image: -webkit-linear-gradient(top, #82954d 0%, #5c6836 100%);
+    /*background: url(../assets/dropdown_arrow.png) no-repeat right center;
+    background-size: 19px 19px;*/
+}
+
+#BootLogTitleBar:hover {
+    background-image: -webkit-linear-gradient(top, #95ae4a 0%, #6d7f39 100%);
+}
+
+.titleBarText {
+    font-family: 'Roboto', sans-serif;
+    color: #FFF;
+    font-size: 12px; 
+    font-weight: bold;
+    padding: 0px 0px 0px 24px;
+    line-height: 36px;
+}
+
+#BootLogContainer {
+    width: 100%;
+    height: 156px;
+    border-top: 2px solid #333;
+    opacity: 0.95;
+}
+
+#bandHeader {
+    background-color: #4a544d;
+    border-bottom: 1px solid #000;
+    float: left;
+    height: 25px;
+    width: 20%;
+}
+
+#bandDescription {
+    background-color: #1d2922;
+    border-bottom: 1px solid #000;
+    float: left;
+    height: 25px;
+    width: 80%;
+    float: left;
+}
+
+#bandColumnLeft {
+    float: left;
+}
+
+#bandColumnRight {
+    position: absolute;
+    left: 470px;
+}
+
+.infoTitle {
+    font-family: 'Roboto', sans-serif;
+    color: #a6a9a7;
+    font-size: 12px;
+    padding: 0px 0px 0px 24px;
+    line-height: 24px;	
+}
+
+.infoBody {
+    font-family: 'Roboto', sans-serif;
+    color: #FFF;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+#FooterLinks {
+    width: 100%;
     height: 36px;
     border-top: 2px solid #333;
     background-color: #737075;
     background-image: -webkit-linear-gradient(top, rgba(9,10,9,1) 0%,rgba(20,22,22,1) 31%,rgba(27,31,29,1) 65%,rgba(7,7,7,1) 100%);
-    z-index:2;
 }
 
-#MessageBoxProgressBar {
-    width: 410px;
-    height: 22px;
-    border: 1px solid #CCC;
-}
- 
-#MessageBoxProgressBar div {
-    height: 100%;
-    width: 0;
+/* ===================================================================== */
+/*                           TEXT CLASSES                                */
+/* ===================================================================== */
+
+.textBody {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFF;
+    text-align:left;
 }
 
-.jquery-ui-like {
-	border-radius: 4px;
-	background: #FFF;
-	border: 1px solid #AAA;
-	overflow: hidden;		
+.textHeaderSmall {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    color: #a1a1a1;
+    -webkit-user-select: none;
 }
-.jquery-ui-like div {
-	background-image: url(../assets/progressbar_stages.gif);
-	border-right: 1px solid #AAA;
+
+.textFreeSpace {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    color: #3ef14b;
+    vertical-align: bottom;
+    -webkit-user-select: none;
 }
+
+.textThemeCount {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    color: #FFF;
+    vertical-align: bottom;
+    -webkit-user-select: none;
+}
+
+.textThemeCountQuery {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFF;
+    text-align: right;
+    vertical-align: bottom;
+    margin-left:6px;
+    display: none;
+    cursor:pointer;
+}
+
+.textFooter {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    color: #FFF;
+    text-align: center;
+    margin-top:10px;
+}
+
+/* ===================================================================== */
+/*                            MESSAGE BOX                                */
+/* ===================================================================== */
 
 /*
 The following overlay and box css is originally from a tutorial by Mary Lou
@@ -940,7 +872,7 @@ a.boxclose:hover {
 		
 .meterTwo > span:after, .animate > span > span {
 
-    font-family: helvetica;
+    font-family: 'Roboto', sans-serif;
     font-weight: bold;
     font-size: 12px;
     color: #FFF;
@@ -971,3 +903,31 @@ a.boxclose:hover {
         background-position: 50px 50px;
     }
 }
+
+.feedbackButton {
+    background-color: #a198e2;
+    background-image: -webkit-linear-gradient(top, #a198e2, #9488d6);
+    border: 1px solid #9686dd;
+    border-radius: 4px;
+    color: #ffffff;
+    float: right;
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    height: 20px;
+    margin: 24px 8px 0 0;
+    padding: 2px;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.3);
+    width: 72px;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.feedbackButton:hover {
+    background-color: #c7c1ee;
+    background-image: -moz-linear-gradient(center top , #c7c1ee, #bfb8e6);
+    background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
+    border: 1px solid #c0b6eb;
+}
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # A script for Clover Theme Manager
-# Copyright (C) 2014 Blackosx
+# Copyright (C) 2014-2015 Blackosx
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.7"
+VERS="0.75.8"
 
 export DEBUG=1
 #set -x
@@ -1541,6 +1541,9 @@ ReadPrefsFile()
         gSnow=$( defaults read "$gUserPrefsFile" Snow )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gSnow=$gSnow"
         
+        gBootlogState=$( defaults read "$gUserPrefsFile" ShowHideBootlog )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gBootlogState=${gBootlogState}"
+        
         local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
         if [ "$tmp" != "" ]; then
             gThumbSizeX="${tmp% *}"
@@ -1653,6 +1656,10 @@ ReadPrefsFile()
         gSnow="On"
     fi
     
+    if [ "$gBootlogState" == "" ]; then
+        gBootlogState="Open"
+    fi
+    
     WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
     WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
     WriteToLog "TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
@@ -1719,6 +1726,10 @@ SendUIInitData()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@@"
         SendToUI "UpdateAvailThemes@@"
     fi
+      
+    # Send UI setting for Snow
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Snow@${gSnow}@"
+    SendToUI "Snow@${gSnow}@"
     
     # Send thumbnail size
     if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
@@ -1737,16 +1748,257 @@ SendUIInitData()
     # Send UI view choice for Previews
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
     SendToUI "PreviewView@${gUISettingViewPreviews}@"
-    
-    # Send UI setting for Snow
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Snow@${gSnow}@"
-    SendToUI "Snow@${gSnow}@"
+        
+    # Send UI setting for BootlogView
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: BootlogView@${gBootlogState}@"
+    SendToUI "BootlogView@${gBootlogState}@"
     
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
 }
 
+# ---------------------------------------------------------------------------------------
+ReadBootLogAndInsertHtml()
+{
+    local canHideClover=1
+    local bootLog=$( ioreg -lw0 -pIODeviceTree | grep boot-log )
+    bootLog=${bootLog#*'<'}
+    bootLog=${bootLog%%'>'*}
+    if [ "$bootLog" != "" ]; then
+        echo "$bootLog" > "${TMPDIR}"/bootLogtmp
+        xxd -r -p "${TMPDIR}"/bootLogtmp > $bootLogFile && rm "${TMPDIR}"/bootLogtmp
+    fi
+    if [ -f $bootLogFile ]; then
+    
+        # Is bootlog from Clover?
+        local checkLog=$( grep "Starting Clover" $bootLogFile )
+        if [ "$checkLog" != "" ]; then
+            local fileToRead=$bootLogFile
+            local nvramReadFrom=""
+            local themeExist="Yes"
+            local themeUsedChosen=""
+            local usingEmbedded=1
 
+            while read -r lineRead
+            do
+        
+                if [[ "$lineRead" == *"Starting Clover"* ]]; then
+                    revision="${lineRead##*Starting Clover rev }"
+                    revision="${revision% on*}"
+                    bootType="${lineRead#*on }"
+                    if [[ "$bootType" == *"CLOVER EFI"* ]]; then
+                        bootType="Legacy"
+                    else
+                        bootType="UEFI"
+                    fi
+                fi 
+                if [[ "$lineRead" == *"SelfDevicePath"* ]]; then
+                    bootDeviceUUID="${lineRead##*\\HD}"
+                    bootDeviceUUID="${bootDeviceUUID#*,}"
+                    bootDeviceUUID="${bootDeviceUUID#*,}"
+                    bootDeviceUUID="${bootDeviceUUID%%,*}"
+
+                    # Translate Device UUID to mountpoint
+                    local identifier=$( "$partutil" --search-uuid $bootDeviceUUID )
+                    mountpoint=$( "$partutil" --show-mountpoint "$identifier" )
+                    if [ "$mountpoint" == "" ]; then
+                        # check against unmounted ESP list
+                        if [ -f "$espList" ]; then
+                            oIFS="$IFS"; IFS=$'\r\n'
+                            while read -r line
+                            do
+                                if [[ "$line" == *@U ]]; then
+                                    if [ "$identifier" == "${line%@*}" ]; then
+                                        mountpoint="${identifier} (Unmounted ESP)"
+                                    fi
+                                fi
+                            done < "$espList"
+                            IFS="$oIFS"
+                        else
+                            if [[ "$identifier" == *$gESPMountPrefix* ]]; then
+                                mountpoint="/Volumes/EFI"
+                            fi
+                        fi
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}mountpoint: $mountpoint"
+                    fi
+                fi
+
+                if [[ "$lineRead" == *"config.plist at path:"* ]]; then
+                    configOem="${lineRead##*Using }"
+                    configOem="${configOem% config.plist*}"
+                fi
+
+                if [[ "$lineRead" == *"config.plist loaded: Success"* ]]; then
+                    configPlistFilePath="${lineRead%config.plist*}"
+                    configPlistFilePath=$( echo "${configPlistFilePath}" | cut -c 15- )
+                    configPlistFilePath="$configPlistFilePath"
+                fi
+
+                if [[ "$lineRead" == *"Default theme"* ]]; then
+                    configPlistThemeEntry="${lineRead##*: }"
+                    themeAskedForTitle="$configPlistThemeEntry"
+                fi
+
+                if [[ "$lineRead" == *"Loading nvram.plist"* ]]; then
+                    volume="${lineRead#*\'}"
+                    volume="${volume%\'*}"
+                fi
+
+                if [[ "$lineRead" == *"Adding Key: Clover.Theme:"* ]]; then
+                    # Remove any trailing spaces
+                    nvramThemeEntry=$( echo "${lineRead##*Data:}" | sed 's/ *$//g' )
+                    # Check for older style boot log
+                    if [ "${nvramThemeEntry:0:5}" != " Size" ]; then
+                        nvramThemeEntry="${nvramThemeEntry// /\\x}"
+                        nvramThemeEntry="$nvramThemeEntry\\n"
+                        nvramThemeEntry=$( printf "$nvramThemeEntry" )
+                        nvramReadFrom="\/Volumes\/${volume}\/nvram.plist"
+                        themeAskedForTitle="$nvramThemeEntry"
+                    else
+                        nvramThemeEntry="not shown in bootlog"
+                        nvramReadFrom="\/Volumes\/${volume}\/nvram.plist"
+                    fi
+                fi
+                
+                if [[ "$lineRead" == *"chosen from nvram"* ]]; then
+                    themefromNvram="${lineRead##*theme }"
+                    themefromNvram=$( echo "${themefromNvram%chosen from*}" | sed 's/ *$//g' )
+                    printf 'Theme read from NVRAM: %s\n' "$themefromNvram"
+                    if [[ "$lineRead" == *"absent"* ]]; then
+                        themeExist="No"
+                        #printf '* %s does not exist!\n' "$themefromNvram"
+                    fi
+                fi
+
+                if [[ "$lineRead" == *"no default theme"* ]]; then
+                    if [[ "$lineRead" == *"get random"* ]]; then
+                        printf 'Theme to be used=random\n'
+                    fi
+                fi
+
+                if [[ "$lineRead" == *"Using theme"* ]]; then
+                    usingTheme="${lineRead#*\'}"
+                    usingTheme="${usingTheme%\'*}"
+                    #printf 'Using theme: %s\n' "$usingTheme"
+                    themeUsedPath="${lineRead#*(}"
+                    themeUsedPath="${themeUsedPath%)*}"
+                fi
+        
+                if [[ "$lineRead" == *"defined in NVRAM found"* ]]; then
+                    nvramThemeEntry="${lineRead#*theme }"
+                    nvramThemeEntry="${nvramThemeEntry% defined*}"
+                    if [ "$nvramReadFrom" == "" ]; then
+                        nvramReadFrom="Native NVRAM"
+                    fi
+                    themeAskedForTitle="$nvramThemeEntry"
+                fi
+
+                if [[ "$lineRead" == *"Choosing theme"* ]]; then
+                    themeUsedChosen="${lineRead##*Choosing theme }"
+                fi
+
+                if [[ "$lineRead" == *"no themes available, using embedded"* ]]; then
+                    #printf 'no themes available, using embedded\n'
+                    usingEmbedded=0
+                    themeExist="No"
+                fi
+
+            done < "$bootLogFile"
+
+            if [ $usingEmbedded -eq 0 ]; then
+                themeUsedPath="internal"
+                themeUsedChosen="embedded"
+            fi
+
+            if [ "$themeAskedForTitle" == "$usingTheme" ]; then
+                themeAskedForPath="$themeUsedPath"
+            else
+                themeAskedForPath="${configPlistFilePath}Themes\${themeAskedForTitle}"
+            fi
+
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Read Boot Log"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Clover Revision=$revision"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Boot Type=$bootType"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}bootDeviceUUID=$bootDeviceUUID"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist OEM=$configOem"    
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist file path: $configPlistFilePath"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist theme entry: $configPlistThemeEntry"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}NVRAM read from: $nvramReadFrom"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}NVRAM theme entry: $nvramThemeEntry"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme asked for path: $themeAskedForPath"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme asked for exist: $themeExist"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme used path: $themeUsedPath"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme used chosen: $themeUsedChosen"
+
+            #Escape backslashes
+            mountpoint=$( echo "$mountpoint" | sed 's/\//\\\//g' )
+            configPlistFilePath=$( echo "$configPlistFilePath" | sed 's/\\/\\\//g' )
+            themeUsedPath=$( echo "$themeUsedPath" | sed 's/\\/\\\//g' )
+            themeAskedForPath=$( echo "$themeAskedForPath" | sed 's/\\/\\\//g' )
+        
+            # Create bootlog html
+            bootlogHtml="        <div id=\"bandHeader\"><span class=\"infoTitle\">Clover<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover Revision:<\/span><span class=\"infoBody\">${revision}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">Boot Type:<\/span><span class=\"infoBody\">${bootType}<\/span><\/div>\
+        <\/div>\
+        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">UUID:<\/span><span class=\"infoBody\">${bootDeviceUUID}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpoint}<\/span><\/div>\
+        <\/div>\
+        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${configPlistFilePath}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBody\">${configPlistThemeEntry}<\/span><\/div>\
+        <\/div>\
+        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${nvramReadFrom}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBody\">${nvramThemeEntry}<\/span><\/div>\
+        <\/div>\
+        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${themeAskedForPath}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">exist?<\/span><span class=\"infoBody\">${themeExist}<\/span><\/div>\
+        <\/div>\
+        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${themeUsedPath}<\/span><\/div>\
+            <div id=\"bandColumnRight\"><span class=\"infoTitle\">Chosen:<\/span><span class=\"infoBody\">${themeUsedChosen}<\/span><\/div>\
+        <\/div>"
+
+            # Insert bootlog Html in to placeholder
+            WriteToLog "Inserting bootlog HTML in to managethemes.html"
+            LANG=C sed -ie "s/<!--INSERT_BOOTLOG_INFO_HERE-->/${bootlogHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
+
+            # Clean up
+            if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
+                rm "${PUBLIC_DIR}"/managethemes.htmle
+            fi
+
+            # Add messages in to log for initialise.js to detect.
+            if [ $check -eq 0 ]; then
+                WriteToLog "CTM_BootlogOK"
+            else
+                canHideClover=0
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}boot.log html failed to be inserted".
+            fi
+        else
+            canHideClover=0
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found boot.log but Not Clover."
+        fi
+    else
+        canHideClover=0
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}boot.log was not found in ioreg".
+    fi
+    
+    if [ $canHideClover -eq 0 ]; then
+        WriteToLog "CTM_BootlogFail"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting gBootlogState to Hide"
+        gBootlogState="Hide"
+    fi
+}
 
 
 # =======================================================================================
@@ -2403,6 +2655,7 @@ CleanUp()
     RemoveFile "$logBashToJs"
     RemoveFile "$updateScript"
     RemoveFile "$espList"
+    RemoveFile "$bootLogFile"
     
     if [ -d "$tmp_dir" ]; then
         rm -rf "$tmp_dir"
@@ -2462,6 +2715,7 @@ uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
 findThemeDirs="${SCRIPTS_DIR}/findThemeDirs.sh"
 gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
 remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
+bootLogFile="${TMPDIR}/boot.log"
 debugIndent="    "
 gThumbSizeX=0
 gThumbSizeY=0
@@ -2473,6 +2727,7 @@ gEspMounted=0
 gitCmd=""
 gESPMountPrefix="ctmTempMp"
 gSnow="On"
+gBootlogState="Open"
 
 export zeroUUID="00000000-0000-0000-0000-000000000000"
 export partutil="$TOOLS_DIR"/partutil
@@ -2507,7 +2762,7 @@ IsGitInstalled
 
 # Only continue if git is installed
 if [ "$gitCmd" != "" ]; then
-
+        
     # Was this script called from a script or the command line
     identityCallerCheck=`ps -o stat= -p $$`
     if [ "${identityCallerCheck:1:1}" == "+" ]; then
@@ -2589,7 +2844,7 @@ if [ "$gitCmd" != "" ]; then
         #tmp_dir=$(mktemp -d -t theme_manager)
         #ReadRepoUrlList
 
-        # Begin        
+        # Begin
         "$findThemeDirs" &
         RefreshHtmlTemplates "managethemes.html"
         IsRepositoryLive
@@ -2605,7 +2860,7 @@ if [ "$gitCmd" != "" ]; then
         if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html ]; then
             rm "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html
         fi
-        
+
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
         WriteToLog "CTM_ThemeDirsScan"
@@ -2619,6 +2874,7 @@ if [ "$gitCmd" != "" ]; then
         fi
         ReadPrefsFile
         CleanInstalledThemesPrefEntries
+        ReadBootLogAndInsertHtml
         SendUIInitData
 
         # Read current Clover.Theme Nvram variable and send to UI.
@@ -2632,8 +2888,8 @@ if [ "$gitCmd" != "" ]; then
         # Write string to mark the end of init file.
         # initialise.js looks for this to signify initialisation is complete.
         # At which point it then redirects to the main UI page.
-        WriteToLog "Complete!"      
-        
+        WriteToLog "Complete!"
+
         # Feedback for command line
         echo "Initialisation complete. Entering loop."
 
@@ -2759,7 +3015,14 @@ if [ "$gitCmd" != "" ]; then
                 RespondToUserSnowToggle "$logLine"
                 
             elif [[ "$logLine" == *started* ]]; then
-                ClearTopOfMessageLog "$logJsToBash"  
+                ClearTopOfMessageLog "$logJsToBash" 
+                
+            # Has user chosen to show/hide bootlog info?
+            elif [[ "$logLine" == *CTM_bootlog* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                # remove everything up until, and including, the first @
+                gBootlogState="${logLine#*@}"
+                UpdatePrefsKey "ShowHideBootlog" "$gBootlogState"
             fi
 
             # Get process ID of parent

@@ -1,5 +1,5 @@
 // A script for Clover Theme Manager
-// Copyright (C) 2014 Blackosx
+// Copyright (C) 2014-2015 Blackosx
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.74.9
+//Version=0.75.0
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -180,6 +180,8 @@ function printLogtoScreen()
                            SetMessageBoxText('Attention: git is not installed' , 'git is a requirement for this app and it cannot continue without it.<br><br>To install only git, you can download an installer from <a href="http://git-scm.com" target="_blank">http://git-scm.com</a>, double click the .dmg and run the .pkg.<br><br>Alternatively you can install the Xcode command line developer tools by loading up Terminal and typing <b>xcode-select --install</b><br><br>This app will quit once you close this box.');
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
+                           // Send native notification
+                           sendNotification("Problem: git is not installed.");
 
                 } else if (/CTM_HTMLTemplateOK/i.test(splitContent[i])) {
                            $("#check_HtmlTemplate").append( "  \u2713" );
@@ -196,6 +198,8 @@ function printLogtoScreen()
                            SetMessageBoxText('Attention: Repository' , 'The remote Clover Theme repository is not responding. This app cannot continue. Exiting.');
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
+                           // Send native notification
+                           sendNotification("Problem: The remote Clover Theme repository is not responding.");
                            terminate();
                            
                 } else if (/CTM_SupportDirOK/i.test(splitContent[i])) {
@@ -253,6 +257,12 @@ function printLogtoScreen()
                 } else if (/CTM_ReadPrefsCreate/i.test(splitContent[i])) {
                            $("#status_ReadPrefs").text( 'Create prefs file' ).append( '<span class="checkMark" id="check_ReadPrefs">  \u2713</span>' );
                            $("#status_ReadPrefs").css("color","#FFF");
+                           
+                } else if (/CTM_BootlogOK/i.test(splitContent[i])) {
+                           $("#check_ReadBootlog").append( "  \u2713" );
+                           $("#status_ReadBootlog").css("color","#FFF"); 
+                } else if (/CTM_BootlogFail/i.test(splitContent[i])) {
+                           $("#status_ReadBootlog").css("color","#DD171B");
                            
                 } else if (/CTM_InitInterface/i.test(splitContent[i])) {
                            $("#check_InitMainUI").append( "  \u2713" );

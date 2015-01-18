@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # A script for Clover Theme Manager
-# Copyright (C) 2014 Blackosx
+# Copyright (C) 2014-2015 Blackosx
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ do
     toBeChecked=0
     for (( e=0; e<${#espFound[@]}; e++ ))
     do
-        [[ ! ${espFound[$e]} == *${gpt[$s]}* ]] && toBeChecked=1
+        [[ ${espFound[$e]} == *${gpt[$s]}* ]] && toBeChecked=1
     done
 
     if [ $toBeChecked -eq 0 ]; then
