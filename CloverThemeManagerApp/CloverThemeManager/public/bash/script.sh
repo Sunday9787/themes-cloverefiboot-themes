@@ -972,7 +972,7 @@ IsRepositoryLive()
     local noConnection=1
     
     # First check if there is a network connection. Check IPv4
-    local defaultGateway=$( netstat -r | grep default | awk '{print $2}' )
+    local defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
     if [ "$defaultGateway" != "" ]; then
         dotCheck=$( echo "$defaultGateway" | sed 's/[0-9]*//g' )
         if [ "$dotCheck" == "..." ]; then
