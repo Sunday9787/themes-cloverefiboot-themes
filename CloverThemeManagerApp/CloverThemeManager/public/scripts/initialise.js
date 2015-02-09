@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.0
+//Version=0.75.1
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -158,7 +158,7 @@ function printLogtoScreen()
     if (fileContent != 0) {
     
         // Print line by line
-        splitContent = fileContent.split("@");
+        splitContent = fileContent.split("\n");
         lastLine = splitContent[splitContent.length-2];
           
         if (lastLine != prevLastLine) {
@@ -181,7 +181,7 @@ function printLogtoScreen()
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
                            // Send native notification
-                           sendNotification("Problem: git is not installed.");
+                           //sendNotification("Problem: git is not installed.");
 
                 } else if (/CTM_HTMLTemplateOK/i.test(splitContent[i])) {
                            $("#check_HtmlTemplate").append( "  \u2713" );
@@ -199,8 +199,7 @@ function printLogtoScreen()
                            $("#AnimatedBar").css("display","none");
                            ShowMessageBox();
                            // Send native notification
-                           sendNotification("Problem: The remote Clover Theme repository is not responding.");
-                           terminate();
+                           //sendNotification("Problem: The remote Clover Theme repository is not responding.");
                            
                 } else if (/CTM_SupportDirOK/i.test(splitContent[i])) {
                            $("#check_SupportDir").append( "  \u2713" );
@@ -258,9 +257,27 @@ function printLogtoScreen()
                            $("#status_ReadPrefs").text( 'Create prefs file' ).append( '<span class="checkMark" id="check_ReadPrefs">  \u2713</span>' );
                            $("#status_ReadPrefs").css("color","#FFF");
                            
+                } else if (/CTM_BootDeviceMBR/i.test(splitContent[i])) {
+                           ChangeMessageBoxHeaderColour("blue");
+                           SetMessageBoxText('Attention: Boot Device' , 'Clover was loaded from an MBR partitioned device. This device will need to be detected before you can manage the themes.<br><br>Please enter your password for running fdisk.');
+                           $("#AnimatedBar").css("display","none");
+                           HideMessageBoxClose();
+                           ShowMessageBox();
+                } else if (/CTM_BootDeviceGPT/i.test(splitContent[i])) {
+                           ChangeMessageBoxHeaderColour("blue");
+                           SetMessageBoxText('Attention: Boot Device' , 'Clover was loaded from an EFI system partition which is currently unmounted. It will need to be mounted to manage the themes.<br><br>Please enter your password to mount it.');
+                           $("#AnimatedBar").css("display","none");
+                           HideMessageBoxClose();
+                           ShowMessageBox();
+                } else if (/CTM_BootDeviceCloseWindow/i.test(splitContent[i])) {
+                           CloseMessageBox();
+                           
                 } else if (/CTM_BootlogOK/i.test(splitContent[i])) {
                            $("#check_ReadBootlog").append( "  \u2713" );
                            $("#status_ReadBootlog").css("color","#FFF"); 
+                } else if (/CTM_BootlogMissing/i.test(splitContent[i])) {
+                           $("#status_ThemeDirs").text( 'Theme directories' ).append( '<span class="checkMark" id="check_ReadBootlog">  \u2713</span>' );
+                           $("#status_ThemeDirs").css("color","#BBB"); // Change to lighter grey, not red.
                 } else if (/CTM_BootlogFail/i.test(splitContent[i])) {
                            $("#status_ReadBootlog").css("color","#DD171B");
                            

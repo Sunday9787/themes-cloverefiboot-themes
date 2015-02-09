@@ -45,6 +45,11 @@
     
 <div id="header">
         <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
+        
+        <!--INSERT_BOOTLOG_BAND_TITLE_HERE-->
+  
+        <!--INSERT_BOOTLOG_INFO_HERE-->
+        
         <div id="PathSelector">
             <select name="dropdown" id="partitionSelect" class="custom-dropdown">
                 <!--INSERT_MENU_OPTIONS_HERE-->
@@ -65,7 +70,7 @@
             <span class="textHeaderSmall">Free Space:</span>&nbsp;<span class="textFreeSpace">-</span>
         </div> <!-- End FreeSpace -->        
         
-        <div id="HeaderBar">
+        <div id="HeaderBar" class="blackFill">
             <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
             <div class="spacerButton"">&nbsp;</div>
             <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
@@ -86,37 +91,13 @@
      
      
 <div id="footer">
-
-    <div id="BootLogTitleBar" class="bootlogBandFill">
-        <span class="titleBarText">Last boot: Bootlog theme info</span>
-    </div> <!-- End BootLogContainer -->
-  
-    <div id="BootLogContainer" class="nvramFillNone">
-        <!--INSERT_BOOTLOG_INFO_HERE-->
-    </div> <!-- End BootLogContainer -->
-
-    <div id="NvramBand" class="nvramFillNone">
     
-        <div id="NvramInfo">
-            <span class="textBody" id="currentNVRAMvar">NVRAM theme:</span>
-        </div> <!-- End NvramInfo -->
-        
-        <div id="NvramThemeMatch">
-            <span class="textBody" id="currentNVRAMMessage"></span>
-        </div> <!-- End NvramThemeMatch -->
-
-        <!--<p class="textBody">Change to:</p>-->
-                    
-        <div id="NvramThemeSelector">
-            <select name="dropdown_config" id="installedThemeDropDown" class="nvram-dropdown">
-                <!--Menu entres will be appended here by cloverthememanager.js -->
-            </select>
-        </div> <!-- End NvramThemeSelector -->
+    <!--INSERT_NVRAM_MESSAGE_BAND_HERE-->
     
-    </div> <!-- End NvramBand --> 
+    <!--INSERT_CONTROL_OPTIONS_BAND_HERE-->
 
     <div id="FooterLinks">
-        <p class="textFooter"><a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>
+        <p class="textFooter"><a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>
     </div> <!-- End FooterLinks -->
     
 </div> <!-- End footer --> 

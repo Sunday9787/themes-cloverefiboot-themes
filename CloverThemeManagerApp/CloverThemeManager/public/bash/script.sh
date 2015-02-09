@@ -22,10 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.8"
-
-export DEBUG=1
-#set -x
+VERS="0.75.9"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -36,14 +33,16 @@ export DEBUG=1
 # ---------------------------------------------------------------------------------------
 CreateSymbolicLinks()
 {
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateSymbolicLinks()"
+    
     local checkCount=0
     
     # Create symbolic link to local images
-    WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
     ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR" && ((checkCount++))
     
     # Create symbolic link to local help page
-    WriteToLog "Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
     ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR" && ((checkCount++))
     
     # Add messages in to log for initialise.js to detect.
@@ -55,27 +54,9 @@ CreateSymbolicLinks()
 }
 
 # ---------------------------------------------------------------------------------------
-WriteToLog() {
-    if [ $COMMANDLINE -eq 0 ]; then
-        printf "@${1}@\n" >> "$logFile"
-    else
-        printf "@${1}@\n"
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-WriteLinesToLog() {
-    if [ $COMMANDLINE -eq 0 ]; then
-        printf "@===================================@\n" >> "$logFile"
-    else
-        printf "@===================================@\n"
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-SendToUI() {
-    echo "${1}" >> "$logBashToJs"
-}
+#SendToUI() {
+#    echo "${1}" >> "$logBashToJs"
+#}
 
 # ---------------------------------------------------------------------------------------
 SendToUIUVersionedDir() {
@@ -160,18 +141,20 @@ ResetInternalDiskArrays()
     unset duContent
     unset duPartitionGuid
     unset themeDirPaths
-    unset unmountedEsp
 }
 
 # ---------------------------------------------------------------------------------------
 RenameInternalESPMountPointToEFI()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RenameInternalESPMountPointToEFI()"
+
     # Rename internal ESP internal mountpoint in supplied path to EFI
     if [[ "$1" == *"$gESPMountPrefix"* ]]; then
         local tmpVolume="${1%/EFI*}"
         local tmpPath="${1##*$tmpVolume}"
         local finalPath="/Volumes/EFI${tmpPath}"
-        [[ DEBUG -eq 1 ]] && WriteToLog "Renaming for UI $1 to $finalPath"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Renaming for UI $1 to $finalPath"
     else
         finalPath="$1"
     fi
@@ -180,7 +163,7 @@ RenameInternalESPMountPointToEFI()
 
 # ---------------------------------------------------------------------------------------
 MaintainInstalledThemeListInPrefs()
-{
+{    
     # This routine creates the InstalledThemes array which is
     # then written to the user's preferences file.
     
@@ -191,6 +174,9 @@ MaintainInstalledThemeListInPrefs()
     # When themes are UnInstalled/deleted by the user, the pref
     # entry is also removed.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MaintainInstalledThemeListInPrefs()"
+        
     chmod 755 "$gUserPrefsFile".plist 
 
     openArray="<array>"
@@ -228,14 +214,14 @@ MaintainInstalledThemeListInPrefs()
     # Is there a newly installed theme to add?
     # And on a partition with a unique partition GUID?
     if [ "$gNewInstalledThemeName" != "" ] && [ "$gNewinstalledThemePartitionGUID" != "$zeroUUID" ]; then
-        WriteToLog "Newly installed theme to be added to prefs: $gNewInstalledThemeName"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Newly installed theme to be added to prefs: $gNewInstalledThemeName"
         # Is this new theme already installed elsewhere?
         local themeToAppend=0
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
             if [ "$gNewInstalledThemeName" == "${installedThemeName[$n]}" ]; then
                 themeToAppend=1
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}$gNewInstalledThemeName is already in prefs - will append to entry"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNewInstalledThemeName is already in prefs - will append to entry"
                 break
             fi
         done
@@ -244,7 +230,7 @@ MaintainInstalledThemeListInPrefs()
     # Is there an UnInstalled theme to remove?
     local dontReAddThemeId=9999
     if [ "$gUnInstalledThemeName" != "" ] && [ "$gNewinstalledThemePartitionGUID" != "$zeroUUID" ]; then
-        WriteToLog "UnInstalled theme to be removed: $gUnInstalledThemeName"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}UnInstalled theme to be removed: $gUnInstalledThemeName"
         
         # Check for ESP mountpoint
         local pathToCheck
@@ -260,8 +246,9 @@ MaintainInstalledThemeListInPrefs()
         # Loop though array of installed themes to find ID of theme to remove.
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do 
-            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && [ "${installedThemePath[$n]}" == "$pathToCheck" ] && [ "${installedThemePartitionGUID[$n]}" == "$gUninstalledThemePartitionGUID" ]; then
-                WriteToLog "Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemePartitionGUID[$n]}"
+            if [ "${installedThemeName[$n]}" == "$gUnInstalledThemeName" ] && [ "${installedThemePath[$n]}" == "$pathToCheck" ] && \
+               [ "${installedThemePartitionGUID[$n]}" == "$gUninstalledThemePartitionGUID" ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Will remove ${installedThemeName[$n]},${installedThemePath[$n]},${installedThemePartitionGUID[$n]}"
                 dontReAddThemeId=$n
                 ResetUnInstalledThemeVars
                 break
@@ -272,7 +259,7 @@ MaintainInstalledThemeListInPrefs()
     # Construct InstalledThemes array
     arrayString=""
     lastAddedThemeName=""
-    WriteToLog "Updating InstalledThemes prefs"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Updating InstalledThemes prefs"
     for ((n=0; n<${#installedThemeName[@]}; n++ ));
     do
          # Don't write back a theme if marked to be removed
@@ -287,7 +274,7 @@ MaintainInstalledThemeListInPrefs()
 
                     # Check if there's a newly installed theme to append to this current array
                     if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Appending $gNewInstalledThemeName dictionary to existing array."
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Appending $gNewInstalledThemeName dictionary to existing array."
                         InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID" ""
                         themeToAppend=0
                         ResetNewlyInstalledThemeVars
@@ -313,7 +300,7 @@ MaintainInstalledThemeListInPrefs()
     # Did the loop finish before appending a newly installed theme to an existing them entry?
     # Check if there's a newly installed theme to append to this current array
     if [ $themeToAppend -eq 1 ] && [ "$lastAddedThemeName" == "$gNewInstalledThemeName" ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Append didn't happen. Attempting to appending $gNewInstalledThemeName now."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Append didn't happen. Attempting to appending $gNewInstalledThemeName now."
         InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID"
         themeToAppend=0
         ResetNewlyInstalledThemeVars
@@ -331,7 +318,7 @@ MaintainInstalledThemeListInPrefs()
         arrayString="${arrayString}<key>${gNewInstalledThemeName}</key>"
         # open array
         arrayString="${arrayString}$openArray"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Append still hasn't completed. Appending $gNewInstalledThemeName now."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Append still hasn't completed. Appending $gNewInstalledThemeName now."
         InsertDictionaryIntoArray "$gNewInstalledThemePath" "$gNewInstalledThemePathDevice" "$gNewinstalledThemePartitionGUID"
         # close array
         arrayString="${arrayString}$closeArray"
@@ -340,12 +327,12 @@ MaintainInstalledThemeListInPrefs()
     fi
     
     # Delete existing and write new InstalledThemes prefs key
-    [[ DEBUG -eq 1 ]] && WriteToLog "Removing previous InstalledThemes array from prefs file"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous InstalledThemes array from prefs file"
     defaults delete "$gUserPrefsFile" "InstalledThemes"
     
     # Only add back if there's something to write.
     if [ "$lastAddedThemeName" != "" ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "Inserting InstalledThemes array in to prefs file"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting InstalledThemes array in to prefs file"
         defaults write "$gUserPrefsFile" InstalledThemes -array "$openDict$arrayString$closeDict"
     fi
     chmod 755 "$gUserPrefsFile".plist 
@@ -355,6 +342,9 @@ MaintainInstalledThemeListInPrefs()
 # ---------------------------------------------------------------------------------------
 UpdatePrefsKey()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}UpdatePrefsKey()"
+    
     local passedKey="$1"
     local passedValue="$2"
     
@@ -365,7 +355,7 @@ UpdatePrefsKey()
     
     if [ -f "$gUserPrefsFile".plist ]; then
         defaults delete "$gUserPrefsFile" "$passedKey"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing prefs key $passedKey = $passedValue"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Writing prefs key $passedKey = $passedValue"
         defaults write "$gUserPrefsFile" "$passedKey" "$passedValue"
     else
         WriteToLog "Error! ${gUserPrefsFile}.plist not found."
@@ -382,6 +372,9 @@ ClearTopOfMessageLog()
 # ---------------------------------------------------------------------------------------
 RunThemeAction()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RunThemeAction()"
+    
     local passedAction="$1" # Will be either Install, UnInstall or Update
     local themeTitleToActOn="$2"
     local successFlag=1
@@ -390,25 +383,25 @@ RunThemeAction()
     local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
     case "$passedAction" in
-                "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}"
+                "Install")  [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}"
                             local successFlag=1
     
                             # Only clone the theme from the Clover repo if not already installed
                             # in which case the bare repo will already be in the local support dir.
                             if [ ! -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
-                                WriteToLog "Creating a bare git clone of $themeTitleToActOn"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating a bare git clone of $themeTitleToActOn"
                                 local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/g' )
 
                                 cd "${WORKING_PATH}/${APP_DIR_NAME}"
                                 feedbackCheck=$("$gitCmd" clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
-                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Install git clone: $feedbackCheck"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Install git clone: $feedbackCheck"
                                 
                             else
                                 WriteToLog "Bare git clone of $themeTitleToActOn already exists. Will checkout from that."
                             fi
                             
                             if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
-                                WriteToLog "Checking out bare git clone of ${themeTitleToActOn}."
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking out bare git clone of ${themeTitleToActOn}."
                                 
                                 # Theme currently gets checked out as /path/to/EFI/Clover/Themes/<theme>/themes/<theme>/
                                 # Desired path is                     /path/to/EFI/Clover/Themes/<theme>
@@ -416,27 +409,27 @@ RunThemeAction()
                                 if [ -d "$UNPACKDIR" ]; then
                                     cd "${WORKING_PATH}/${APP_DIR_NAME}"
                                     feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout . 2>&1 )
-                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout .: $feedbackCheck"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}checkout .: $feedbackCheck"
                                     feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout HEAD -- 2>&1 ) && successFlag=0
-                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout HEAD --: $feedbackCheck"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}checkout HEAD --: $feedbackCheck"
                                 else
-                                    WriteToLog "Error. UnPack dir does not exist."
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error. UnPack dir does not exist."
                                 fi
                                 
                                 # Read current hash from packed-refs file.
                                 local currentThemeHash=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git/packed-refs | grep refs/heads/master )
                                 currentThemeHash="${currentThemeHash% refs*}"
-                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash=$currentThemeHash"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash=$currentThemeHash"
                             fi
 
                             if [ ${successFlag} -eq 0 ]; then 
                             
                                 # Write hash to file in to unpacked theme dir.
                                 local addFile=0
-                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
                                 echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
                                 if [ $addFile -eq 1 ]; then
-                                    WriteToLog "${debugIndent}Added hash successfully"
+                                    WriteToLog "${debugIndentTwo}Added hash successfully"
                                     chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
                                     # Enable glob to match dot files.
                                     shopt -s dotglob
@@ -447,7 +440,8 @@ RunThemeAction()
 
                                 if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                     if [ $(CheckOsVersion) -ge 13 ]; then
-                                        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                                                       /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                     else
                                         successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                     fi  
@@ -473,7 +467,7 @@ RunThemeAction()
                             fi
                             ;;
                             
-               "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
+               "UnInstall") [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
 
                             # Check if theme needs elevated privileges to remove
                             CheckPathIsWriteable "${TARGET_THEME_DIR}/$themeTitleToActOn"
@@ -481,7 +475,8 @@ RunThemeAction()
 
                             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                 if [ $(CheckOsVersion) -ge 13 ]; then
-                                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                                                   /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                 else
                                     successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                 fi 
@@ -493,29 +488,29 @@ RunThemeAction()
                             fi
                             ;;
                  
-                "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
+                "Update")   [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
 
                             # Check if bare git repo for this theme exists and delete if yes.
                             if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
-                                WriteToLog "bare repo for $themeTitleToActOn exists. Deleting"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bare repo for $themeTitleToActOn exists. Deleting"
                                 cd "${WORKING_PATH}/${APP_DIR_NAME}"
                                 rm -rf "$themeTitleToActOn".git
                             fi
 
                             # Clone theme from repo.
-                            WriteToLog "Creating a bare git clone of $themeTitleToActOn"
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating a bare git clone of $themeTitleToActOn"
                             local themeNameWithSpacesFixed=$( echo "$themeTitleToActOn" | sed 's/ /%20/g' )
                             cd "${WORKING_PATH}/${APP_DIR_NAME}"
                             feedbackCheck=$("$gitCmd" clone --progress --depth=1 --bare "$remoteRepositoryUrl"/themes.git/themes/"${themeNameWithSpacesFixed}"/theme.git "$themeTitleToActOn".git 2>&1 )
-                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Install git clone: $feedbackCheck"
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Install git clone: $feedbackCheck"
 
                             # Checkout the bare repo to the unpack dir then replace on target dir.
                             if [ -d "${TARGET_THEME_DIR}"/"$themeTitleToActOn" ] && [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
 
-                                WriteToLog "Force checking out bare git clone of ${themeTitleToActOn}."
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Force checking out bare git clone of ${themeTitleToActOn}."
                                 cd "${WORKING_PATH}/${APP_DIR_NAME}"
                                 feedbackCheck=$("$gitCmd" --git-dir="$themeTitleToActOn".git --work-tree="$UNPACKDIR" checkout --force 2>&1) && successFlag=0
-                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}checkout git clone: $feedbackCheck"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}checkout git clone: $feedbackCheck"
                                 
                                 if [ $successFlag -eq 0 ]; then
 
@@ -523,14 +518,14 @@ RunThemeAction()
                                     local currentThemeHash=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git/packed-refs | grep refs/heads/master )
                                     #currentThemeHash="${currentThemeHash% refs*}"
                                     currentThemeHash="${currentThemeHash:0:40}"
-                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash=$currentThemeHash"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash=$currentThemeHash"
 
                                     # Write hash to file in to unpacked theme dir.
                                     local addFile=0
-                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
                                     echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
                                     if [ $addFile -eq 1 ]; then
-                                        WriteToLog "${debugIndent}Added hash successfully"
+                                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Added hash successfully"
                                         chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
                                         # Enable glob to match dot files.
                                         shopt -s dotglob
@@ -540,20 +535,21 @@ RunThemeAction()
                             
                                     if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                        if [ $(CheckOsVersion) -ge 13 ]; then
-                                            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                                                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                         else
                                             successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
                                         fi
                                     else
                                         if [ -d "$targetThemeDir" ]; then
                                             chckDir=0
-                                            WriteToLog "Removing existing $targetThemeDir files"
+                                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing existing $targetThemeDir files"
                                             rm -rf "$targetThemeDir"/* && chckDir=1
                                             if [ $chckDir -eq 1 ]; then
                                                 # Move unpacked files to target theme path.
                                                 cd "$UNPACKDIR"/themes
                                                 if [ -d "$themeTitleToActOn" ]; then
-                                                    WriteToLog "Moving updated $themeTitleToActOn theme files to $targetThemeDir"
+                                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Moving updated $themeTitleToActOn theme files to $targetThemeDir"
                                                     mv "$themeTitleToActOn"/* "$targetThemeDir" && successFlag=0
                                                 fi
                                             fi
@@ -574,12 +570,12 @@ RunThemeAction()
     # Was install operation a success?
     if [ $successFlag -eq 0 ]; then
         if [ $COMMANDLINE -eq 0 ]; then
-            WriteToLog "$themeTitleToActOn : ${passedAction} : Success"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Success@${passedAction}@$themeTitleToActOn"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$themeTitleToActOn : ${passedAction} : Success"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Success@${passedAction}@$themeTitleToActOn"
             SendToUI "Success@${passedAction}@$themeTitleToActOn"
             
             if [ "$passedAction" == "Install" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
-                WriteToLog "Saving settings for newly installed theme."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for newly installed theme."
                 # Save new theme details for adding to prefs file
                 gNewInstalledThemeName="$themeTitleToActOn"
                 gNewInstalledThemePath="$TARGET_THEME_DIR"
@@ -588,7 +584,7 @@ RunThemeAction()
             fi
 
             if [ "$passedAction" == "UnInstall" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
-                WriteToLog "Saving settings for UnInstalled theme."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for UnInstalled theme."
                 # Save new theme details for adding to prefs file
                 gUnInstalledThemeName="$themeTitleToActOn"
                 gUnInstalledThemePath="$TARGET_THEME_DIR"
@@ -607,8 +603,8 @@ RunThemeAction()
         return 0
     else
         if [ $COMMANDLINE -eq 0 ]; then
-            WriteToLog "$themeTitleToActOn : ${passedAction} : Fail"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Fail@${passedAction}@$themeTitleToActOn"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$themeTitleToActOn : ${passedAction} : Fail"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Fail@${passedAction}@$themeTitleToActOn"
             SendToUI "Fail@${passedAction}@$themeTitleToActOn"
         fi
         return 1
@@ -618,20 +614,22 @@ RunThemeAction()
 # ---------------------------------------------------------------------------------------
 CreateThemeListHtml()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateThemeListHtml()"
+    
     # Build html for each theme.    
-    WriteToLog "Creating html theme list."
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Number of theme titles=${#themeTitle[@]}"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Number of theme description=${#themeDescription[@]}"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Number of theme author=${#themeAuthor[@]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating html theme list."
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Number of theme titles=${#themeTitle[@]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Number of theme description=${#themeDescription[@]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Number of theme author=${#themeAuthor[@]}"
     
     local imageFormat="png"
     
     if [ ${#themeTitle[@]} -eq ${#themeDescription[@]} ] && [ ${#themeTitle[@]} -eq ${#themeAuthor[@]} ]; then
-        WriteToLog "Found ${#themeTitle[@]} Titles, Descriptions and Authors"
-        WriteLinesToLog
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found ${#themeTitle[@]} Titles, Descriptions and Authors"
         for ((n=0; n<${#themeTitle[@]}; n++ ));
         do
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Creating html for ${themeTitle[$n]} theme"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating html for ${themeTitle[$n]} theme"
             themeHtml="${themeHtml}\
         <div id=\"ThemeBand\" class=\"accordion\">\
         <div id=\"ThemeItems\">\
@@ -647,19 +645,21 @@ CreateThemeListHtml()
         done
         WriteToLog "CTM_ThemeListOK"
     else
-        WriteToLog "Error: Title(${#themeTitle[@]}), Author(${#themeAuthor[@]}), Description(${#themeDescription[@]}) mismatch."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error: Title(${#themeTitle[@]}), Author(${#themeAuthor[@]}), Description(${#themeDescription[@]}) mismatch."
         for ((n=0; n<${#themeTitle[@]}; n++ ));
         do
-            WriteToLog "$n : ${themeTitle[$n]} | ${themeDescription[$n]} | ${themeAuthor[$n]}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$n : ${themeTitle[$n]} | ${themeDescription[$n]} | ${themeAuthor[$n]}"
         done
         WriteToLog "CTM_ThemeListFail"
     fi
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
 InsertThemeListHtmlInToManageThemes()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}InsertThemeListHtmlInToManageThemes()"
+    
     local passedOptionalCommand="$1"
     local check=1
         
@@ -677,7 +677,7 @@ InsertThemeListHtmlInToManageThemes()
     fi
 
     # Insert Html in to placeholder
-    WriteToLog "Inserting HTML in to managethemes.html"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting HTML in to managethemes.html"
     LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
 
     # Clean up
@@ -694,21 +694,130 @@ InsertThemeListHtmlInToManageThemes()
 }
 
 # ---------------------------------------------------------------------------------------
+SetControlOptionHtmlSections()
+{
+    local disabledNvramPlist=""
+    local disabledConfigPlist=""
+    
+    if [ "$gNvramPlistFullPath" != "Native NVRAM" ]; then
+        if [ -f "$gNvramPlistFullPath" ]; then
+            local nvramPlistText="$gNvramPlistFullPath"
+        else
+            local nvramPlistText="$gNvramPlistFullPath (not available)"
+            disabledNvramPlist="disabled"
+        fi
+    fi
+
+    if [ -f "$gConfigPlistFullPath" ]; then
+        local configPlistText="$gConfigPlistFullPath"
+        configPlistText=$( RenameInternalESPMountPointToEFI "$configPlistText" )
+    else
+        local configPlistText="$gConfigPlistFullPath (mountpoint not available)"
+        disabledConfigPlist="disabled"
+    fi
+
+    # Escape paths
+    nvramPlistText=$( echo "$nvramPlistText" | sed 's/\//\\\//g' )
+    configPlistText=$( echo "$configPlistText" | sed 's/\//\\\//g' )
+
+    # Set html sections
+    ctOuterOpen="    <div id=\"changeThemeContainer\">"
+    ctOpen="    <div id=\"changeThemeBand\" class=\"fillDarkerGrey\">"
+    ctBandNvram="        <div class=\"ctOptionTitle\">NVRAM<\/div>\
+            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
+            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\
+            <div class=\"ctOptionSetHeader\">Action:<\/div>\
+            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\">\
+                <!--Menu entries will be appended here by cloverthememanager.js -->\
+            <\/select>"
+    ctBandNvramP="        <div class=\"ctOptionTitle\">${nvramPlistText}<\/div>\
+            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
+            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvramP\"><\/div>\
+            <div class=\"ctOptionSetHeader\">Action:<\/div>\
+            <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\
+                <!--Menu entries will be appended here by cloverthememanager.js -->\
+            <\/select>"
+    ctBandNvramC="        <div class=\"ctOptionTitle\">${configPlistText}<\/div>\
+            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
+            <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\
+            <div class=\"ctOptionSetHeader\">Action:<\/div>\
+            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\
+                <!--Menu entries will be appended here by cloverthememanager.js -->\
+            <\/select>"
+    ctNextBootTheme="        <div id=\"themePredictionTitle\">\
+                <span class=\"predictionText\">Theme determined for next boot from device $TARGET_THEME_DIR_DEVICE:<\/span>\
+        <\/div> <!-- End themePredictionTitle -->\
+        <div id=\"themePredictionTheme\">\
+                <span class=\"predictionText\" id=\"predictionTheme\"><\/span>\
+        <\/div> <!-- End themePredictionTheme -->"        
+    ctClose="    <\/div> <!-- End changeThemeBand -->"
+    ctOuterClose="    <\/div> <!-- End changeThemeContainer -->"       
+}
+
+# ---------------------------------------------------------------------------------------
+CreateControlOptionsHtmlAndInsert()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateControlOptionsHtmlAndInsert()"
+    
+    local check=1
+    SetControlOptionHtmlSections
+    
+    local controlOptionsHtml="${ctOuterOpen}"
+    
+    # Add nvram control band
+    if [[ "$gNvramPlistFullPath" == "Native NVRAM" ]] || [[ "$gBootType" == "Legacy" && $gNvramSave -eq 0 ]]; then
+        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvram}${ctClose}"
+    fi
+
+    # Add nvram.plist control band
+    if [ "$gNvramPlistFullPath" != "" ] && [ "$gNvramPlistFullPath" != "Native NVRAM" ]; then
+        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvramP}${ctClose}"
+    fi
+
+    # Add config.plist control band
+    if [ "$gConfigPlistFullPath" != "" ]; then
+        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvramC}${ctClose}"
+    fi
+    
+    # Add next boot theme prediction band
+    if [ "$gConfigPlistFullPath" != "" ]; then
+        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctNextBootTheme}${ctClose}"
+    fi
+
+    controlOptionsHtml="${controlOptionsHtml}${ctOuterClose}"
+
+    # Insert control options band Html in to placeholder
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting control options band HTML in to managethemes.html"
+    LANG=C sed -ie "s/<!--INSERT_CONTROL_OPTIONS_BAND_HERE-->/${controlOptionsHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
+    
+    # Add messages in to log for initialise.js to detect.
+    if [ $check -eq 0 ]; then
+        WriteToLog "CTM_ControlOptionsOK"
+    else
+        WriteToLog "CTM_ControlOptionsFail"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
 InsertNotificationCodeInToJS()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}InsertNotificationCodeInToJS()"
+    
     local check=1
     
     codeToInsert="macgap.notice.notify({ title: 'Clover Theme Manager', content: messageBody, sound: true});"
     
     # Insert Html in to placeholder
-    WriteToLog "Inserting JS notification code in to cloverthememanager.js"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting JS notification code in to cloverthememanager.js"
     LANG=C sed -ie "s/\/\/ INSERT_NOTIFICATION_CODE_HERE/${codeToInsert}/g" "${PUBLIC_DIR}"/scripts/cloverthememanager.js && check=0
     
     # Add messages in to log for initialise.js to detect.
     if [ $check -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Inserting notification code was successful."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting notification code was successful."
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Inserting notification code failed."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting notification code failed."
     fi
 }
 
@@ -725,46 +834,23 @@ CheckOsVersion()
 # =======================================================================================
 
 
-
 # ---------------------------------------------------------------------------------------
-GetAndCheckUIPassword()
+ResolveMountPointFromGUID()
 {
-    # Commas in the message causes osascript to fail!
-    # So strip any commas before continuing.
-    message=$( echo "$1" | sed 's/,//g' )
-     
-    # revoke sudo permissions
-    sudo -k
-
-    gPw="$( /usr/bin/osascript << EOF -e 'set MyApplVar to do shell script "echo '"${message}"'"' -e 'Tell application "System Events" to display dialog MyApplVar default answer "" with hidden answer with icon 1' -e 'text returned of result' 2>/dev/null)"
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ResolveMountPointFromGUID()"
     
-    # Is result not null AND not empty
-    if [ -n "$gPw" ] && [ ! -z "$gPw" ]; then
-        local userNow=$( echo "$gPw" | sudo -S whoami )
-        if [ "$userNow" == "root" ]; then
-            return 0
-        else
-            return 1
-        fi
-    else
-        gPw="$gUiPwCancelledStr"
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-ResolveMountPointFromUUID()
-{
-    # Resolve volume mountpoint from UUID
+    # Resolve volume mountpoint from GUID
     local mountpoint=""
     
-    # MBR partition scheme does not use UUID's so check
+    # MBR partition scheme does not use GUID's so check
     if [ "$1" != "$zeroUUID" ]; then
         for (( u=0; u<${#themeDirPaths[@]}; u++ ))
         do
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Matching ${duPartitionGuid[$u]} : $1"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Matching ${duPartitionGuid[$u]} : $1"
             if [[ "${duPartitionGuid[$u]}" == "$1" ]]; then
                 mountpoint="${themeDirPaths[$u]}"
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match: Mountpoint=$mountpoint"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match: Mountpoint=$mountpoint"
                 break
             fi
         done
@@ -777,6 +863,9 @@ ResolveMountPointFromUUID()
 # ---------------------------------------------------------------------------------------
 CheckPathIsWriteable()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckPathIsWriteable()"
+
     local passedMountPoint="$1"     
     local isWriteable=1
     
@@ -794,13 +883,15 @@ CheckPathIsWriteable()
 # ---------------------------------------------------------------------------------------
 FindArrayIdFromTarget()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}FindArrayIdFromTarget()"
+    
     local success=0
     for ((a=0; a<${#duIdentifier[@]}; a++))
     do
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Does ${duPartitionGuid[$a]}=${TARGET_THEME_PARTITIONGUID} && ${themeDirPaths[$a]}=${TARGET_THEME_DIR}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Does ${duPartitionGuid[$a]}=${TARGET_THEME_PARTITIONGUID} && ${themeDirPaths[$a]}=${TARGET_THEME_DIR}"
         if [ "${duPartitionGuid[$a]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "${themeDirPaths[$a]}" == "${TARGET_THEME_DIR}" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found. Returning $a"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match found. Returning $a"
             echo $a
             success=1
             break
@@ -820,6 +911,9 @@ FindArrayIdFromTarget()
 # ---------------------------------------------------------------------------------------
 ReadRepoUrlList()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadRepoUrlList()"
+    
     WriteToLog "Looking for URL list"
     if [ -f "$gThemeRepoUrlFile" ]; then
         WriteToLog "Reading URL list"
@@ -841,20 +935,23 @@ ReadRepoUrlList()
 # ---------------------------------------------------------------------------------------
 RefreshHtmlTemplates()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RefreshHtmlTemplates()"
+    
     passedTemplate="$1"
     local check=1
     
     # For now remove previous managethemes.html and copy template
     if [ -f "${PUBLIC_DIR}"/$passedTemplate ]; then
         if [ -f "${PUBLIC_DIR}"/$passedTemplate.template ]; then
-            WriteToLog "Setting $passedTemplate to default."
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting $passedTemplate to default."
             rm "${PUBLIC_DIR}"/$passedTemplate
             cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
         else
-            WriteToLog "Error: missing ${PUBLIC_DIR}/$passedTemplate.template"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error: missing ${PUBLIC_DIR}/$passedTemplate.template"
         fi
     else
-        WriteToLog "Creating: $passedTemplate"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating: $passedTemplate"
         cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
     fi
     
@@ -864,30 +961,52 @@ RefreshHtmlTemplates()
     else
         WriteToLog "CTM_HTMLTemplateFail"
     fi
-    
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
 IsRepositoryLive()
 {
-    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
-    [[ DEBUG -eq 1 ]] && WriteToLog "$gitRepositoryUrl"
-    local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
-    [[ DEBUG -eq 1 ]] && WriteToLog "$testConnection"
-    if [ ! "$testConnection" ]; then
-        # Repository not alive.
-        WriteToLog "CTM_RepositoryError: No response from Repository ${gitRepositoryUrl}/themes"
-        # The initialise.js should pick this up, notify the user, then quit.
-        exit 1
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}IsRepositoryLive()"
+    
+    local noConnection=1
+    
+    # First check if there is a network connection. Check IPv4
+    local defaultGateway=$( netstat -r | grep default | awk '{print $2}' )
+    if [ "$defaultGateway" != "" ]; then
+        dotCheck=$( echo "$defaultGateway" | sed 's/[0-9]*//g' )
+        if [ "$dotCheck" == "..." ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default Gateway $defaultGateway"
+            
+            # Continue to check is repository is live
+            local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gitRepositoryUrl"
+            local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
+            if [ "$testConnection" ]; then
+                WriteToLog "CTM_RepositorySuccess"
+            else
+                noConnection=0
+            fi
+        else
+            noConnection=0
+        fi
     else
-        WriteToLog "CTM_RepositorySuccess"
+        noConnection=0
+    fi
+    
+    if [ $noConnection -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Cannot contact the Repository ${gitRepositoryUrl}/themes"
+        WriteToLog "CTM_RepositoryError" # initialise.js should pick this up, notify the user, then quit.
+        exit 1
     fi
 }
 
 # ---------------------------------------------------------------------------------------
 EnsureLocalSupportDir()
-{    
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}EnsureLocalSupportDir()"
+    
     # Check for local support directory
     local pathToCreate="${WORKING_PATH}/${APP_DIR_NAME}"
     if [ ! -d "$pathToCreate" ]; then
@@ -913,6 +1032,9 @@ EnsureLocalSupportDir()
 # ---------------------------------------------------------------------------------------
 EnsureSymlinks()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}EnsureSymlinks()"
+    
     # Rather than check if a valid one exists, it's quicker to simply re-create it.
     if [ -h "$ASSETS_DIR"/themes ] || [ -L "$ASSETS_DIR"/themes ]; then
         rm "$ASSETS_DIR"/themes
@@ -923,12 +1045,14 @@ EnsureSymlinks()
     fi
     
     CreateSymbolicLinks
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
 RespondToUserUpdateApp()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserUpdateApp()"
+    
     local messageFromUi="$1"
 
     # remove everything up until, and including, the first @
@@ -936,7 +1060,6 @@ RespondToUserUpdateApp()
     chosenOption="${messageFromUi##*:}"
 
     if [ ! "$chosenOption" == "" ]; then
-        WriteLinesToLog
         if [ "$chosenOption" == "Yes" ]; then
             WriteToLog "User chose to update app."
             DownloadPublicDirFromServer
@@ -956,9 +1079,12 @@ RespondToUserUpdateApp()
 # ---------------------------------------------------------------------------------------
 CheckForAppUpdate()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForAppUpdate()"
+    
     # Remove app files from a previous run
     if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager ]; then
-        WriteToLog "Removing previous CloverThemeManagerApp/CloverThemeManager directory"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous CloverThemeManagerApp/CloverThemeManager directory"
         rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager
     fi
 
@@ -976,20 +1102,20 @@ CheckForAppUpdate()
     else
         local serverAppVersion=$mainAppVersion
     fi
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}serverAppVersion=$serverAppVersion"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}serverAppVersion=$serverAppVersion"
     
     # Compare local vs server main app versions
     if [ $serverAppVersion != $mainAppVersion ]; then
         # If this differs then prompt user to download a new version of the app.
         # This is because I can't replace the currently running binary.
-        WriteToLog "Main app update available. Current=$mainAppVersion | Server=$serverAppVersion"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverAppVersion}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Main app update available. Current=$mainAppVersion | Server=$serverAppVersion"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverAppVersion}@"
         SendToUI "UpdateAvailApp@${serverAppVersion}@"
         return 0
     else
         # The main app version is the same.
         # Continue to check if the public dir has changed as that can be updated still.
-        WriteToLog "Main app is at latest version: $serverAppVersion"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Main app is at latest version: $serverAppVersion"
    
         # ======================================
         # Get current app update version for the public DIR
@@ -1012,12 +1138,12 @@ CheckForAppUpdate()
         fi
     
         if [ $serverVersion -gt $currentVersion ]; then
-            WriteToLog "App update available. Current=$currentVersion | Server=$serverVersion"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailApp@${serverVersion}@"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}App update available. Current=$currentVersion | Server=$serverVersion"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverVersion}@"
             SendToUI "UpdateAvailApp@${serverVersion}@"
             return 0
         else
-            WriteToLog "No app update available. Current=$currentVersion | Server=$serverVersion"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No app update available. Current=$currentVersion | Server=$serverVersion"
             return 1
         fi
     fi
@@ -1028,6 +1154,9 @@ CheckForAppUpdate()
 # ---------------------------------------------------------------------------------------
 DownloadPublicDirFromServer()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DownloadPublicDirFromServer()"
+
     # Remove app files from a previous run
     if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp ]; then
         WriteToLog "Removing previous CloverThemeManagerApp directory"
@@ -1053,6 +1182,9 @@ DownloadPublicDirFromServer()
 # ---------------------------------------------------------------------------------------
 CreateUpdateScript()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateUpdateScript()"
+
     AddCopyCommandToFile()
     {
         if [ "$1" == "" ]; then
@@ -1077,15 +1209,14 @@ CreateUpdateScript()
             local pathAndName="${dirName}/${fileName}"
         fi
 
-        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found File: ${pathAndName}"
         if [ ! -f "${PUBLIC_DIR}/${pathAndName}" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}File $pathAndName is new. Adding"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}File $pathAndName is new. Adding"
             AddCopyCommandToFile "$dirName" "$2"
             echo 0
         else
             # file already exists. Is it different?
             if [[ $(CalculateMd5 "${PUBLIC_DIR}/${pathAndName}") != $(CalculateMd5 "$2") ]]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}File $fileName has been updated."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}File $fileName has been updated."
                 AddCopyCommandToFile "$dirName" "$2"
                 echo 0
             else
@@ -1100,7 +1231,7 @@ CreateUpdateScript()
     # Delete any previous update script
     RemoveFile "$updateScript"
     
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking App updates" 
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking App updates" 
     local pathToDownloadedPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
     if [ -d "$pathToDownloadedPublicDir" ]; then
         # Check each item against current ones in app
@@ -1114,8 +1245,8 @@ CreateUpdateScript()
                 local dirName="${item##*/}"
                 #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found Directory: $dirName" 
                 if [ ! -d "${PUBLIC_DIR}/${dirName}" ]; then
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Directory $dirName is new. Adding" 
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}cp $item $PUBLIC_DIR"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Directory $dirName is new. Adding" 
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}cp $item $PUBLIC_DIR"
                     tmpA=$( echo "$item" | sed 's/ /\\ /g' )
                     tmpB=$( echo "$PUBLIC_DIR" | sed 's/ /\\ /g' )
                     printf "cp -R ${tmpA} ${tmpB}\n" >> "$updateScript"
@@ -1157,7 +1288,7 @@ CreateUpdateScript()
         updateScriptChecksum=$(CalculateMd5 "$updateScript")
     else
         # No app update in the downloaded files. Can remove
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}No app updates. Deleting $pathToDownloadedPublicDir" 
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No app updates. Deleting $pathToDownloadedPublicDir" 
         rm -rf "$pathToDownloadedPublicDir"
     fi
 }
@@ -1165,6 +1296,9 @@ CreateUpdateScript()
 # ---------------------------------------------------------------------------------------
 PerformUpdates()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PerformUpdates()"
+
     local successFlag=1
     if [ -f "$updateScript" ]; then
 
@@ -1181,7 +1315,8 @@ PerformUpdates()
             WriteToLog "Performing Updates"
             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                if [ $(CheckOsVersion) -ge 13 ]; then
-                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
+                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                                   /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
                 else
                     successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
                 fi
@@ -1198,7 +1333,7 @@ PerformUpdates()
     
     if [ $successFlag -eq 0 ]; then
         WriteToLog "Updates were successful."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Success@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAppFeedback@Success@"
         SendToUI "UpdateAppFeedback@Success@"
         
         # Remove update files
@@ -1213,16 +1348,17 @@ PerformUpdates()
         fi
     else
         WriteToLog "Updates failed."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAppFeedback@Fail@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAppFeedback@Fail@"
         SendToUI "UpdateAppFeedback@Fail@"
     fi
-    
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
 GetLatestIndexAndEnsureThemeHtml()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetLatestIndexAndEnsureThemeHtml()"
+
     BuildThemeTextInformation()
     {
         # Read local theme.plists and parse author and description info.
@@ -1230,13 +1366,13 @@ GetLatestIndexAndEnsureThemeHtml()
         oIFS="$IFS"; IFS=$'\r\n'
         themeList=( $( ls -d "${WORKING_PATH}/${APP_DIR_NAME}"/themes/* | sort -f ))
     
-        WriteToLog "Reading theme plists."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Reading theme plists."
     
         # Read each themes' theme.plist from the repository to extract Author & Description.
         for ((n=0; n<${#themeList[@]}; n++ ));
         do
             tmpTitle="${themeList[$n]##*/}"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Reading theme plists for $tmpTitle" 
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Reading theme plists for $tmpTitle" 
             themeTitle+=("$tmpTitle")
             themeAuthor+=( $(FindStringInPlist "Author" "${WORKING_PATH}/${APP_DIR_NAME}/themes/${tmpTitle}/theme.plist"))
             themeDescription+=( $(FindStringInPlist "Description" "${WORKING_PATH}/${APP_DIR_NAME}/themes/${tmpTitle}/theme.plist"))
@@ -1250,28 +1386,28 @@ GetLatestIndexAndEnsureThemeHtml()
         
         # Remove index.git from a previous run
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/index.git ]; then
-            WriteToLog "Removing previous index.git"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous index.git"
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
         fi
     
         # Remove any images from a previous run
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/images ]; then
-            WriteToLog "Removing previous index images directory"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous index images directory"
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/images
         fi
     
         # Remove any theme.plists from a previous run
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/themes ]; then
-            WriteToLog "Removing previous index themes directory"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous index themes directory"
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/themes
         fi
             
         # Get new index.git from CloverRepo
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
         WriteToLog "CTM_IndexCloneAndCheckout"
-        WriteToLog "Cloning bare repo index.git"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Cloning bare repo index.git"
         "$gitCmd" clone --depth=1 --bare "$remoteRepositoryUrl"/themes.git/index.git
-        WriteToLog "Checking out index.git"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking out index.git"
         "$gitCmd" --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force && check=0
         
         # Add message in to log for initialise.js to detect.
@@ -1303,28 +1439,28 @@ GetLatestIndexAndEnsureThemeHtml()
 
         # Get epoch of existing index.git
         indexFileEpoch=$( stat -f "%m" "${WORKING_PATH}/${APP_DIR_NAME}"/index.git )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}indexFileEpoch=$indexFileEpoch"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}indexFileEpoch=$indexFileEpoch"
         if [ $indexFileEpoch -lt $repoRebuildEpoch ]; then
-            WriteToLog "index.git is from before repo was rebuilt"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}index.git is from before repo was rebuilt"
             GetIndexAndProcessThemeList
         else
             # Check for updates to index.git
-            WriteToLog "Checking for update to index.git"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking for update to index.git"
             cd "${WORKING_PATH}/${APP_DIR_NAME}"/index.git
             local updateCheck=$( "$gitCmd" fetch --progress origin master:master 2>&1 )
             if [[ "$updateCheck" == *done.*  ]]; then
-                WriteToLog "index.git has been updated. Re-downloading"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}index.git has been updated. Re-downloading"
                 GetIndexAndProcessThemeList
             else
-                WriteToLog "No updates to index.git"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No updates to index.git"
                 WriteToLog "CTM_IndexOK"
             
                 # Use previously saved theme.html
                 if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
-                    WriteToLog "CTM_ThemeListOK"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}CTM_ThemeListOK"
                     InsertThemeListHtmlInToManageThemes "file"
                 else
-                    WriteToLog "Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
                     BuildThemeTextInformation
                     CreateThemeListHtml
                     InsertThemeListHtmlInToManageThemes
@@ -1336,40 +1472,41 @@ GetLatestIndexAndEnsureThemeHtml()
         addThemeHelpFile=$( find "${WORKING_PATH}/${APP_DIR_NAME}"/ -type f -name "add_theme.html" 2>/dev/null )
         if [ ! "$addThemeHelpFile" ]; then
             "$gitCmd" --git-dir="${WORKING_PATH}/${APP_DIR_NAME}"/index.git --work-tree="${WORKING_PATH}/${APP_DIR_NAME}" checkout --force
-        fi  
-    fi  
-
-    WriteLinesToLog
+        fi
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
 GetFreeSpaceOfTargetDeviceAndSendToUI()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetFreeSpaceOfTargetDeviceAndSendToUI()"
+
     # Read available space on volume and send to the UI.
-    WriteToLog "Getting free space on target device $TARGET_THEME_DIR_DEVICE"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Getting free space on target device $TARGET_THEME_DIR_DEVICE"
 
     oIFS="$IFS"; IFS=$'\r\n'
     deviceResult=( $( df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $1}' ))
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}deviceResult=$deviceResult"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}deviceResult=$deviceResult"
     IFS="$oIFS"
 
     local found=99
     for (( d=0; d<${#deviceResult[@]}; d++ ))
     do
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}In Loop: d=$d"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}In Loop: d=$d"
         if [ "${deviceResult[$d]##*/}" == "$TARGET_THEME_DIR_DEVICE" ]; then
            found=$d
-           [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}found=$found"
+           [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}found=$found"
         fi
     done
 
     if [ $found -lt 99 ]; then
         local freeSpace=$(df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $4}' | head -n$(( found + 1 )) | tail -n1)
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: FreeSpace:$freeSpace"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
     else
         local freeSpace="0M"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}*Couldn't get free space."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: FreeSpace:$freeSpace"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}*Couldn't get free space."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
     fi
     SendToUI "FreeSpace@${freeSpace}@"
 }
@@ -1381,6 +1518,11 @@ ReadThemeDirList()
     # arrays for theme directory information.
     # themeDirInfo.txt is created by findThemeDirs.sh script.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadThemeDirList()"
+    
+    ResetInternalDiskArrays
+
     if [ -f "$themeDirInfo" ]; then
         oIFS="$IFS"; IFS=$'\r\n'
         while read -r line
@@ -1396,7 +1538,8 @@ ReadThemeDirList()
             
         # Check array contents match and send message to UI via log
         local total=${#duIdentifier[@]}
-        if [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
+        if [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || \
+           [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
             WriteToLog "CTM_ThemeDirsFail"
         
             # Print results
@@ -1415,46 +1558,140 @@ ReadThemeDirList()
 }
 
 # ---------------------------------------------------------------------------------------
-ManageESP()
+GetBootlog()
 {
-    # Read espList.txt file
-    # Store indentifiers for unmounted ESP's in array
-    # espList.txt is created by findThemeDirs.sh script.
-    if [ -f "$espList" ]; then
-        oIFS="$IFS"; IFS=$'\r\n'
-        while read -r line
-        do
-            if [[ "$line" == *@U ]]; then
-                unmountedEsp+=( "${line%@*}" )
-            fi
-        done < "$espList"
-        IFS="$oIFS"
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetBootlog()"
+    
+    local bootLog=$( ioreg -lw0 -pIODeviceTree | grep boot-log )
+    bootLog=${bootLog#*'<'}
+    bootLog=${bootLog%%'>'*}
+    if [ "$bootLog" != "" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found a bootlog in ioreg. Writing bootlog to disk"
+        echo "$bootLog" > "${TEMPDIR}"/bootLogtmp
+        xxd -r -p "${TEMPDIR}"/bootLogtmp > "${bootLogFile}_tmp" && rm "${TEMPDIR}"/bootLogtmp
+        # Convert to Unix Line Feed endings
+        tr -d '\r' < "${bootLogFile}_tmp" > "${bootLogFile}" && rm "${bootLogFile}_tmp"
 
-        # Loop through partitions
-        for (( s=0; s<${#unmountedEsp[@]}; s++ ))
-        do
-
-            successFlag=1
-            local mountPoint=`/usr/bin/mktemp -d /Volumes/${gESPMountPrefix}XXXXXXXXX`
-            if [ ! "$mountPoint" == "" ]; then
-               if [ $(CheckOsVersion) -ge 13 ]; then
-                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
-                else
-                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@MountESP\" & \"@/dev/${unmountedEsp[$s]}\" & \"@$mountPoint\" with administrator privileges" )
-                fi
-               if [ $successFlag -eq 0 ]; then
-                    (( gEspMounted++ ))
-                fi
-            fi
-        done
+        # Remove bootlog if not from Clover
+        local checkLog=$( grep "Starting Clover" $bootLogFile )
+        if [ "$checkLog" == "" ]; then
+             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bootlog is not from Clover. Deleting"
+             rm $bootLogFile
+        fi
     else
-        WriteToLog "Error. Missing $espList file"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bootlog from ioreg is blank"
     fi
+}
+
+# ---------------------------------------------------------------------------------------
+GetSelfDevicePath()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetSelfDevicePath()"
+    
+    if [ -f "$bootLogFile" ]; then
+    
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Reading bootlog"
+        
+        local selfDevicePath=$( grep SelfDevicePath "$bootLogFile" )
+        if [[ "$selfDevicePath" ]]; then
+        
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found selfDevicePath"
+                    
+            # Will look something like these examples
+            #0:999  0:000  SelfDevicePath=PcieRoot(0x0)\Pci(0x1F,0x2)\USB(0x0,0x0)\HD(1,MBR,0x00000000,0x2,0x3BB7BE) @1DBDFE98
+            #0:100  0:000  SelfDevicePath=PciRoot(0x0)\Pci(0x1F,0x2)\Sata(0x0,0xFFFF,0x0)\HD(1,GPT,BC1B343C-2D6B-4C0C-8B88-71C2AFCF6E65,0x28,0x64000) @C7AA598
+            #0:100 0:000 SelfDevicePath=PciRoot(0x0)\Pci(0x1F,0x2)\VenHw(CF31FAC5-C24E-11D2-85F3-00A0C93EC93B,02)\HD(1,GPT,AA434287-E363-4254-AC5A-27189F7BDCC0,0x28,0x64000) @97548018
+                    
+            # Get device path and split in to parts
+            devicePath="${selfDevicePath#*=}"
+            declare -a devicePathArr
+            IFS=$'\\'
+            devicePathArr=($devicePath)
+            IFS="$oIFS"
+                    
+            local deviceType="-"
+            deviceType="${devicePathArr[2]%(*}"
+
+            if [ $DEBUG -eq 1 ]; then
+                for ((i=0; i<${#devicePathArr[@]}; i++))
+                do
+                    WriteToLog "${debugIndentTwo}devicePathArr[$i]=${devicePathArr[$i]}"
+                done
+            fi
+
+            # Split HD in to parts
+            devicePathHD="${devicePathArr[3]%)*}"
+            devicePathHD="${devicePathHD#*(}"
+            # Should be something like these examples:
+            #1,MBR,0x2A482A48,0x2,0x4EFC1B80
+            #2,GPT,F55D9AC4-08A8-4269-9A8E-396DBE7C7943,0x64028,0x1C0000
+            declare -a hdArr
+            IFS=$','
+            hdArr=($devicePathHD)
+            IFS="$oIFS"
+            bootDevicePartition="${hdArr[0]}"
+            bootDevicePartType="${hdArr[1]}"
+            bootDevicePartSignature="${hdArr[2]}"
+            bootDevicePartStart="${hdArr[3]}"
+            bootDevicePartSize="${hdArr[4]}"
+            
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bootDevicePartType=$bootDevicePartType"
+            if [ "$bootDevicePartType" == "GPT" ]; then
+                local identifier=$( "$partutil" --search-uuid $bootDevicePartSignature )
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}identifier=$identifier"
+                # is this an unmounted ESP?
+                if [ -f "$espList" ] && [ "$identifier" != "" ]; then
+                    checkESP=$( grep "$identifier" "$espList" )
+                    if [ "$checkESP" != "" ] && [[ "$checkESP" == *@U ]]; then
+                        # Instruct UI to tell user that it needs password to mount ESP
+                        WriteToLog "CTM_BootDeviceGPT"
+                        MountESPAndSearchThemesPath
+                    fi
+                fi
+                [[ $identifier == "" ]] && identifier="Failed"
+            elif [ "$bootDevicePartType" == "MBR" ]; then
+                # Convert device hex values to human readable
+                bootDevicePartStartDec=$(echo "ibase=16; ${bootDevicePartStart#*x}" | bc)
+                bootDevicePartSizeDec=$(echo "ibase=16; ${bootDevicePartSize#*x}" | bc)
+                
+                # Save boot device details to file
+                echo "${bootDevicePartition}@${bootDevicePartType}@${bootDevicePartSignature}@${bootDevicePartStartDec}@${bootDevicePartSizeDec}" > "$bootDeviceInfo"
+                
+                # Instruct UI to tell user that it needs password for identifying MBR device
+                WriteToLog "CTM_BootDeviceMBR"
+                
+                local identifier=$( DetectMBRDevice )
+            fi
+            
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Boot device part type=${bootDevicePartType} | identifier=${identifier}"
+            echo "$identifier"
+            
+            # Write results to file for bootlog.sh to use
+            #echo "$deviceType" >> 
+            #echo bootDevicePartition
+            #echo bootDevicePartType=
+            #echo bootDevicePartSignature
+            #echo bootDevicePartStart
+            #echo bootDevicePartSize
+
+        else
+            echo ""
+        fi
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$bootLog not found"
+    fi
+    
+    WriteToLog "CTM_BootDeviceCloseWindow"
 }
 
 # ---------------------------------------------------------------------------------------
 CreateAndSendVolumeDropDownMenu()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateAndSendVolumeDropDownMenu()"
+    
     # Send new dropdown list for UI
     for (( p=0; p<${#themeDirPaths[@]}; p++ ))
     do
@@ -1475,7 +1712,7 @@ CreateAndSendVolumeDropDownMenu()
     if [ "$newPathList" != "" ]; then
         # Remove leading comma from string
         newPathList="${newPathList#?}"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: NewVolumeDropDown@${newPathList}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: NewVolumeDropDown@${newPathList}@"
         SendToUI "NewVolumeDropDown@${newPathList}@"
         return 0
     else
@@ -1488,77 +1725,104 @@ CreateAndSendVolumeDropDownMenu()
 # ---------------------------------------------------------------------------------------
 MountESPAndSearchThemesPath()
 {
-    WriteLinesToLog
-    WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
-    WriteToLog "Searching for ESP's with /EFI/Clover/Themes"
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MountESPAndSearchThemesPath()"
+        
+    espMountedCount=0
     
-    gEspMounted=0
-    local currentMountedEspCount=$gEspMounted
-    
-    ManageESP
-    if [ $gEspMounted -gt $currentMountedEspCount ]; then
-    
+    if [ $(CheckOsVersion) -ge 13 ]; then
+        espMountedCount=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@ManageESP\" with administrator privileges" )
+    else
+        espMountedCount=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@ManageESP\" with administrator privileges" )
+    fi
+
+    if [ $espMountedCount -gt 0 ]; then
+
         "$findThemeDirs"
-        ResetInternalDiskArrays
-        ReadThemeDirList
-        
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${gEspMounted}"
-        SendToUI "MessageESP@Mounted@${gEspMounted}"
-        
-        CreateAndSendVolumeDropDownMenu
+        #ReadThemeDirList
+        #CreateAndSendVolumeDropDownMenu
 
         # As volume selector dropdown menu entries have changed,
         # send UI a partition to select
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$espID"
-        SendToUI "Target@$espID"
+        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
+        #SendToUI "Target@$espID"
         
-        RespondToUserDeviceSelection "@$espID"
+        #RespondToUserDeviceSelection "@$espID"
+    fi
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
+    SendToUI "MessageESP@Mounted@${espMountedCount}"
+}
+
+# ---------------------------------------------------------------------------------------
+DetectMBRDevice()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DetectMBRDevice()"
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User selected to detect MBR device."
+    
+    local device=""
+    if [ $(CheckOsVersion) -ge 13 ]; then
+        device=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                  /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI message: Mounted@${gEspMounted}"
-        SendToUI "MessageESP@Mounted@${gEspMounted}"
+        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+    fi
+    
+    if [ "$device" != "" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot device. $deviceFound"
+        echo "$device"
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to match a mounted boot device."
+        echo "Failed"
     fi
 }
 
 # ---------------------------------------------------------------------------------------
 ReadPrefsFile()
 {
-    WriteToLog "Read user preferences file"
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadPrefsFile()"
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Read user preferences file"
     # Check for preferences file
     if [ -f "$gUserPrefsFile".plist ]; then
 
         gLastSelectedPath=$( defaults read "$gUserPrefsFile" LastSelectedPath )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPath=$gLastSelectedPath"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gLastSelectedPath=$gLastSelectedPath"
         
         gLastSelectedPathDevice=$( defaults read "$gUserPrefsFile" LastSelectedPathDevice )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPathDevice=$gLastSelectedPathDevice"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gLastSelectedPathDevice=$gLastSelectedPathDevice"
         
         gLastSelectedPartitionGUID=$( defaults read "$gUserPrefsFile" LastSelectedPartitionGUID )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gLastSelectedPartitionGUID=$gLastSelectedPartitionGUID"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gLastSelectedPartitionGUID=$gLastSelectedPartitionGUID"
      
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Resetting internal theme arrays"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Resetting internal theme arrays"
         ResetInternalThemeArrays
         
         gSnow=$( defaults read "$gUserPrefsFile" Snow )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gSnow=$gSnow"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gSnow=$gSnow"
         
         gBootlogState=$( defaults read "$gUserPrefsFile" ShowHideBootlog )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gBootlogState=${gBootlogState}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gBootlogState=${gBootlogState}"
         
         local tmp=$( defaults read "$gUserPrefsFile" Thumbnail )
         if [ "$tmp" != "" ]; then
             gThumbSizeX="${tmp% *}"
             gThumbSizeY="${tmp#* }"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}ThumbnailSize=${gThumbSizeX}x${gThumbSizeY}"
         fi
         
         gUISettingViewUnInstalled=$( defaults read "$gUserPrefsFile" UnInstalledButton )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gUISettingViewUnInstalled=${gUISettingViewUnInstalled}"
         
         gUISettingViewThumbnails=$( defaults read "$gUserPrefsFile" ViewThumbnails )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewThumbnails=${gUISettingViewThumbnails}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gUISettingViewThumbnails=${gUISettingViewThumbnails}"
         
         gUISettingViewPreviews=$( defaults read "$gUserPrefsFile" ShowPreviewsButton )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}gUISettingViewPreviews=${gUISettingViewPreviews}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gUISettingViewPreviews=${gUISettingViewPreviews}"
         
         # Find installed themes
         oIFS="$IFS"; IFS=$'\n'
@@ -1594,53 +1858,13 @@ ReadPrefsFile()
             fi
         done
         
-        # Map $gLastSelectedPath against $gLastSelectedPartitionGUID to catch differences
-        # which will occur when using ESP. Internal random mountpoint gets written to 
-        # prefs as /Volumes/EFI because random mountpoint will not happen again.
-        if [ "$gLastSelectedPartitionGUID" != "" ] && [ "$gLastSelectedPath" != "" ] && [ "$gLastSelectedPathDevice" != "" ]; then
-            
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Mapping last selected partition GUID against mounted partition GUIDs"
-            local checkPath=""
-            for (( u=0; u<${#themeDirPaths[@]}; u++ ))
-            do
-                # Note: Two MBR partitioned, FAT32 formatted USB sticks will both have zero UUID.
-                if [ $gLastSelectedPartitionGUID == $zeroUUID ]; then
-                    if [ "${duPartitionGuid[$u]}" == "$zeroUUID" ]; then
-                        # Attempt to match theme path
-                        if [ "${themeDirPaths[$u]}" == "$TARGET_THEME_DIR" ]; then
-                            checkPath="${themeDirPaths[$u]}"
-                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
-                            break
-                        fi
-                    fi
-                else
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Checking ${duPartitionGuid[$u]} = $gLastSelectedPartitionGUID"
-                    if [ "${duPartitionGuid[$u]}" == "$gLastSelectedPartitionGUID" ]; then
-                        checkPath="${themeDirPaths[$u]}"
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Match found:checkPath=$checkPath"
-                    fi
-                fi
-            done
-            
-            if [ "$checkPath" != "" ]; then
-                TARGET_THEME_DIR="$checkPath"
-            else
-                TARGET_THEME_DIR="$gLastSelectedPath"
-            fi
-            TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
-            TARGET_THEME_PARTITIONGUID="$gLastSelectedPartitionGUID"
-        else
-            TARGET_THEME_DIR="-"
-            TARGET_THEME_DIR_DEVICE="-"
-            TARGET_THEME_PARTITIONGUID="-"
-        fi
+# Moved to MapLastSelectedPathToGUID()
         
         # Add message in to log for initialise.js to detect.
         [[ $gFirstRun -eq 0 ]] && WriteToLog "CTM_ReadPrefsOK" && gFirstRun=1
-        
     else
-        WriteToLog "Preferences file not found."
-        WriteLog "Creating initial prefs file: $gUserPrefsFile"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Preferences file not found."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating initial prefs file: $gUserPrefsFile"
         defaults write "$gUserPrefsFile" "LastSelectedPath" "-"
         defaults write "$gUserPrefsFile" "LastSelectedPathDevice" "-"
         defaults write "$gUserPrefsFile" "LastSelectedPartitionGUID" "-"
@@ -1660,11 +1884,64 @@ ReadPrefsFile()
         gBootlogState="Open"
     fi
     
-    WriteToLog "TARGET_THEME_DIR=$TARGET_THEME_DIR"
-    WriteToLog "TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-    WriteToLog "TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
         
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
+}
+
+# ---------------------------------------------------------------------------------------
+MapLastSelectedPathToGUID()
+{
+    # Map $gLastSelectedPath against $gLastSelectedPartitionGUID to catch differences
+    # which will occur when using ESP. Internal random mountpoint gets written to 
+    # prefs as /Volumes/EFI because random mountpoint will not happen again.
+        
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MapLastSelectedPathToGUID()"
+    
+    if [ "$gLastSelectedPartitionGUID" != "-" ] && [ "$gLastSelectedPath" != "-" ] && [ "$gLastSelectedPathDevice" != "-" ]; then
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Mapping last selected partition GUID against mounted partition GUIDs"
+        local checkPath=""
+        for (( u=0; u<${#themeDirPaths[@]}; u++ ))
+        do
+            # Note: Two MBR partitioned, FAT32 formatted USB sticks will both have zero UUID.
+            if [ $gLastSelectedPartitionGUID == $zeroUUID ]; then
+                if [ "${duPartitionGuid[$u]}" == "$zeroUUID" ]; then
+                    # Attempt to match theme path
+                    if [ "${themeDirPaths[$u]}" == "$TARGET_THEME_DIR" ]; then
+                        checkPath="${themeDirPaths[$u]}"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match found:checkPath=$checkPath"
+                        break
+                    fi
+                fi
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking ${duPartitionGuid[$u]} = $gLastSelectedPartitionGUID"
+                if [ "${duPartitionGuid[$u]}" == "$gLastSelectedPartitionGUID" ]; then
+                    checkPath="${themeDirPaths[$u]}"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match found:checkPath=$checkPath"
+                fi
+            fi
+        done
+            
+        if [ "$checkPath" != "" ]; then
+            TARGET_THEME_DIR="$checkPath"
+        else
+            TARGET_THEME_DIR="$gLastSelectedPath"
+        fi
+        TARGET_THEME_DIR_DEVICE="$gLastSelectedPathDevice"
+        TARGET_THEME_PARTITIONGUID="$gLastSelectedPartitionGUID"
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No last selected partition is set."
+        TARGET_THEME_DIR="-"
+        TARGET_THEME_DIR_DEVICE="-"
+        TARGET_THEME_PARTITIONGUID="-"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1675,21 +1952,23 @@ SendInternalThemeArraysToLogFile()
     # print them to the log file.
     # They arrays are saved to prefs in MaintainInstalledThemeListInPrefs()
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SendInternalThemeArraysToLogFile()"
+    
     WriteLinesToLog
     local totalPath="${#installedThemePath[@]}"
     local totalPathDevice="${#installedThemePathDevice[@]}"
     local totalVolUuid="${#installedThemePartitionGUID[@]}"
     if [ $totalPath -ne $totalPathDevice ] && [ $totalPath -ne $totalVolUuid ]; then
-        WriteToLog "${debugIndent}Error. Preferences are corrupt"
+        WriteToLog "${debugIndentTwo}Error. Preferences are corrupt"
         exit 1
     else
-        WriteToLog "${debugIndent}Prefs shows total number of installed themes=${#installedThemeName[@]}"
+        WriteToLog "${debugIndentTwo}Prefs shows total number of installed themes=${#installedThemeName[@]}"
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
-            WriteToLog "${debugIndent}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemePartitionGUID[$n]}"
+            WriteToLog "${debugIndentTwo}$n: ${installedThemeName[$n]}, ${installedThemePath[$n]}, ${installedThemePathDevice[$n]}, ${installedThemePartitionGUID[$n]}"
         done
     fi  
-    WriteLinesToLog 
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1697,307 +1976,67 @@ SendUIInitData()
 {
     # This is called once after much of the initialisation routines have run.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SendUIInitData()"
+    
+    # Send UI setting for BootlogView and adjust footer height
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: BootlogView@${gBootlogState}@"
+    SendToUI "BootlogView@${gBootlogState}@"
+
     if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
 
         local entry=$( FindArrayIdFromTarget )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
-
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Target@$entry"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
             SendToUI "Target@$entry"
-
             GetListOfInstalledThemesAndSendToUI
-            GetFreeSpaceOfTargetDeviceAndSendToUI
+            GetFreeSpaceOfTargetDeviceAndSendToUI 
+            
+            # Run this regardless of path chosen as JS is waiting to hear it.
+            CheckAndRecordUnManagedThemesAndSendToUI 
         fi
-        
-        # Run this regardless of path chosen as JS is waiting to hear it. 
-        CheckAndRecordUnManagedThemesAndSendToUI
-
-        # Set redirect from initial page
-        #WriteToLog "Redirect managethemes.html"
     else
-        WriteToLog "NoPathSelected"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
         
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@-@"
+        SendToUI "Target@-@"
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
+        SendToUI "InstalledThemes@-@"
+        
         # Send list of updated themes to UI otherwise the UI interface will not be enabled.
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes@@"
         SendToUI "UpdateAvailThemes@@"
     fi
       
     # Send UI setting for Snow
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Snow@${gSnow}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Snow@${gSnow}@"
     SendToUI "Snow@${gSnow}@"
-    
+
     # Send thumbnail size
     if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
         SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
     fi
     
     # Send UI view choice for UnInstalled themes
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
     SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
     
     # Send UI view choice for Thumbnails
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
     SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
     
     # Send UI view choice for Previews
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: PreviewView@${gUISettingViewPreviews}@"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: PreviewView@${gUISettingViewPreviews}@"
     SendToUI "PreviewView@${gUISettingViewPreviews}@"
-        
-    # Send UI setting for BootlogView
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: BootlogView@${gBootlogState}@"
-    SendToUI "BootlogView@${gBootlogState}@"
-    
+
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
-}
-
-# ---------------------------------------------------------------------------------------
-ReadBootLogAndInsertHtml()
-{
-    local canHideClover=1
-    local bootLog=$( ioreg -lw0 -pIODeviceTree | grep boot-log )
-    bootLog=${bootLog#*'<'}
-    bootLog=${bootLog%%'>'*}
-    if [ "$bootLog" != "" ]; then
-        echo "$bootLog" > "${TMPDIR}"/bootLogtmp
-        xxd -r -p "${TMPDIR}"/bootLogtmp > $bootLogFile && rm "${TMPDIR}"/bootLogtmp
-    fi
-    if [ -f $bootLogFile ]; then
-    
-        # Is bootlog from Clover?
-        local checkLog=$( grep "Starting Clover" $bootLogFile )
-        if [ "$checkLog" != "" ]; then
-            local fileToRead=$bootLogFile
-            local nvramReadFrom=""
-            local themeExist="Yes"
-            local themeUsedChosen=""
-            local usingEmbedded=1
-
-            while read -r lineRead
-            do
-        
-                if [[ "$lineRead" == *"Starting Clover"* ]]; then
-                    revision="${lineRead##*Starting Clover rev }"
-                    revision="${revision% on*}"
-                    bootType="${lineRead#*on }"
-                    if [[ "$bootType" == *"CLOVER EFI"* ]]; then
-                        bootType="Legacy"
-                    else
-                        bootType="UEFI"
-                    fi
-                fi 
-                if [[ "$lineRead" == *"SelfDevicePath"* ]]; then
-                    bootDeviceUUID="${lineRead##*\\HD}"
-                    bootDeviceUUID="${bootDeviceUUID#*,}"
-                    bootDeviceUUID="${bootDeviceUUID#*,}"
-                    bootDeviceUUID="${bootDeviceUUID%%,*}"
-
-                    # Translate Device UUID to mountpoint
-                    local identifier=$( "$partutil" --search-uuid $bootDeviceUUID )
-                    mountpoint=$( "$partutil" --show-mountpoint "$identifier" )
-                    if [ "$mountpoint" == "" ]; then
-                        # check against unmounted ESP list
-                        if [ -f "$espList" ]; then
-                            oIFS="$IFS"; IFS=$'\r\n'
-                            while read -r line
-                            do
-                                if [[ "$line" == *@U ]]; then
-                                    if [ "$identifier" == "${line%@*}" ]; then
-                                        mountpoint="${identifier} (Unmounted ESP)"
-                                    fi
-                                fi
-                            done < "$espList"
-                            IFS="$oIFS"
-                        else
-                            if [[ "$identifier" == *$gESPMountPrefix* ]]; then
-                                mountpoint="/Volumes/EFI"
-                            fi
-                        fi
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}mountpoint: $mountpoint"
-                    fi
-                fi
-
-                if [[ "$lineRead" == *"config.plist at path:"* ]]; then
-                    configOem="${lineRead##*Using }"
-                    configOem="${configOem% config.plist*}"
-                fi
-
-                if [[ "$lineRead" == *"config.plist loaded: Success"* ]]; then
-                    configPlistFilePath="${lineRead%config.plist*}"
-                    configPlistFilePath=$( echo "${configPlistFilePath}" | cut -c 15- )
-                    configPlistFilePath="$configPlistFilePath"
-                fi
-
-                if [[ "$lineRead" == *"Default theme"* ]]; then
-                    configPlistThemeEntry="${lineRead##*: }"
-                    themeAskedForTitle="$configPlistThemeEntry"
-                fi
-
-                if [[ "$lineRead" == *"Loading nvram.plist"* ]]; then
-                    volume="${lineRead#*\'}"
-                    volume="${volume%\'*}"
-                fi
-
-                if [[ "$lineRead" == *"Adding Key: Clover.Theme:"* ]]; then
-                    # Remove any trailing spaces
-                    nvramThemeEntry=$( echo "${lineRead##*Data:}" | sed 's/ *$//g' )
-                    # Check for older style boot log
-                    if [ "${nvramThemeEntry:0:5}" != " Size" ]; then
-                        nvramThemeEntry="${nvramThemeEntry// /\\x}"
-                        nvramThemeEntry="$nvramThemeEntry\\n"
-                        nvramThemeEntry=$( printf "$nvramThemeEntry" )
-                        nvramReadFrom="\/Volumes\/${volume}\/nvram.plist"
-                        themeAskedForTitle="$nvramThemeEntry"
-                    else
-                        nvramThemeEntry="not shown in bootlog"
-                        nvramReadFrom="\/Volumes\/${volume}\/nvram.plist"
-                    fi
-                fi
-                
-                if [[ "$lineRead" == *"chosen from nvram"* ]]; then
-                    themefromNvram="${lineRead##*theme }"
-                    themefromNvram=$( echo "${themefromNvram%chosen from*}" | sed 's/ *$//g' )
-                    printf 'Theme read from NVRAM: %s\n' "$themefromNvram"
-                    if [[ "$lineRead" == *"absent"* ]]; then
-                        themeExist="No"
-                        #printf '* %s does not exist!\n' "$themefromNvram"
-                    fi
-                fi
-
-                if [[ "$lineRead" == *"no default theme"* ]]; then
-                    if [[ "$lineRead" == *"get random"* ]]; then
-                        printf 'Theme to be used=random\n'
-                    fi
-                fi
-
-                if [[ "$lineRead" == *"Using theme"* ]]; then
-                    usingTheme="${lineRead#*\'}"
-                    usingTheme="${usingTheme%\'*}"
-                    #printf 'Using theme: %s\n' "$usingTheme"
-                    themeUsedPath="${lineRead#*(}"
-                    themeUsedPath="${themeUsedPath%)*}"
-                fi
-        
-                if [[ "$lineRead" == *"defined in NVRAM found"* ]]; then
-                    nvramThemeEntry="${lineRead#*theme }"
-                    nvramThemeEntry="${nvramThemeEntry% defined*}"
-                    if [ "$nvramReadFrom" == "" ]; then
-                        nvramReadFrom="Native NVRAM"
-                    fi
-                    themeAskedForTitle="$nvramThemeEntry"
-                fi
-
-                if [[ "$lineRead" == *"Choosing theme"* ]]; then
-                    themeUsedChosen="${lineRead##*Choosing theme }"
-                fi
-
-                if [[ "$lineRead" == *"no themes available, using embedded"* ]]; then
-                    #printf 'no themes available, using embedded\n'
-                    usingEmbedded=0
-                    themeExist="No"
-                fi
-
-            done < "$bootLogFile"
-
-            if [ $usingEmbedded -eq 0 ]; then
-                themeUsedPath="internal"
-                themeUsedChosen="embedded"
-            fi
-
-            if [ "$themeAskedForTitle" == "$usingTheme" ]; then
-                themeAskedForPath="$themeUsedPath"
-            else
-                themeAskedForPath="${configPlistFilePath}Themes\${themeAskedForTitle}"
-            fi
-
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Read Boot Log"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Clover Revision=$revision"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Boot Type=$bootType"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}bootDeviceUUID=$bootDeviceUUID"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist OEM=$configOem"    
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist file path: $configPlistFilePath"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Config.plist theme entry: $configPlistThemeEntry"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}NVRAM read from: $nvramReadFrom"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}NVRAM theme entry: $nvramThemeEntry"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme asked for path: $themeAskedForPath"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme asked for exist: $themeExist"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme used path: $themeUsedPath"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Theme used chosen: $themeUsedChosen"
-
-            #Escape backslashes
-            mountpoint=$( echo "$mountpoint" | sed 's/\//\\\//g' )
-            configPlistFilePath=$( echo "$configPlistFilePath" | sed 's/\\/\\\//g' )
-            themeUsedPath=$( echo "$themeUsedPath" | sed 's/\\/\\\//g' )
-            themeAskedForPath=$( echo "$themeAskedForPath" | sed 's/\\/\\\//g' )
-        
-            # Create bootlog html
-            bootlogHtml="        <div id=\"bandHeader\"><span class=\"infoTitle\">Clover<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover Revision:<\/span><span class=\"infoBody\">${revision}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">Boot Type:<\/span><span class=\"infoBody\">${bootType}<\/span><\/div>\
-        <\/div>\
-        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">UUID:<\/span><span class=\"infoBody\">${bootDeviceUUID}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpoint}<\/span><\/div>\
-        <\/div>\
-        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${configPlistFilePath}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBody\">${configPlistThemeEntry}<\/span><\/div>\
-        <\/div>\
-        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${nvramReadFrom}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBody\">${nvramThemeEntry}<\/span><\/div>\
-        <\/div>\
-        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${themeAskedForPath}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">exist?<\/span><span class=\"infoBody\">${themeExist}<\/span><\/div>\
-        <\/div>\
-        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">file path:<\/span><span class=\"infoBody\">${themeUsedPath}<\/span><\/div>\
-            <div id=\"bandColumnRight\"><span class=\"infoTitle\">Chosen:<\/span><span class=\"infoBody\">${themeUsedChosen}<\/span><\/div>\
-        <\/div>"
-
-            # Insert bootlog Html in to placeholder
-            WriteToLog "Inserting bootlog HTML in to managethemes.html"
-            LANG=C sed -ie "s/<!--INSERT_BOOTLOG_INFO_HERE-->/${bootlogHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
-
-            # Clean up
-            if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-                rm "${PUBLIC_DIR}"/managethemes.htmle
-            fi
-
-            # Add messages in to log for initialise.js to detect.
-            if [ $check -eq 0 ]; then
-                WriteToLog "CTM_BootlogOK"
-            else
-                canHideClover=0
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}boot.log html failed to be inserted".
-            fi
-        else
-            canHideClover=0
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found boot.log but Not Clover."
-        fi
-    else
-        canHideClover=0
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}boot.log was not found in ioreg".
-    fi
-    
-    if [ $canHideClover -eq 0 ]; then
-        WriteToLog "CTM_BootlogFail"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting gBootlogState to Hide"
-        gBootlogState="Hide"
-    fi
 }
 
 
@@ -2019,25 +2058,30 @@ RespondToUserDeviceSelection()
     # from the menu (indicated by a - for each device and volumeName), the 
     # path is double checked before writing the choice to the user prefs file.
     #
-    # Two routines are then called:
-    # 1 - to get a list of theme directories at selected file path.
-    # 2 - to check for any updates to those theme directories.
+    # Routines are then called to perform the following:
+    # 1 - Get a list of theme directories at selected file path.
+    # 2 - Get available free space on target volume.
+    # 3 - List any themes without .hash (unmanaged).
+    # 4 - Housekeep locally installed bare git clones.
+    # 5 - Check current NVRAM Clover.Theme variable.
+    # 6 - Check for any theme updates on target volume.
+    
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserDeviceSelection()"
         
     local messageFromUi="$1"
-
-    WriteLinesToLog
 
     # parse message
     # remove everything up until, and including, the first @
     local messageFromUi="${messageFromUi#*@}"
     local pathOption="${messageFromUi##*@}"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserDeviceSelection() messageFromUi=$messageFromUi | pathOption=$pathOption"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}RespondToUserDeviceSelection() messageFromUi=$messageFromUi | pathOption=$pathOption"
     # Check user did actually change from default
     if [ ! "$pathOption" == "-" ]; then
 
-        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with UUID ${duPartitionGuid[$pathOption]}" 
+        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with GUID ${duPartitionGuid[$pathOption]}" 
 
-        local mountpoint=$( ResolveMountPointFromUUID "${duPartitionGuid[$pathOption]}" )
+        local mountpoint=$( ResolveMountPointFromGUID "${duPartitionGuid[$pathOption]}" )
         if [ "$mountpoint" != "" ]; then
             TARGET_THEME_DIR="$mountpoint"
         else
@@ -2046,9 +2090,9 @@ RespondToUserDeviceSelection()
         TARGET_THEME_DIR_DEVICE="${duIdentifier[$pathOption]}"
         TARGET_THEME_PARTITIONGUID="${duPartitionGuid[$pathOption]}"
 
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR=$TARGET_THEME_DIR"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
         
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
@@ -2062,8 +2106,21 @@ RespondToUserDeviceSelection()
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordUnManagedThemesAndSendToUI
             CheckAndRemoveBareClonesNoLongerNeeded
-            ReadAndSendCurrentNvramTheme
+            #ReadAndSendCurrentNvramTheme
             CheckForThemeUpdates &
+            
+            # Check if this selected device is boot device or not
+            if [ "$TARGET_THEME_DIR_DEVICE" != "$bootDeviceIdentifier" ]; then
+                # Hide theme control options
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
+                SendToUI "ShowHideControlOptions@Hide@"
+            else
+                # Show theme control options
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Show@"
+                SendToUI "ShowHideControlOptions@Show@"
+            fi
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
@@ -2075,12 +2132,12 @@ RespondToUserDeviceSelection()
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_PARTITIONGUID="-"
         
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Setting prefs for default dir,path & GUID to -"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting prefs for default dir,path & GUID to -"
         UpdatePrefsKey "LastSelectedPath" "$TARGET_THEME_DIR"  
         UpdatePrefsKey "LastSelectedPathDevice" "$TARGET_THEME_DIR_DEVICE"
         UpdatePrefsKey "LastSelectedPartitionGUID" "$TARGET_THEME_PARTITIONGUID"
         
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@-@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
     fi
 }
@@ -2088,6 +2145,9 @@ RespondToUserDeviceSelection()
 # ---------------------------------------------------------------------------------------
 RespondToUserThemeAction()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserThemeAction()"
+    
     local messageFromUi="$1"
 
     # remove everything up until, and including, the first @
@@ -2102,8 +2162,7 @@ RespondToUserThemeAction()
     # Note - desiredAction will be either: Install, UnInstall or Update
     
     if [ ! "$chosenTheme" == "" ] && [ ! "$desiredAction" == "" ]; then
-        WriteLinesToLog
-        WriteToLog "User chose to $desiredAction theme $chosenTheme"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to $desiredAction theme $chosenTheme"
         
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
@@ -2119,6 +2178,9 @@ RespondToUserThemeAction()
 # ---------------------------------------------------------------------------------------
 RespondToUserSnowToggle()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserSnowToggle()"
+    
     local messageFromUi="$1"
 
     # remove everything up until, and including, the first @
@@ -2126,13 +2188,12 @@ RespondToUserSnowToggle()
     chosenOption="${messageFromUi##*:}"
 
     if [ ! "$chosenOption" == "" ]; then
-        WriteLinesToLog
         if [ "$chosenOption" == "On" ]; then
-            WriteToLog "User chose to set enable Snow."
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to set enable Snow."
             gSnow="On"
             UpdatePrefsKey "Snow" "On"
         elif [ "$chosenOption" == "Off" ]; then
-            WriteToLog "User chose to set disable Snow."
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to set disable Snow."
             gSnow="Off"
             UpdatePrefsKey "Snow" "Off"
         fi
@@ -2142,6 +2203,9 @@ RespondToUserSnowToggle()
 # ---------------------------------------------------------------------------------------
 CheckThemePathIsStillValid()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckThemePathIsStillValid()"
+    
     local findDevice=""
     local stillMounted=0
     
@@ -2157,7 +2221,7 @@ CheckThemePathIsStillValid()
         for ((i=0; i<${#duIdentifier[@]}; i++))
         do
             if [ $findDevice == ${duIdentifier[$i]} ]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Device $TARGET_THEME_PARTITIONGUID is ${duIdentifier[$i]}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Device $TARGET_THEME_PARTITIONGUID is ${duIdentifier[$i]}"
                 stillMounted=1
                 # Ensure current TARGET_THEME_DIR_DEVICE matches device
                 TARGET_THEME_DIR_DEVICE=${duIdentifier[$i]}
@@ -2169,7 +2233,7 @@ CheckThemePathIsStillValid()
         WriteToLog "Theme directory $TARGET_THEME_DIR on $TARGET_THEME_PARTITIONGUID does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}entry=$entry"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
         local pathToPrint="$TARGET_THEME_DIR"
         if [ "$entry" != "-" ]; then
             if [[ "${themeDirPaths[$entry]}" == *$gESPMountPrefix* ]]; then
@@ -2179,24 +2243,24 @@ CheckThemePathIsStillValid()
                 pathToPrint="/Volumes/EFI/${tmpStrip}"
             fi
         fi
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
         SendToUI "NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
 
-        WriteToLog "NoPathSelected"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: NoPathSelected@@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}NoPathSelected"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
         
         # Re-build theme directory list
         "$findThemeDirs"
-        ResetInternalDiskArrays
         ReadThemeDirList
         CreateAndSendVolumeDropDownMenu
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@-"
         SendToUI "Target@-@"
         RespondToUserDeviceSelection "@-"
 
         return 1
     else
-        WriteToLog "Theme directory $TARGET_THEME_DIR exists."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Theme directory $TARGET_THEME_DIR exists."
         return 0
     fi
 }
@@ -2209,11 +2273,14 @@ GetListOfInstalledThemesAndSendToUI()
     # what's there.
     # Send the list of installed themes to the UI.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetListOfInstalledThemesAndSendToUI()"
+    
     installedThemeStr=""
     unset installedThemesFoundAfterSearch
     unset installedThemesOnCurrentVolume
     if [ "$TARGET_THEME_DIR" != "" ] && [ "$TARGET_THEME_DIR" != "-" ]; then
-        WriteToLog "Looking for installed themes at $TARGET_THEME_DIR on $TARGET_THEME_DIR_DEVICE"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Looking for installed themes at $TARGET_THEME_DIR on $TARGET_THEME_DIR_DEVICE"
         oIFS="$IFS"; IFS=$'\r\n'
         installedThemesFoundAfterSearch=( $( find "$TARGET_THEME_DIR"/* -type d -depth 0 ))
         for ((i=0; i<${#installedThemesFoundAfterSearch[@]}; i++))
@@ -2221,16 +2288,25 @@ GetListOfInstalledThemesAndSendToUI()
             installedThemesOnCurrentVolume[$i]="${installedThemesFoundAfterSearch[$i]##*/}"
             # Create comma separated string for sending to the UI
             installedThemeStr="${installedThemeStr},${installedThemesOnCurrentVolume[$i]}"
-            WriteToLog "Found installed theme: ${installedThemesOnCurrentVolume[$i]}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found installed theme: ${installedThemesOnCurrentVolume[$i]}"
         done
         IFS="$oIFS"
         # Remove leading comma from string
         installedThemeStr="${installedThemeStr#?}"
     else
-        WriteToLog "Can't check for installed themes at $TARGET_THEME_DIR"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Can't check for installed themes at $TARGET_THEME_DIR"
     fi
     
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: InstalledThemes@${installedThemeStr}@"
+    # Sort comma separated list. 
+    # This is necessary only for applying different fills (shadows/without shadows) in JS ChangeButtonAndBandToUnInstall()
+    installedThemeStr=$( LC_ALL=C; echo "$installedThemeStr" | tr , "\n" | sort -f | tr "\n" , )
+    
+    # Remove trailing comma from string
+    if [ "${installedThemeStr: -1}" == "," ]; then
+        installedThemeStr="${installedThemeStr%?}"
+    fi
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@${installedThemeStr}@"
     SendToUI "InstalledThemes@${installedThemeStr}@"
 }
 
@@ -2241,6 +2317,9 @@ CheckThemeIsInPrefs()
     # it's clearly installed in the users EFI/Clover/Themes directory AND has a parent
     # bare clone in the support directory.
     # If found - Add this theme in to prefs.
+    
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckThemeIsInPrefs()"
     
     local themeToFind="$1"
     local inPrefs=0
@@ -2254,7 +2333,7 @@ CheckThemeIsInPrefs()
     
     if [ $inPrefs -eq 0 ]; then
         # Should add in to prefs
-        WriteToLog "* $themeToFind is in ${TARGET_THEME_DIR} and bare clone exists but not in prefs! Adding now."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}* $themeToFind is in ${TARGET_THEME_DIR} and bare clone exists but not in prefs! Adding now."
 
         # Add the details for this theme for adding to prefs file
         gNewInstalledThemeName="$themeToFind"
@@ -2275,8 +2354,11 @@ CheckAndRecordUnManagedThemesAndSendToUI()
     #       Create list of any installed themes missing a .hash file in $unversionedThemeStr
     # Send the list to the UI so a cross is drawn to the right of the 'UnInstall' button.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckAndRecordUnManagedThemesAndSendToUI()"
+    
     if [ ! "$TARGET_THEME_DIR" == "-" ]; then
-        WriteToLog "Checking $TARGET_THEME_DIR for any unmanaged themes (without a .hash)."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking $TARGET_THEME_DIR for any unmanaged themes (without a .hash)."
         unversionedThemeStr=""
         local prefsNeedUpdating=0
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
@@ -2287,7 +2369,7 @@ CheckAndRecordUnManagedThemesAndSendToUI()
                 
             # Check for .hash inside installed theme dir
             if [ ! -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
-                WriteToLog "${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has no hash"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has no hash"
         
                 # Append to list of themes that cannot be checked for updates
                 unversionedThemeStr="${unversionedThemeStr},${installedThemesOnCurrentVolume[$t]}"
@@ -2295,16 +2377,18 @@ CheckAndRecordUnManagedThemesAndSendToUI()
                 # Remove any pref entry for this theme
                 for ((d=0; d<${#installedThemeName[@]}; d++))
                 do
-                    if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && [ "${installedThemePartitionGUID[$d]}" == "${TARGET_THEME_PARTITIONGUID}" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
+                    if [ "${installedThemeName[$d]}" == "${installedThemesOnCurrentVolume[$t]}" ] && \
+                       [ "${installedThemePartitionGUID[$d]}" == "${TARGET_THEME_PARTITIONGUID}" ] && \
+                       [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                         # Doing this will effectively delete the theme from prefs as it 
                         # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
-                        WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} on $TARGET_THEME_PARTITIONGUID"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Housekeeping: Will remove prefs entry for ${installedThemeName[$d]} on $TARGET_THEME_PARTITIONGUID"
                         prefsNeedUpdating=1
                         installedThemeName[$d]="-"
                     fi
                 done
             else
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${TARGET_THEME_DIR}/${installedThemesOnCurrentVolume[$t]} has parent bare clone in support dir"
                 # Match - theme dir in users theme path that also has a parent bare clone in app support dir.
                 # Double check this is also in user prefs file.
                 if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
@@ -2321,53 +2405,226 @@ CheckAndRecordUnManagedThemesAndSendToUI()
         # Remove leading comma from string
         unversionedThemeStr="${unversionedThemeStr#?}"
     
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
         SendToUI "UnversionedThemes@${unversionedThemeStr}@"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+IsThemeInstalled()
+{
+    local passedTheme="$1"
+    local found=1
+    for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++ ));
+    do
+        if [ "$passedTheme" == "${installedThemesOnCurrentVolume[$t]}" ]; then
+            found=0
+            break
+        fi
+    done
+    echo $found
+}
+
+# ---------------------------------------------------------------------------------------
+PredictNextTheme()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PredictNextTheme()"
+    
+    local themeToSend=""
+    
+    # Also got available $gBootType which shows UEFI or Legacy
+    # Also got available $gNvramSave which can be either 0 or 1 to indicate working nvram
+
+    if [ "$gBootType" == "UEFI" ]; then
+        if [ "$CURRENT_THEME_ENTRY_NVRAM" != "" ]; then
+            local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_NVRAM" )
+            if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_NVRAM" == "embedded" ]; then
+                themeToSend="$CURRENT_THEME_ENTRY_NVRAM"
+            fi
+        elif [ "$CURRENT_THEME_ENTRY_CONFIG_PLIST" != "" ]; then
+            local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_CONFIG_PLIST" )
+            if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_CONFIG_PLIST" == "embedded" ]; then
+                themeToSend="$CURRENT_THEME_ENTRY_CONFIG_PLIST"
+            fi
+        fi
+    elif [ "$gBootType" == "Legacy" ]; then
+        if [ "$CURRENT_THEME_ENTRY_NVRAM" != "" ] && [ $gNvramSave -eq 0 ]; then
+            local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_NVRAM" )
+            if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_NVRAM" == "embedded" ]; then
+                themeToSend="$CURRENT_THEME_ENTRY_NVRAM"
+            fi
+        elif [ "$CURRENT_THEME_ENTRY_NVRAM_PLIST" != "" ]; then
+            local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_NVRAM_PLIST" )
+            if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_NVRAM_PLIST" == "embedded" ]; then
+                themeToSend="$CURRENT_THEME_ENTRY_NVRAM_PLIST"
+            fi
+        elif [ "$CURRENT_THEME_ENTRY_CONFIG_PLIST" != "" ]; then
+            local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_CONFIG_PLIST" )
+            if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_CONFIG_PLIST" == "embedded" ]; then
+                themeToSend="$CURRENT_THEME_ENTRY_CONFIG_PLIST"
+            fi
+        fi
+    fi
+
+    if [ "$themeToSend" == "" ]; then
+        if [ ${#installedThemesOnCurrentVolume[@]} -gt 0 ]; then
+            themeToSend="random"
+        else
+            themeToSend="embedded"
+        fi
+    fi
+
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: SetPrediction@${themeToSend}@"
+    SendToUI "SetPrediction@${themeToSend}@"
+}
+
+# ---------------------------------------------------------------------------------------
+RespondToDropDownMenuChange()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToDropDownMenuChange()"
+    
+    local messageFromUi="$1"
+    local wantToChange="${messageFromUi%@*}"
+    local themeToSet="${messageFromUi#*@}"
+    local lastChar=$( echo -n "$wantToChange" | tail -c -1 )
+
+    if [ "$lastChar" == "N" ]; then
+        if [ "$themeToSet" != "!Remove!" ]; then
+            WriteToLog "User chose to set nvram var to $themeToSet"
+            SetNvramTheme "$themeToSet"
+        else
+            WriteToLog "User chose to delete clover.Theme nvram var"
+            DeleteNvramThemeVar
+        fi
+    elif [ "$lastChar" == "P" ]; then
+        if [ "$themeToSet" != "!Remove!" ]; then
+            WriteToLog "User chose to set nvram plist to $themeToSet"
+            SetNvramFile "$themeToSet"
+        else
+            WriteToLog "User chose to remove nvram.plist theme entry"
+            DeleteNvramPlistThemeEntry
+        fi
+    elif [ "$lastChar" == "C" ]; then
+        if [ "$themeToSet" != "!Remove!" ]; then
+            WriteToLog "User chose to set config.plist to $themeToSet"
+            SetConfigFile "$themeToSet"
+        else
+            WriteToLog "User chose to remove config.plist theme entry"
+            DeleteConfigPlistThemeEntry
+        fi
     fi
 }
 
 # ---------------------------------------------------------------------------------------
 ReadAndSendCurrentNvramTheme()
 {
-    readNvramVar=$( nvram -p | grep Clover.Theme | tr -d '\011' )
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadAndSendCurrentNvramTheme()"
+    
+    local readNvramVar=$( nvram -p | grep Clover.Theme | tr -d '\011' )
 
     # Extract theme name
     local themeName="${readNvramVar##*Clover.Theme}"
 
     if [ ! -z "$readNvramVar" ]; then
-        WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@${themeName}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Clover.Theme NVRAM variable is set to $themeName"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@${themeName}@"
         SendToUI "Nvram@${themeName}@"
         # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_NvramFound"
+        CURRENT_THEME_ENTRY_NVRAM="$themeName"
+        PredictNextTheme
     else
-        WriteToLog "Clover.Theme NVRAM variable is not set"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: Nvram@-@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Clover.Theme NVRAM variable is not set"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
         # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_NvramNotFound"
+        PredictNextTheme
     fi
 }
 
 # ---------------------------------------------------------------------------------------
+ReadAndSendCurrentNvramPlistTheme()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadAndSendCurrentNvramPlistTheme()"
+    
+    if [ -f "$gNvramPlistFullPath" ]; then
+
+        # Extract theme name
+        local themeName=$( /usr/libexec/PlistBuddy -c "Print:Clover.Theme" "$gNvramPlistFullPath" 2>/dev/null )
+        
+        if [ "$themeName" != "" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath contains theme entry $themeName"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@${themeName}@"
+            SendToUI "NvramP@${themeName}@"
+            CURRENT_THEME_ENTRY_NVRAM_PLIST="$themeName"
+            PredictNextTheme
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath does not contain a theme entry"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@-@"
+            SendToUI "NvramP@-@"
+            PredictNextTheme
+        fi
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath does not exist."
+    fi
+
+}
+
+# ---------------------------------------------------------------------------------------
+ReadAndSendCurrentConfigPlistTheme()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadAndSendCurrentConfigPlistTheme()"
+    
+    if [ -f "$gConfigPlistFullPath" ]; then
+
+        # Extract theme name
+        local themeName=$( /usr/libexec/PlistBuddy -c "Print:GUI:Theme" "$gConfigPlistFullPath" 2>/dev/null )
+        
+        if [ "$themeName" != "" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath contains theme entry $themeName"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@${themeName}@"
+            SendToUI "ConfigP@${themeName}@"
+            CURRENT_THEME_ENTRY_CONFIG_PLIST="$themeName"
+            PredictNextTheme
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath does not contain a theme entry"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@-@"
+            SendToUI "ConfigP@-@"
+            PredictNextTheme
+        fi
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath does not exist."
+    fi
+
+}
+# ---------------------------------------------------------------------------------------
 SetNvramTheme()
 {
-    local messageFromUi="$1"
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetNvramTheme()"
 
-    # remove everything up until, and including, the first @
-    messageFromUi="${messageFromUi#*@}"
-    chosenTheme="${messageFromUi%%@*}"
+    local chosenTheme="$1"
+    local successFlag=1
+
     if [ $(CheckOsVersion) -ge 13 ]; then
         # com.apple.security.agentStub on Mavericks?
-        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
     else
         successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
     fi
+    
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        WriteToLog "Setting NVRAM Variable was successful."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable was successful."
     else
-        WriteToLog "Setting NVRAM Variable failed."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable failed."
     fi
     
     # Read current Clover.Theme Nvram variable and send to UI.
@@ -2375,17 +2632,169 @@ SetNvramTheme()
 }
 
 # ---------------------------------------------------------------------------------------
+DeleteNvramThemeVar()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DeleteNvramThemeVar()"
+    
+    local successFlag=1
+
+    if [ $(CheckOsVersion) -ge 13 ]; then
+        # com.apple.security.agentStub on Mavericks?
+        successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteNVRAMVar\" with administrator privileges" )
+    else
+        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteNVRAMVar\" with administrator privileges" )
+    fi
+    
+    # Was operation a success?
+    if [ $successFlag -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting NVRAM Variable was successful."
+        CURRENT_THEME_ENTRY_NVRAM=""
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting NVRAM Variable failed."
+    fi
+    
+    # Read current Clover.Theme Nvram variable and send to UI.
+    ReadAndSendCurrentNvramTheme
+}
+
+# ---------------------------------------------------------------------------------------
+SetNvramFile()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetNvramFile()"
+    
+    local chosenTheme="$1"
+    local successFlag=1
+    
+    if [ -f "$gNvramPlistFullPath" ]; then
+        if [ $(CheckOsVersion) -ge 13 ]; then
+            # com.apple.security.agentStub on Mavericks?
+            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+        else
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+        fi
+    fi
+        
+    # Was operation a success?
+    if [ $successFlag -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable in $gNvramPlistFullPath was successful."
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable in $gNvramPlistFullPath failed."
+    fi
+    
+    # Read current nvram.plist theme var and send to UI
+    ReadAndSendCurrentNvramPlistTheme
+}
+
+# ---------------------------------------------------------------------------------------
+DeleteNvramPlistThemeEntry()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DeleteNvramPlistThemeEntry()"
+    
+    local successFlag=1
+    
+    if [ -f "$gNvramPlistFullPath" ]; then
+        if [ $(CheckOsVersion) -ge 13 ]; then
+            # com.apple.security.agentStub on Mavericks?
+            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+        else
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+        fi
+    fi
+        
+    # Was operation a success?
+    if [ $successFlag -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gNvramPlistFullPath was successful."
+        CURRENT_THEME_ENTRY_NVRAM_PLIST=""
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gNvramPlistFullPath failed."
+    fi
+    
+    # Read current nvram.plist theme var and send to UI
+    ReadAndSendCurrentNvramPlistTheme
+}
+
+# ---------------------------------------------------------------------------------------
+SetConfigFile()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetConfigFile()"
+    
+    local chosenTheme="$1"
+    local successFlag=1
+    
+    if [ -f "$gConfigPlistFullPath" ]; then
+        if [ $(CheckOsVersion) -ge 13 ]; then
+            # com.apple.security.agentStub on Mavericks?
+            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+        else
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+        fi
+    fi
+        
+    # Was operation a success?
+    if [ $successFlag -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting theme in $gConfigPlistFullPath was successful."
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting theme in $gConfigPlistFullPath failed."
+    fi
+    
+    # Read current config.plist theme entry and send to UI
+    ReadAndSendCurrentConfigPlistTheme
+}
+
+# ---------------------------------------------------------------------------------------
+DeleteConfigPlistThemeEntry()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DeleteConfigPlistThemeEntry()"
+    
+    local successFlag=1
+    
+    if [ -f "$gConfigPlistFullPath" ]; then
+        if [ $(CheckOsVersion) -ge 13 ]; then
+            # com.apple.security.agentStub on Mavericks?
+            successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+        else
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+        fi
+    fi
+        
+    # Was operation a success?
+    if [ $successFlag -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gConfigPlistFullPath was successful."
+        CURRENT_THEME_ENTRY_CONFIG_PLIST=""
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gConfigPlistFullPath failed."
+    fi
+    
+    # Read current nvram.plist theme var and send to UI
+    ReadAndSendCurrentConfigPlistTheme
+}
+
+
+# ---------------------------------------------------------------------------------------
 CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
 {
     # If all instances of a local bare repo theme.git have been uninstalled
     # then delete the local bare repo.
+    
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()"
     
     local passedThemeName="$1"
     local foundTheme=0
     for ((n=0; n<${#installedThemeName[@]}; n++ ));
     do
         if [ "${installedThemeName[$n]}" == "$passedThemeName" ]; then
-            WriteToLog "Keeping ${passedThemeName}.git local bare repo as it's still in use."
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Keeping ${passedThemeName}.git local bare repo as it's still in use."
             foundTheme=1
             break
         fi
@@ -2393,7 +2802,7 @@ CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
     if [ $foundTheme -eq 0 ]; then
         if [ -d "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git ]; then
             #WriteToLog "Local bare repo ${passedThemeName}.git is no longer in use. Deleting."
-            WriteToLog "Local bare repo ${passedThemeName}.git is now being deleted."
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Local bare repo ${passedThemeName}.git is now being deleted."
             rm -rf "${WORKING_PATH}/${APP_DIR_NAME}/${passedThemeName}".git
         fi
     fi
@@ -2406,7 +2815,8 @@ CheckForThemeUpdates()
     # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
     #       If parent-repo theme.git is found then cd in to it and run a git fetch.
 
-    #local updateWasFound=0
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForThemeUpdates()"
     
     # Send UI a blank update message to enable UI.
     SendToUI "UpdateAvailThemes@@"
@@ -2415,31 +2825,31 @@ CheckForThemeUpdates()
 
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
-        WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking $TARGET_THEME_DIR for any theme updates."
     
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
             # read hash from currently installed theme
             if [ -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
                 local themeHashLocal=$( cat "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash )
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashLocal=$themeHashLocal"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashLocal=$themeHashLocal"
 
                 # get hash of theme in the repo
                 local themeHashRepo=$( "$gitCmd" ls-remote git://git.code.sf.net/p/cloverefiboot/themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master )
                 themeHashRepo="${themeHashRepo:0:40}"
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}themeHashRepo=$themeHashRepo"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashRepo=$themeHashRepo"
 
                 if [ "$themeHashRepo" != "" ]; then
                     if [ "$themeHashLocal" != "$themeHashRepo" ]; then
                         # Theme has been updated.
-                        WriteToLog "${installedThemesOnCurrentVolume[$t]} has an update available."
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash diff: $themeHashLocal | $themeHashRepo"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${installedThemesOnCurrentVolume[$t]} has an update available."
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash diff: $themeHashLocal | $themeHashRepo"
                         updateAvailThemeStr="${updateAvailThemeStr},${installedThemesOnCurrentVolume[$t]}" 
                     else
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}hash matches. No update for ${installedThemesOnCurrentVolume[$t]}"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash matches. No update for ${installedThemesOnCurrentVolume[$t]}"
                     fi
                 else
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Failed to read hash for ${installedThemesOnCurrentVolume[$t]} from repository."
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to read hash for ${installedThemesOnCurrentVolume[$t]} from repository."
                 fi
             fi
         done
@@ -2449,7 +2859,7 @@ CheckForThemeUpdates()
             updateAvailThemeStr="${updateAvailThemeStr#?}"
         fi
         
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
         SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
     fi
     
@@ -2464,6 +2874,9 @@ CheckAndRemoveBareClonesNoLongerNeeded()
     # If prefs says a theme should be on selected volume but it's not (maybe user
     # manually removed it?), then remove entry from prefs.
     # Also check to see if the bare clone in support dir can be deleted.
+    
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckAndRemoveBareClonesNoLongerNeeded()"
     
     if [ ! "$TARGET_THEME_DIR" == "-" ]; then
     
@@ -2484,7 +2897,7 @@ CheckAndRemoveBareClonesNoLongerNeeded()
                     fi
                 done
                 if [ $themeIsInDir -eq 0 ]; then
-                    WriteToLog "Housekeeping: ${installedThemeName[$n]} exists in prefs for $TARGET_THEME_DIR but it's not installed!"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Housekeeping: ${installedThemeName[$n]} exists in prefs for $TARGET_THEME_DIR but it's not installed!"
                     foundCloneToDelete=1
 
                     # if bare clone exists in support dir then there's a chance it could be deleted.
@@ -2501,7 +2914,7 @@ CheckAndRemoveBareClonesNoLongerNeeded()
                         done
 
                         if [ $foundCloneToDelete -eq 1 ]; then
-                            WriteToLog "Housekeeping: Deleting bare clone ${installedThemeName[$n]}.git"
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Housekeeping: Deleting bare clone ${installedThemeName[$n]}.git"
                             cd "${WORKING_PATH}/${APP_DIR_NAME}"
                             rm -rf "${installedThemeName[$n]}".git
                         else
@@ -2512,7 +2925,7 @@ CheckAndRemoveBareClonesNoLongerNeeded()
                     # Set theme name to -
                     # Doing this will effectively delete the theme from prefs as it 
                     # will be skipped in the loop in MaintainInstalledThemeListInPrefs()
-                    WriteToLog "Housekeeping: Will remove prefs entry for ${installedThemeName[$n]} in $TARGET_THEME_DIR"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Housekeeping: Will remove prefs entry for ${installedThemeName[$n]} in $TARGET_THEME_DIR"
                     prefsNeedUpdating=1
                     installedThemeName[$n]="-"
                 fi
@@ -2533,6 +2946,9 @@ CleanInstalledThemesPrefEntries()
     # This should not happen in the first place but I have found some examples
     # during my local testing here. Could be a bug that needs finding!
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CleanInstalledThemesPrefEntries()"
+    
     foundEntryToDelete=0
     for ((n=0; n<${#installedThemeName[@]}; n++ ));
     do
@@ -2541,10 +2957,12 @@ CleanInstalledThemesPrefEntries()
             if [ $m -ne $n ] && [ "${installedThemeName[$n]}" == "${installedThemeName[$m]}" ]; then
                 # Found another theme entry by same name
                 # Is this installed elsewhere or a duplicate entry?
-                if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && [ "${installedThemePartitionGUID[$n]}" == "${installedThemePartitionGUID[$m]}" ]; then
+                if [ "${installedThemePath[$n]}" == "${installedThemePath[$m]}" ] && \
+                   [ "${installedThemePathDevice[$n]}" == "${installedThemePathDevice[$m]}" ] && \
+                   [ "${installedThemePartitionGUID[$n]}" == "${installedThemePartitionGUID[$m]}" ]; then
                     # Duplicate entry. Remove
                     foundEntryToDelete=1
-                    WriteToLog "Housekeeping: Removing duplicate prefs entry for ${installedThemeName[$n]} at ${installedThemePath[$n]}."
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Housekeeping: Removing duplicate prefs entry for ${installedThemeName[$n]} at ${installedThemePath[$n]}."
                     installedThemeName[$n]="-"
                 fi
             fi
@@ -2560,11 +2978,13 @@ CleanInstalledThemesPrefEntries()
 # ---------------------------------------------------------------------------------------
 IsGitInstalled()
 {
-    WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}IsGitInstalled()"
+    
     local tmp=$( which -a git )
     local num=$( which -a git | wc -l )
-    WriteToLog "Number of git installations: ${num##* }"
-    WriteToLog "git installations: $tmp"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Number of git installations: ${num##* }"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}git installations: $tmp"
     
     if [ $( which -s git) ]; then 
         # Alert user in UI
@@ -2638,24 +3058,29 @@ IsGitInstalled()
         fi
         
         if [ "$gitCmd" != "" ]; then
-            WriteToLog "using git at:$gitCmd"
-            WriteToLog "$( $gitCmd --version )"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}using git at:$gitCmd"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$( $gitCmd --version )"
             WriteToLog "CTM_GitOK"
         fi
     fi
-    WriteLinesToLog
 }
 
 # ---------------------------------------------------------------------------------------
 CleanUp()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CleanUp()"
+    
     RemoveFile "$logJsToBash"
     RemoveFile "$logFile"
     RemoveFile "$themeDirInfo"
     RemoveFile "$logBashToJs"
     RemoveFile "$updateScript"
     RemoveFile "$espList"
+    RemoveFile "$mbrList"
     RemoveFile "$bootLogFile"
+    RemoveFile "$bootlogScriptOutfile"
+    RemoveFile "$bootDeviceInfo"
     
     if [ -d "$tmp_dir" ]; then
         rm -rf "$tmp_dir"
@@ -2685,58 +3110,34 @@ appPid=$( ps -p ${pid:-$$} -o ppid= )
 
 # Resolve path
 SELF_PATH=$(cd -P -- "$(dirname -- "$0")" && pwd -P) && SELF_PATH=$SELF_PATH/$(basename -- "$0")
+source "${SELF_PATH%/*}"/shared.sh
 
-# Set out other directory paths based on SELF_PATH
-PUBLIC_DIR="${SELF_PATH%/*}"
-PUBLIC_DIR="${PUBLIC_DIR%/*}"
-ASSETS_DIR="$PUBLIC_DIR"/assets
-SCRIPTS_DIR="$PUBLIC_DIR"/bash
-JSSCRIPTS_DIR="$PUBLIC_DIR"/scripts
-TOOLS_DIR="$PUBLIC_DIR"/tools
-WORKING_PATH="${HOME}/Library/Application Support"
-APP_DIR_NAME="CloverThemeManager"
-TARGET_THEME_DIR=""
-TARGET_THEME_DIR_DEVICE=""
-TARGET_THEME_PARTITIONGUID=""
-TMPDIR="/tmp/CloverThemeManager"
-UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
-COMMANDLINE=0
-
-logFile="${TMPDIR}/CloverThemeManagerLog.txt"
-themeDirInfo="${TMPDIR}/themeDirInfo.txt"
-espList="${TMPDIR}/espList.txt"
-logJsToBash="${TMPDIR}/jsToBash" # Note - this is created in AppDelegate.m
-logBashToJs="${TMPDIR}/bashToJs" # Note - this is created in AppDelegate.m
-updateScript="${TMPDIR}/updateScript.sh"
+# Globals
+#gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
 gUserPrefsFileName="org.black.CloverThemeManager"
 gUserPrefsFile="$HOME/Library/Preferences/$gUserPrefsFileName"
-gThemeRepoUrlFile="$PUBLIC_DIR"/theme_repo_url_list.txt
-uiSudoChanges="${SCRIPTS_DIR}/uiSudoChangeRequests.sh"
-findThemeDirs="${SCRIPTS_DIR}/findThemeDirs.sh"
-gUiPwCancelledStr="zYx1!ctm_User_Cancelled!!xYz"
-remoteRepositoryUrl="http://git.code.sf.net/p/cloverefiboot"
-bootLogFile="${TMPDIR}/boot.log"
-debugIndent="    "
 gThumbSizeX=0
 gThumbSizeY=0
 gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
-gFirstRun=0
-gEspMounted=0
-gitCmd=""
-gESPMountPrefix="ctmTempMp"
-gSnow="On"
-gBootlogState="Open"
+gFirstRun=0                                                        # Show to initialise.js that prefs have been read the first time
+gitCmd=""                                                          # Will be set to path to installed git binary to use
+gSnow="Off"                                                        # Default state for Snow effect. ** Should really remove this! **
+gBootlogState="Open"                                               # Default state for bootlog in UI. This is overridden by user prefs
+gNvramPlistFullPath=""                                             # Will become full path if theme entry exists in nvram.plist
+gConfigPlistFullPath=""                                            # Will become full path if theme entry exists in config.plist
+gBootType=""                                                       # Will become either UEFI or Legacy
+gNvramSave=1                                                       # Set to 0 if writing to NVRAM is saved for next boot
 
-export zeroUUID="00000000-0000-0000-0000-000000000000"
-export partutil="$TOOLS_DIR"/partutil
+CURRENT_THEME_ENTRY_NVRAM=""
+CURRENT_THEME_ENTRY_NVRAM_PLIST=""
+CURRENT_THEME_ENTRY_CONFIG_PLIST=""
 
-# Get versions of js scripts
-#jsScriptInitVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/initialise.js )
-#jsScriptInitVersion="${jsScriptInitVersion##*=}"
-#jsScriptCtmVersion=$( grep "//Version=" "$JSSCRIPTS_DIR"/cloverthememanager.js )
-#jsScriptCtmVersion="${jsScriptCtmVersion##*=}"
+TARGET_THEME_DIR=""
+TARGET_THEME_DIR_DEVICE=""
+TARGET_THEME_PARTITIONGUID=""
+
 updateIdVersion=$( cat "${PUBLIC_DIR}"/.updateID )
 
 # Find version of main app.
@@ -2745,17 +3146,23 @@ mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString"
 
 # Begin log file
 RemoveFile "$logFile"
-WriteToLog "CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
-WriteToLog "Started Clover Theme Manager script"
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Started Clover Theme Manager script"
 WriteLinesToLog
-WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}scriptPid=$scriptPid | appPid=$appPid"
 WriteLinesToLog
-WriteToLog "PATH=$PATH"
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PATH=$PATH"
 
 # Ensure permissions of findThemeDirs script
 if [ -f "$findThemeDirs" ]; then
     chmod 755 "$findThemeDirs"
-    WriteToLog "Set permissions of findThemeDirs script"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of findThemeDirs script"
+fi
+
+# Ensure permissions of findThemeDirs script
+if [ -f "$bootlogScript" ]; then
+    chmod 755 "$bootlogScript"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of bootlog script"
 fi
 
 IsGitInstalled
@@ -2807,31 +3214,29 @@ if [ "$gitCmd" != "" ]; then
     else
         # Called from Clover Theme Manager.app
 
-        declare -a themeList
-        declare -a themeTitle
-        declare -a themeAuthor
-        declare -a themeDescription
-        declare -a dfMounts
-        declare -a tmpArray
+        # Arrays for theme.plists
+        declare -a themeList                       # holds the name of each theme
+        declare -a themeTitle                      # holds the title of each theme
+        declare -a themeAuthor                     # holds the author of each theme
+        declare -a themeDescription                # holds the description of each theme
     
         # Arrays for saving volume info
-        declare -a duIdentifier
-        declare -a duVolumeName
-        declare -a duVolumeMountPoint
-        declare -a duContent
-        declare -a duPartitionGuid
-        declare -a unmountedEsp
+        declare -a duIdentifier                    # holds the Disk Util identifier of available volume paths
+        declare -a duVolumeName                    # holds the Disk Util volume name of available volume paths
+        declare -a duVolumeMountPoint              # holds the Disk Util mountpoint of available volume paths
+        declare -a duContent                       # holds the Disk Util content of available volume paths
+        declare -a duPartitionGuid                 # holds the Disk Util UUID of available volume paths
     
         # Arrays for theme
-        declare -a themeDirPaths
-        declare -a installedThemesOnCurrentVolume
-        declare -a installedThemesFoundAfterSearch
+        declare -a themeDirPaths                   # holds full path of theme directory on each volume
+        declare -a installedThemesOnCurrentVolume  # holds list of themes on currently selected volume
+        declare -a installedThemesFoundAfterSearch # holds list of themes found on the selected volume
     
         # Arrays for list of what themes are installed where.
-        declare -a installedThemeName
-        declare -a installedThemePath
-        declare -a installedThemePathDevice
-        declare -a installedThemePartitionGUID
+        declare -a installedThemeName              # holds installed theme names read from prefs
+        declare -a installedThemePath              # holds theme paths for installed themes read from prefs
+        declare -a installedThemePathDevice        # holds theme device identifiers for installed themes read from prefs
+        declare -a installedThemePartitionGUID     # holds theme device UUID's for installed themes read from prefs
 
         # Globals for newly installed theme before adding to prefs
         ResetNewlyInstalledThemeVars
@@ -2844,8 +3249,9 @@ if [ "$gitCmd" != "" ]; then
         #tmp_dir=$(mktemp -d -t theme_manager)
         #ReadRepoUrlList
 
-        # Begin
+        # Run child script to gather information of volumes with /EFI/Clover/Themes directories 
         "$findThemeDirs" &
+        
         RefreshHtmlTemplates "managethemes.html"
         IsRepositoryLive
         EnsureLocalSupportDir
@@ -2865,6 +3271,20 @@ if [ "$gitCmd" != "" ]; then
         GetLatestIndexAndEnsureThemeHtml
         WriteToLog "CTM_ThemeDirsScan"
         wait
+
+        ReadPrefsFile
+        CleanInstalledThemesPrefEntries
+        
+        # Search ioreg for bootlog and write to file.
+        GetBootlog
+
+        # Identify boot device from bootlog and try to have it available.
+        # If MBR, try to find it among currently mounted devices.
+        # If GPT, match GUID from devicepath. If unmounted ESP and mount.
+        # Returns identifier. For example, disk0s1
+        bootDeviceIdentifier=$( GetSelfDevicePath ) # Calls MountESPAndSearchThemesPath (if GPT and unmounted ESP)
+
+        # Rebuild internal theme list as ESP may have been mounted
         ReadThemeDirList
         CreateAndSendVolumeDropDownMenu
         if [ $? -eq 0 ]; then
@@ -2872,13 +3292,68 @@ if [ "$gitCmd" != "" ]; then
         else
             WriteToLog "CTM_DropDownListNone"
         fi
-        ReadPrefsFile
-        CleanInstalledThemesPrefEntries
-        ReadBootLogAndInsertHtml
+
+        # If we have identified the mounted boot device, then set as target
+        if [ "$bootDeviceIdentifier" != "" ] && [ "$bootDeviceIdentifier" != "Failed" ]; then # Failed = no currently mounted MBR device matches bootlog self devicepath.
+            for (( t=0; t<${#duIdentifier[@]}; t++ ))
+            do
+                if [ "${duIdentifier[$t]}" == "$bootDeviceIdentifier" ]; then
+                    TARGET_THEME_DIR="${themeDirPaths[$t]}"
+                    TARGET_THEME_DIR_DEVICE="${duIdentifier[$t]}"
+                    TARGET_THEME_PARTITIONGUID="${duPartitionGuid[$t]}"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set target volume to boot device: $bootDeviceIdentifier"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
+                fi
+            done
+        fi
+
+        # Run bootlog script to read bootlog for theme info.
+        # This script builds the bootlog html and injects it into the managethemes template.
+        "$bootlogScript" "$bootDeviceIdentifier"
+        
+        # The bootlog script writes some paths (or text 'Native NVRAM') to file. Read them in.
+        if [ -f "$bootlogScriptOutfile" ]; then
+            gNvramPlistFullPath=$( grep "nvram@" "$bootlogScriptOutfile" ) && gNvramPlistFullPath="${gNvramPlistFullPath##*@}"
+            gConfigPlistFullPath=$( grep "config@" "$bootlogScriptOutfile" ) && gConfigPlistFullPath="${gConfigPlistFullPath##*@}"
+            gBootType=$( grep "bootType@" "$bootlogScriptOutfile" ) && gBootType="${gBootType##*@}"
+            gNvramSave=$( grep "nvramSave@" "$bootlogScriptOutfile" ) && gNvramSave="${gNvramSave##*@}"
+            
+            # Honour the users choice to have the bootlog closed or expanded
+            if [ "$gBootlogState" == "Close" ]; then
+                gBootlogState="ShowClosed"
+            else
+                gBootlogState="Show"
+            fi
+        fi
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Returned back from bootlog script: gNvramPlistFullPath=$gNvramPlistFullPath | gConfigPlistFullPath=$gConfigPlistFullPath"
+
+        # Set last used volumes (as read from prefs), if boot device was not found.
+        if [ "$TARGET_THEME_DIR" == "" ] || [ "$TARGET_THEME_DIR" == "-" ]; then
+            MapLastSelectedPathToGUID
+        fi
+        
+        # Create footer control options for user to manage theme paths.
+        if [ "$TARGET_THEME_DIR_DEVICE" == "$bootDeviceIdentifier" ]; then
+            CreateControlOptionsHtmlAndInsert
+        fi
+        
+        # Send UI target theme entry to display, and other data to set default / restore state of main UI page
         SendUIInitData
 
-        # Read current Clover.Theme Nvram variable and send to UI.
-        ReadAndSendCurrentNvramTheme
+        # Read each available place where theme entry could be
+        if [ "$TARGET_THEME_DIR" != "-" ] && [ "$TARGET_THEME_DIR_DEVICE" != "-" ] && [ "$TARGET_THEME_PARTITIONGUID" != "-" ]; then
+        
+            # Read current Clover.Theme Nvram variable and send to UI.
+           ReadAndSendCurrentNvramTheme
+        
+            # Read current nvram.plist theme var and send to UI
+            ReadAndSendCurrentNvramPlistTheme
+        
+            # Read current config.plist theme entry and send to UI
+            ReadAndSendCurrentConfigPlistTheme
+        fi
         
         # If OS is newer than Lion then enable notifications
         if [ $(CheckOsVersion) -gt 11 ]; then
@@ -2901,7 +3376,7 @@ if [ "$gitCmd" != "" ]; then
         retVal=$? # returns 1 if no update / 0 if valid is available
         # If update available then user will be notified so do not check for theme updates.
         if [ $retVal -eq 1 ]; then
-            CheckForThemeUpdates &
+            CheckForThemeUpdates &   # CHECK - This is also called from RespondToUserDeviceSelection() which is called from SendUIInitData().
         fi
 
         # The messaging system is event driven and quite simple.
@@ -2937,7 +3412,14 @@ if [ "$gitCmd" != "" ]; then
             # Has the user clicked the MountESP button?
             elif [[ "$logLine" == *MountESP* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
+                WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
                 MountESPAndSearchThemesPath
+                # Test (move these from MountESPAndSearchThemesPath() and call separately)
+                ReadThemeDirList
+                CreateAndSendVolumeDropDownMenu
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
+                SendToUI "Target@$espID"
+                RespondToUserDeviceSelection "@$espID"
 
             # Has the user pressed a theme button to install, uninstall or update?
             elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
@@ -2951,14 +3433,15 @@ if [ "$gitCmd" != "" ]; then
                     CheckAndRecordUnManagedThemesAndSendToUI
                     CheckForThemeUpdates &
                     ReadAndSendCurrentNvramTheme
+                    ReadAndSendCurrentNvramPlistTheme
+                    ReadAndSendCurrentConfigPlistTheme
                 fi 
 
-            # Has user selected a theme for NVRAM variable?
-            elif [[ "$logLine" == *CTM_chosenNvramTheme* ]]; then
+            # Has user selected a theme control option?
+            elif [[ "$logLine" == *CTM_changeTheme* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
-                WriteToLog "User chose to set nvram theme."
-                SetNvramTheme "$logLine"
-            
+                RespondToDropDownMenuChange "$logLine"
+                
             # Has user changed the thumbnail size?
             elif [[ "$logLine" == *CTM_thumbSize* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"

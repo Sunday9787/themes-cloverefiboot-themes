@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.3
+//Version=0.75.4
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
+var gInstalledThemeListStr="";
 
 //-------------------------------------------------------------------------------------
 // On initial load
@@ -116,6 +117,8 @@ function readBashToJsMessageFile()
                 // where $installedThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
                 updateBandsWithInstalledThemes(firstLineSplit[1]);
+                // remember installed theme list
+                gInstalledThemeListStr=firstLineSplit[1];
                 // Honour users choice of which themes to view (All or just Installed)
                 GetShowHideButtonStateAndUpdateUI();
                 break;
@@ -138,7 +141,20 @@ function readBashToJsMessageFile()
             case "Nvram":
                 // Bash sends: "Nvram@${themeName}@"
                 macgap.app.removeMessage(firstLine);
-                actOnNvramThemeVar(firstLineSplit[1]);
+                SetCurrentThemeEntry("Nvram",firstLineSplit[1]);
+                //SetDropDownNvram(firstLineSplit[1]);
+                break;
+            case "NvramP":
+                // Bash sends: "NvramP@${themeName}@"
+                macgap.app.removeMessage(firstLine);
+                SetCurrentThemeEntry("NvramP",firstLineSplit[1]);
+                //SetDropDownNvramP(firstLineSplit[1]);
+                break;
+            case "ConfigP":
+                // Bash sends: "ConfigP@${themeName}@"
+                macgap.app.removeMessage(firstLine);
+                SetCurrentThemeEntry("ConfigP",firstLineSplit[1]);
+                //SetDropDownConfigP(firstLineSplit[1]);
                 break;
             case "Success":
                 // Bash sends: "Success@${passedAction}@$themeTitleToActOn"
@@ -206,6 +222,18 @@ function readBashToJsMessageFile()
                 // Bash sends: "BootlogView@${gBootlogState}@"
                 macgap.app.removeMessage(firstLine);
                 SetBootLogState(firstLineSplit[1]);
+                // Adjust footer height also
+                SetFooterHeight("IncludeCO");
+                break;
+            case "SetPrediction":
+                // Bash sends: "SetPrediction@${themeToSend}@"
+                macgap.app.removeMessage(firstLine);
+                SetPredictionText(firstLineSplit[1]);
+                break;
+            case "ShowHideControlOptions":
+                // Bash sends: "ShowHideControlOptions@Show or Hide@"
+                macgap.app.removeMessage(firstLine);
+                ShowHideControlOptions(firstLineSplit[1]);
                 break;
             default:
                 alert("Found else:"  + firstLine);
@@ -221,6 +249,13 @@ function readBashToJsMessageFile()
         timerReadMessageFile = setTimeout(readBashToJsMessageFile, 500);
     }
 }
+
+//-------------------------------------------------------------------------------------
+//function PopulateThemeListArray()
+//{
+    // Get each 'id' of a 'div' with class 'versionControl' and store everything after 'indicator_' in an array. 
+    //$(".versionControl").each(function(){ gThemeList.push(this.id.replace('indicator_','')); });
+//}
 
 //-------------------------------------------------------------------------------------
 function setTargetThemePath(entry)
@@ -296,10 +331,11 @@ function updateBandsWithInstalledThemes(themeList)
                 $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
             }
 
-            // Populate the config plist key drop down menu
+            // Populate control option dropdown menus.
             UpdateAndRefreshInstalledThemeDropDown(splitThemeList);
         } else {
-            UpdateAndRefreshInstalledThemeDropDown("-");
+            // Populate control option dropdown menus even though there are no themes.
+            UpdateAndRefreshInstalledThemeDropDown("");
                     
             // Update number of installed themes
             $("#NumInstalledThemes").html("-/" + $('div[id^=ThemeBand]').length);
@@ -309,6 +345,8 @@ function updateBandsWithInstalledThemes(themeList)
         }
     } else {
         showButtons();
+        // Populate control option dropdown menus even though there are no themes.
+        UpdateAndRefreshInstalledThemeDropDown("");
         // No themes installed on this volume
         $("#NumInstalledThemes").html("0/" + $('div[id^=ThemeBand]').length);
         // Reset colours and question mark incase previously shown.
@@ -441,42 +479,53 @@ function displayUnversionedThemes(themeList)
 }
 
 //-------------------------------------------------------------------------------------
-function actOnNvramThemeVar(nvramThemeVar)
+function SetCurrentThemeEntry(textToChange,themeName)
 {
-    // Print curent NVRAM var to UI
-    if(nvramThemeVar == "-") {        
-        SetNvramFooterToNotSet();
-    } else {
-        // Does the current NVRAM variable match an installed theme on this volume? 
-        var matchFound=0;
+    if (textToChange == "Nvram") {
+        $('#ctEntryNvram').text(themeName);
+    } else if (textToChange == "NvramP") {
+        $('#ctEntryNvramP').text(themeName);
+    } else if (textToChange == "ConfigP") {
+        $('#ctEntryConfig').text(themeName);
+    }
+}
 
-        // Check this theme from nvram against the ones installed on current volume.
-        $('#installedThemeDropDown option').each(function(){
-
-            if(this.value == nvramThemeVar) {
-                matchFound=1;
+//-------------------------------------------------------------------------------------
+function SetDropDownNvram(themeName)
+{
+    // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    if(themeName != "") {
+        $('#installedThemeDropDownNvram option').each(function(){
+            if(this.value == themeName) {
+                $("#installedThemeDropDownNvram").val(themeName);
             }
-        });
+        });  
+    }
+}
 
-        // Print Current NVRAM var contents
-        $("#currentNVRAMvar").text("NVRAM theme: " + nvramThemeVar );
-                
-        // Change UI content to match results
-        if(matchFound==1) {
-            // Print message
-            $("#currentNVRAMMessage").text("Theme is Installed on this volume"); 
-            // Change background colour to green
-            $("#NvramBand").attr('class', 'nvramFillInstalled');
-            // Change nvram dropdown option to match nvram var
-            $("#installedThemeDropDown").val(nvramThemeVar);
-        } else {
-            // Print message
-            $("#currentNVRAMMessage").text("Not Installed on this volume"); 
-            // Change background colour to red
-            $("#NvramBand").attr('class', 'nvramFillNotInstalled');
-            // Change nvram dropdown option to "-"
-            $("#installedThemeDropDown").val("-");
-        }
+//-------------------------------------------------------------------------------------
+function SetDropDownNvramP(themeName)
+{
+    // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    if(themeName != "") {
+        $('#installedThemeDropDownNvramP option').each(function(){
+            if(this.value == themeName) {
+                $("#installedThemeDropDownNvramP").val(themeName);
+            }
+        });  
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function SetDropDownConfigP(themeName)
+{
+    // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    if(themeName != "") {
+        $('#installedThemeDropDownConfigP option').each(function(){
+            if(this.value == themeName) {
+                $("#installedThemeDropDownConfigP").val(themeName);
+            }
+        });  
     }
 }
 
@@ -507,7 +556,6 @@ function AppUpdateFeedback(state)
         }
     }
 }
-
 
 //-------------------------------------------------------------------------------------
 function themeActionSuccess(action,themeName)
@@ -821,12 +869,32 @@ $(function()
     });
     
     //-----------------------------------------------------
-    // On changing the 'NVRAM theme' dropdown menu.
-    $("#installedThemeDropDown").change(function() {
-        var chosenNvramTheme=$("#installedThemeDropDown").val();
-        if(chosenNvramTheme != "-") {
-            // Send massage to bash script to notify setting of NVRAM variable.
-            macgap.app.launch("CTM_chosenNvramTheme@" + chosenNvramTheme);
+    // On changing the 'NVRAM' dropdown menu.
+    $("#installedThemeDropDownNvram").change(function() {
+        var chosenOption=$("#installedThemeDropDownNvram").val();
+        if(chosenOption != "-") {
+            // Send message to bash script to notify change.
+            macgap.app.launch("CTM_changeThemeN@" + chosenOption);
+        }
+    });
+    
+    //-----------------------------------------------------
+    // On changing the 'NVRAM.plist' dropdown menu.
+    $("#installedThemeDropDownNvramP").change(function() {
+        var chosenOption=$("#installedThemeDropDownNvramP").val();
+        if(chosenOption != "-") {
+            // Send message to bash script to notify change.
+            macgap.app.launch("CTM_changeThemeP@" + chosenOption);
+        }
+    });
+    
+    //-----------------------------------------------------
+    // On changing the 'Config.plist' dropdown menu.
+    $("#installedThemeDropDownConfigP").change(function() {
+        var chosenOption=$("#installedThemeDropDownConfigP").val();
+        if(chosenOption != "-") {
+            // Send message to bash script to notify change.
+            macgap.app.launch("CTM_changeThemeC@" + chosenOption);
         }
     });
     
@@ -847,40 +915,110 @@ $(function()
 //-------------------------------------------------------------------------------------
 function SetBootLogState(state)
 {
-    var bootLogContainerHeight = $('#BootLogContainer').height();
-    var currentFooterHeight = $('#footer').height();
+    // Note: The bootlog is not in the starting html template.
+    // It's injected by the bash script if a bootlog has been found.
+
+    var bootLogTitleBarHeight = $('#BootLogTitleBar').outerHeight();
+    var bootLogContainerBandCount = $('div[id^=bandHeader]').length;
+    var bootLogContainerHeight = ( bootLogContainerBandCount * 26 ); // 26px = Height of a single #BandHeader, #Band Description (inc 1px border)
+    var currentHeaderHeight = $('#header').outerHeight();
     
-    if(state == "Hide") { // There is no bootlog to show so hide the bootlog section
-        var bootLogTitleBarHeight = $('#BootLogTitleBar').height();
+    // Show and ShowClosed are passed by bash script if finding a bootlog.
+    // ShowClosed is used if user has asked to close it and setting is in prefs.
+    
+    if(state == "Show") {
+        // bash script has sent a command to show the bootlog
         var bootlogTotalHeight = bootLogTitleBarHeight + bootLogContainerHeight;
-        var newFooterHeight = (currentFooterHeight - bootlogTotalHeight);
-        $('#BootLogTitleBar').hide();
-        $('#BootLogContainer').hide();
-        window.resizeBy(0, - bootlogTotalHeight);
-        $('#footer').height(newFooterHeight);
-        $('#content').css("bottom","-="+bootlogTotalHeight);
+        var newHeaderHeight = (currentHeaderHeight + bootlogTotalHeight);
+        $('#header').height(newHeaderHeight);
+        $('#content').css("top","+="+bootlogTotalHeight);
+        SetCheckUpdateMessageAndProgressBarPosition();
+    } else if (state == "ShowClosed" ) {
+        // bash script has sent a command to show the bootlog but collapsed
+        $('#BootLogContainer').hide(function() {
+            var newHeaderHeight = (currentHeaderHeight + bootLogTitleBarHeight);
+            $('#header').height(newHeaderHeight);
+            $('#content').css("top","+="+bootLogTitleBarHeight);
+            SetCheckUpdateMessageAndProgressBarPosition();
+        });
     } else {
+        // Open and Close are passed as a result of the user clicking the #BootLogTitleBar
+        
         var hidden = $('#BootLogContainer').is(":hidden"); 
         if(state == "Open") {
             // check it's not already open
             if (hidden) {
-                $('#BootLogContainer').show();
-                var newFooterHeight = (currentFooterHeight + bootLogContainerHeight);
-                window.resizeBy(0, bootLogContainerHeight);
-                $('#footer').height(newFooterHeight);
-                $('#content').css("bottom","+="+bootLogContainerHeight);
+            
+                // set header div z-index to 0 so header does not sit over sliding #content
+                $('#header').css("z-index",0);
+                
+                var newHeaderHeight = (currentHeaderHeight + bootLogContainerHeight);
+                $('#BootLogContainer').show(500);
+                $('#content').animate({ left: '0', top: '+=' + (bootLogContainerHeight)}, 500, function () {
+                        // Action after animation has completed
+                        SetCheckUpdateMessageAndProgressBarPosition();
+                        
+                        // set header div z-index to 1 so header sits over #content and shadows shows.
+                        $('#header').css("z-index",1);
+                    });
+                $('#header').height(newHeaderHeight);
+                // Change arrow in bootlog header band title
+                $('#BootLogTitleBar span').first().html('LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|');
             }
         } else {
-            // check it's not already closed
-            if (!hidden) {
-                $('#BootLogContainer').hide();
-                var newFooterHeight = (currentFooterHeight - bootLogContainerHeight);
-                window.resizeBy(0, - bootLogContainerHeight);
-                $('#footer').height(newFooterHeight);
-                $('#content').css("bottom","-="+bootLogContainerHeight);
+            // check it's not already closed and not already been clicked and currently animating to close
+            if (!hidden && (!$('#content').is(':animated'))) {
+            
+                // set header div z-index to 0 so header does not sit over sliding #content
+                $('#header').css("z-index",0);
+                
+                var newHeaderHeight = (currentHeaderHeight - bootLogContainerHeight);
+                $('#BootLogContainer').hide(500);
+                $('#content').animate({ left: '0', top: '-=' + (bootLogContainerHeight)}, 500, function () {
+                        // Action after animation has completed
+                        $('#header').height(newHeaderHeight);
+                        SetCheckUpdateMessageAndProgressBarPosition();
+                        
+                        // set header div z-index to 1 so header sits over #content and shadows shows.
+                        $('#header').css("z-index",1);
+                    });
+                // Change arrow in bootlog header band title
+                $('#BootLogTitleBar span').first().html('LAST BOOT\&nbsp;\&nbsp;\&\#x25B8\&nbsp;\&nbsp;\&nbsp;\&nbsp;|');
             }
         }
     }
+}
+
+//-------------------------------------------------------------------------------------
+function SetFooterHeight(UseControlOption)
+{
+    // Note: only the footer links exist in the default template.
+    // The nvram status band is injected by bootlog.sh
+    // The control options are injected by script.sh
+
+    var nvramBandHeight = $('#NvramFunctionalityBand').outerHeight();
+    var changeThemeContainerHeight = $('#changeThemeContainer').outerHeight();
+    var footerLinksHeight = $('#FooterLinks').outerHeight();
+    
+    if(UseControlOption == "IncludeCO") {
+        var newFooterHeight = (changeThemeContainerHeight + nvramBandHeight + footerLinksHeight);
+    } else if(UseControlOption == "ExcludeCO") {
+        var newFooterHeight = (nvramBandHeight + footerLinksHeight);
+    }
+
+    // set height of footer
+    $('#footer').css("height",newFooterHeight);
+    
+    // Adjust bottom of #content to match footer height
+    $('#content').css("bottom",newFooterHeight);
+}
+
+
+//-------------------------------------------------------------------------------------
+function SetCheckUpdateMessageAndProgressBarPosition(state)
+{
+    var pathSelectorTop = $('#PathSelector').offset().top;
+    $("#CheckingUpdatesMessage").css({ top: (pathSelectorTop-5) });
 }
 
 //-------------------------------------------------------------------------------------
@@ -890,10 +1028,12 @@ function SetShowHidePreviews(state)
     if(state == "Show") {
         if (accordionBandState) {
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
         }
         $("#preview_Toggle_Button").text("Collapse Previews");
@@ -903,10 +1043,12 @@ function SetShowHidePreviews(state)
     } else if (state == "Hide") {
         if (accordionBandState) {
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
         }
         $("#preview_Toggle_Button").text("Expand Previews");
@@ -929,7 +1071,6 @@ function SetShowHideButton(state)
         $("#ShowHideToggleButton").text("Hide UnInstalled");
         $("#ShowHideToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
         $("#ShowHideToggleButton").css("border","1px solid #282828");
-        $("#ShowHideToggleButton").css("color","#FFF");
         GetShowHideButtonStateAndUpdateUI();
     }
 }
@@ -955,6 +1096,7 @@ function SetThemeBandHeight(setting)
             // Adjust height of theme bands
             $(".accordion").css("height","36px");
             $(".accordionInstalled").css("height","36px");
+            $(".accordionInstalledNoShadow").css("height","36px");
             $(".accordionUpdate").css("height","36px");
             // Reduce margin top of buttons
             $(".buttonInstall").css("margin-top","6px");
@@ -991,6 +1133,7 @@ function SetThemeBandHeight(setting)
             var accordionHeight = (currentThumbHeight+14);
             $(".accordion").css("height",accordionHeight);
             $(".accordionInstalled").css("height",accordionHeight);
+            $(".accordionInstalledNoShadow").css("height",accordionHeight);
             $(".accordionUpdate").css("height",accordionHeight);
             // Revert margin top of buttons
             // Note: When thumb=100px wide, default button top=24px
@@ -1012,7 +1155,6 @@ function SetThemeBandHeight(setting)
             $("#BandsHeightToggleButton").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
             $("#BandsHeightToggleButton").css("border","1px solid #282828");
             $("#BandsHeightToggleButton").css("color","#FFF");
-            
     }
 }
 
@@ -1028,7 +1170,14 @@ function UpdateMessageBox(messageOne,messageTwo)
                 SetMessageBoxText("EFI System Partition(s)","There are no unmounted EFI system partitions with an existing /EFI/Clover/Themes directory.");
             } else {
                 ChangeMessageBoxHeaderColour("green");
-                SetMessageBoxText("EFI System Partition(s)","Number of EFI system partitions with an existing /EFI/Clover/Themes directory mounted just now:<br><br>" + messageTwo);
+                if (messageTwo == '1') {
+                    var msgWrd1="partition"
+                    var msgWrd2="was"
+                } else {
+                    var msgWrd1="partitions"
+                    var msgWrd2="were"
+                }
+                SetMessageBoxText("EFI System Partition(s)",messageTwo + " EFI system " + msgWrd1 + " with an existing /EFI/Clover/Themes directory " + msgWrd2 + " mounted.");
 
                 // Honour users choice of which themes to view (All or just Installed)
                 GetShowHideButtonStateAndUpdateUI();
@@ -1080,6 +1229,7 @@ function ChangeThumbnailSize(action)
         // Adjust height of theme bands
         $(".accordion").css("height",newAccordionHeight);
         $(".accordionInstalled").css("height",newAccordionHeight);
+        $(".accordionInstalledNoShadow").css("height",newAccordionHeight);
         $(".accordionUpdate").css("height",newAccordionHeight);
             
         // Change thumbnail size
@@ -1327,6 +1477,9 @@ function ResetButtonsAndBandsToDefault()
     // Change all installed band backgrounds to normal
     $(".accordionInstalled").attr("class","accordion");
     
+    // Change all installed band backgrounds to normal
+    $(".accordionInstalledNoShadow").attr("class","accordion");
+    
     // Change all update band backgrounds to normal
     $(".accordionUpdate").attr("class","accordion");
     
@@ -1342,7 +1495,7 @@ function ResetButtonsAndBandsToDefault()
 function ChangeButtonAndBandToUnInstall(themeName)
 {
     // themeName will be the name of an installed theme
-    
+  
     // Set class of this themes' button to UnInstall
     // Use an attribute selector to deal with themes with spaces in their name
     $("[id='button_" + themeName + "']").attr('class', 'buttonUnInstall');
@@ -1351,7 +1504,25 @@ function ChangeButtonAndBandToUnInstall(themeName)
     $("[id='button_" + themeName + "']").html("UnInstall");
     
     // Change band of this themes' background to indicate installed.
-    $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
+    //$("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
+    
+    // Note: bash script supplies this theme list in alphabetical order.
+    //       If themes are not called in alphabetical order this does not work.
+    // Work out if band above is accordionInstalled. If yes then fill with accordionInstalledNoShadow
+    var currentThemeBand = $("[id='button_" + themeName + "']").closest("#ThemeBand");
+    var currentBandClass = currentThemeBand.attr('class');
+    var aboveBandClass = currentThemeBand.prevAll("#ThemeBand").first().attr('class');
+    if(typeof aboveBandClass != 'undefined') { // not at top band
+        if(aboveBandClass == "accordion") {
+            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
+        } else if(aboveBandClass == "accordionInstalled") {
+            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+        } else if(aboveBandClass == "accordionInstalledNoShadow") {
+            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+        }
+    } else { // at top band
+        $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -1400,7 +1571,8 @@ function UpdateAndRefreshPartitionSelectMenu(list)
     $(partitionSelect).empty();
       
     // Add title menu option
-    $("#partitionSelect").append("<option value=\"-\">Select your target theme directory:</option>");
+    $("#partitionSelect").append("<option value=\"-\" disabled=\"disabled\">Select your target theme directory:</option>");
+        //$(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
     
     if (list != "") {
         splitList = (list).split(',');
@@ -1416,18 +1588,45 @@ function UpdateAndRefreshPartitionSelectMenu(list)
 //-------------------------------------------------------------------------------------
 function UpdateAndRefreshInstalledThemeDropDown(themeList)
 {
-    // Clear any existing entries
-    $(installedThemeDropDown).empty();
+    //if (themeList != "-") {
 
-    if (themeList != "-") {
-        // Add title option with - value
-        $("#installedThemeDropDown").append("<option value=\"-\">Set Default Theme</option>");
-        // Add new list
-        for (var t = 0; t < themeList.length; t++) {
-            if (themeList[t] != "")
-                $("#installedThemeDropDown").append("<option value=\"" + themeList[t] + "\">" + themeList[t] + "</option>");
+        // If menus exist in the DOM then populate them
+        var test=$("#installedThemeDropDownNvram");
+        if (jQuery.contains(document, test[0])) {
+            $(installedThemeDropDownNvram).empty();
+            populateDropDownMenu(installedThemeDropDownNvram,themeList);
         }
+
+        var test=$("#installedThemeDropDownNvramP");
+        if (jQuery.contains(document, test[0])) {
+            $(installedThemeDropDownNvramP).empty();
+            populateDropDownMenu(installedThemeDropDownNvramP,themeList);
+        }
+        
+        var test=$("#installedThemeDropDownConfigP");
+        if (jQuery.contains(document, test[0])) {
+            $(installedThemeDropDownConfigP).empty();
+            populateDropDownMenu(installedThemeDropDownConfigP,themeList);
+        }
+    //}
+}
+
+//-------------------------------------------------------------------------------------
+function populateDropDownMenu(menu,themeList)
+{
+    //$(menu).append("<option value=\"-1\" disabled=\"disabled\">Select Action</option>");
+    $(menu).append("<option value=\"-\">Choose</option>");
+    $(menu).append("<option value=\"!Remove!\">Remove Current Entry</option>");
+    $(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
+    $(menu).append("<option value=\"-\" disabled=\"disabled\">Installed Themes</option>");
+    for (var t = 0; t < themeList.length; t++) {
+        if (themeList[t] != "")
+            $(menu).append("<option value=\"" + themeList[t] + "\">" + themeList[t] + "</option>");
     }
+    $(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
+    $(menu).append("<option value=\"-\" disabled=\"disabled\">Other Choices</option>");
+    $(menu).append("<option value=\"random\">random</option>");
+    $(menu).append("<option value=\"embedded\">embedded</option>");
 }
 
 //-------------------------------------------------------------------------------------
@@ -1503,13 +1702,6 @@ function RemoveYesNoButtons(){
 }
 
 //-------------------------------------------------------------------------------------
-function SetNvramFooterToNotSet(){
-    $("#currentNVRAMvar").text("NVRAM theme: Not set:"); 
-    $("#currentNVRAMMessage").text(""); 
-    $("#NvramBand").css("background-image","-webkit-linear-gradient(top, rgba(195,195,195,1) 0%,rgba(123,123,123,1) 100%)");
-}
-
-//-------------------------------------------------------------------------------------
 function ShowHideUnInstalledThemes(showHide,expandCollapse)
 {        
     if (showHide.indexOf("Show") >= 0) {
@@ -1521,6 +1713,10 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
             $(".accordion").css("display","none");
             $(".accordion").next('[class="accordionContent"]').css("display","none");
         }
+
+        // Remove all installed theme band shadows
+        $(".accordionInstalled").attr("class","accordionInstalledNoShadow");
+        
     } else if (showHide.indexOf("Hide") >= 0) {   
 
         if (expandCollapse.indexOf("Expand") >= 0) {
@@ -1529,7 +1725,12 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
         if (expandCollapse.indexOf("Collapse") >= 0) {
             $(".accordion").css("display","block");
             $(".accordion").next('[class="accordionContent"]').css("display","block");
-        }   
+        }
+        
+        // Set all installed theme bands (not under another installed theme band) to
+        // a class of accordionInstalledNoShadow
+        ResetButtonsAndBandsToDefault();
+        updateBandsWithInstalledThemes(gInstalledThemeListStr);
     }
 }
 
@@ -1555,5 +1756,30 @@ function ToggleSnow(action)
 //-------------------------------------------------------------------------------------
 function sendNotification(messageBody)
 {
-    // INSERT_NOTIFICATION_CODE_HERE
+    macgap.notice.notify({ title: 'Clover Theme Manager', content: messageBody, sound: true});
+}
+
+//-------------------------------------------------------------------------------------
+function SetPredictionText(message)
+{
+    $("#predictionTheme").text(message);
+}
+
+//-------------------------------------------------------------------------------------
+function ShowHideControlOptions(state)
+{
+    var AreControlOptionsHidden = $('#changeThemeContainer').is(":hidden"); 
+    if (state == "Show") {
+        // check it's not already showing
+        if (AreControlOptionsHidden) {
+            $("#changeThemeContainer").css("display","block");
+            SetFooterHeight("IncludeCO");
+        }
+    } else if (state == "Hide"){
+        // check it's not already hidden
+        if (!AreControlOptionsHidden) {
+            $("#changeThemeContainer").css("display","none");
+            SetFooterHeight("ExcludeCO");
+        }
+    }
 }

@@ -93,6 +93,9 @@ p {
     right: 0;
     height: 66px;
     background-color: #000;
+    box-shadow: 0px 2px 6px #000;
+    z-index: 1 /* Raise up one layer to allow shadow to be seen */
+               /* Note: js script toggles this from 1 to 0 when changing height for bootlog.*/
 }
 
 #CheckingUpdatesMessage {
@@ -207,7 +210,6 @@ select.custom-dropdown:hover {
 
 #HeaderBar {
     height: 24px;
-    background-image: -webkit-linear-gradient(top, rgba(111,111,111,1) 0%,rgba(0,0,0,1) 100%); 
     padding: 5px 20px 5px 20px;
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
@@ -301,7 +303,11 @@ select.custom-dropdown:hover {
 #content {
     position: fixed;
     top: 66px;
-    bottom: 265px;
+    
+    /* bottom position calculated by adding the heights and borders of the following elements:
+    /* #NvramFunctionalityBand 23px (inc 2px border) + #changeThemeBand 55px (inc 2px border) + #FooterLinks 38px (inc 2px border) = 116px */
+    bottom: 139px; /* Must match height of #footer */
+    /* Note: #BootLogTitleBar 35px (inc 2px border) + BandHeader/Band Description 26px (inc 1px border) * 5 gets added when bootlog is inserted - totals 165px */
     left: 0;
     right: 0;
     background-color: #000;
@@ -313,7 +319,19 @@ select.custom-dropdown:hover {
 }
 
 .accordionInstalled {
-    background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
+    /* background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c); */
+    /* background-image: -webkit-linear-gradient(top, #80a072, #608550); */
+    /* background-image: -webkit-linear-gradient(top, #1a1b1c, #2b2d2e); */
+    /* background-image: -webkit-linear-gradient(top, #0d1a28, #172e48); */
+    background-image: -webkit-linear-gradient(top, #232f43 0%,#305584 7%,#305584 98%,#305584 98%); 
+    border-top: 1px solid #000 !important;
+    /* border-bottom: 1px solid #000 !important; */
+}
+
+.accordionInstalledNoShadow {
+    background-color: #305584;
+    border-top: 1px solid #305584 !important;
+    /* border-bottom: 1px solid #000 !important; */
 }
 
 .accordionUpdate {
@@ -376,6 +394,7 @@ select.custom-dropdown:hover {
 .thumbnail img {
     width: 100px;
     height: 56px;
+    border: 1px solid rgba(255, 255, 255, .2);
 }
 
 
@@ -414,6 +433,10 @@ select.custom-dropdown:hover {
 .buttonInstall {
     background-color: #49c0f0;
     background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c);
+    /*background-image: -webkit-linear-gradient(top, #80a072, #608550);*/
+    /*background-image: -webkit-linear-gradient(top, #1a1b1c, #2b2d2e); */
+    /*background-image: -webkit-linear-gradient(top, #0d1a28, #172e48);*/
+    /*background-image: -webkit-linear-gradient(top, #172e48, #0d1a28);*/
     border: 1px solid #414245;
     border-radius: 4px;
     color: #fff;
@@ -434,8 +457,10 @@ select.custom-dropdown:hover {
 
 .buttonInstall:hover {
     background-color: #bbdbf5;
-    background-image: -webkit-linear-gradient(top, #5ea55c, #3d6c3c);
-    border: 1px solid #3b4e2f;
+    /* background-image: -webkit-linear-gradient(top, #5ea55c, #3d6c3c); */
+    background-image: -webkit-linear-gradient(top, #2bbcff, #00a5fd);
+    /* border: 1px solid #3b4e2f; */
+    border: 1px solid #00a7fb;
 }
 
 .buttonInstall:active {
@@ -446,8 +471,10 @@ select.custom-dropdown:hover {
 
 .buttonUnInstall {
     background-color: #a90329;
-    background-image: -webkit-linear-gradient(top, #4b4f52, #2f3134);
-    border: 1px solid #424344;
+    /*background-image: -webkit-linear-gradient(top, #4b4f52, #2f3134);*/
+    background-image: -webkit-linear-gradient(top, #7a2222, #621b1c);
+    /*border: 1px solid #424344;*/
+    border: 1px solid #621b1c;
     border-radius: 4px;
     color: #fff;
     float: right;
@@ -467,8 +494,10 @@ select.custom-dropdown:hover {
 
 .buttonUnInstall:hover {
     background-color: #bf6e83;
-    background-image: -webkit-linear-gradient(top, #ac5458, #713739);
-    border: 1px solid #5b3234;
+    /*background-image: -webkit-linear-gradient(top, #ac5458, #713739);*/
+    background-image: -webkit-linear-gradient(top, #c61313, #a8181b);
+    /* border: 1px solid #5b3234; */
+    border: 1px solid #a8181b;
 }
 
 .buttonUnInstall:active {
@@ -519,7 +548,11 @@ select.custom-dropdown:hover {
 
 #footer {
     position: fixed;
-    height: 265px;
+    
+    /* height is calculated by adding the heights and borders of the following elements:
+    /* #NvramFunctionalityBand 23px (inc 2px border) + #changeThemeContainer 60px (inc 2px border) + #FooterLinks 38px (inc 2px border) = 121px */
+    height: 139px;  /* Must match bottom of #content */
+    /* Note: #BootLogTitleBar 35px (inc 2px border) + BootLogContainer height will be inserted when injecting bootlog */
     bottom: 0;
     left: 0;
     right: 0;
@@ -535,92 +568,158 @@ a:hover {
     color: #FFF;
 }
 
-#NvramBand {
+#NvramFunctionalityBand {
     width: 100%;
-    height: 33px;
+    height: 21px;
     border-top: 2px solid #333;
     opacity: 0.95;
 }
 
-.nvramFillNone {
-    background-image: -webkit-linear-gradient(top, rgba(247,247,247,1) 0%,rgba(142,142,142,1) 100%); 
-}
-
-.nvramFillInstalled {
-   background-image: -webkit-linear-gradient(top, #5ea55c 0%, #3d6c3c 100%);
-}
-
-.nvramFillNotInstalled {
-    background-image: -webkit-linear-gradient(top, #ac5458 0%, #713739 100%); 
-}
-
-#NvramInfo {
-    width: 38%;
-    margin: 7px 8px 5px 24px;
-    float: left;
+#nvramTextArea {
+    width: 90%;
+    margin: 1px 8px 3px 24px;
     -webkit-user-select: none;
 }
 
-#NvramThemeMatch {
+#changeThemeContainer {
+    width: 100%;
+    height: auto;
+    border-top: 2px solid #333;
+    opacity: 0.95;
+}
+
+#changeThemeBand {
+    width: 100%;
+    height: 24px;
+    border-top: 2px solid #333;
+    opacity: 0.95;
+}
+
+#changeThemeCurrentTheme {
     width: 30%;
-    margin: 7px 0px 5px 0px;
+    margin: 6px 8px 0px 24px;
     float: left;
-    text-align: center;
-    font-weight: bold;
     -webkit-user-select: none;
 }
 
-#NvramThemeSelector {
-    width: 20%;
-    float: right;
-    margin: 6px 24px 5px 5px;
+#changeThemeInstalled {
+    width: 30%;
+    margin: 6px 8px 0px 24px;
+    float: left;
+    -webkit-user-select: none;
 }
 
-#NvramThemeSelector select {
-    width: 98%;
+#themePredictionTitle {
+    width: 45%;
+    float: left;
+    margin: 2px 0px 0px 24px;
+    /*-webkit-user-select: none;*/
+}
+
+#themePredictionTheme {
+    width: 25%;
+    float: left;
+    margin: 2px 0px 0px 0px;
+    /*-webkit-user-select: none;*/
+}
+
+
+
+
+.ctOptionTitle {
+    width: 40%;
+    float: left;
+    margin: 4px 0px 0px 24px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFF;    
+}
+
+.ctOptionEntryHeader {
+    float: left;
+    margin: 6px 2px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ababab;    
+}
+
+.ctOptionEntryResult {
+    width: 22%;
+    float: left;
+    margin: 4px 0px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFF;    
+}
+
+.ctOptionSetHeader {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ababab;    
+    position:absolute;
+    margin: 6px 0px 0px 70%;
+}
+
+#changeThemeSelector {
+    width: 92%;
+    float: left; /* right */
+    margin: 2px 0px 0px 24px;
+    /* text-align: right; */
+}
+
+#changeThemeSelector select {
+    width: 18%;
     max-width: 98% !important;
 }
 
-select.nvram-dropdown {
+select.changeThemeDropdown {
     -webkit-appearance: none;
     border: 0 !important;
     outline: none;
     color: #000;
     -webkit-border-radius: 4px;
-    border-radius: 4px;
     font-size: 12px;
     padding: 1px 24px 2px 10px;
     cursor: pointer;
     background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
     background-size: 19px 19px;
     opacity: 0.8;
+    float: right;
+    margin-right: 30px;
+    width: 158px;
 }
 
-select.nvram-dropdown:hover {
+select.changeThemeDropdown:disabled {
+    opacity: 0.3;
+}
+
+select.changeThemeDropdown:hover:enabled {
     background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
     background-size: 19px 19px;
     opacity: 1;
 }
 
+
+
 #BootLogTitleBar {
     width: 100%;
     height: 33px;
-    border-top: 2px solid #333;
+    /* border-top: 2px solid #333; */
     opacity: 0.95;
     cursor: pointer;
 }
 
-.bootlogBandFill {
-    background-image: -webkit-linear-gradient(top, #82954d 0%, #5c6836 100%);
-    /*background: url(../assets/dropdown_arrow.png) no-repeat right center;
-    background-size: 19px 19px;*/
-}
-
 #BootLogTitleBar:hover {
-    background-image: -webkit-linear-gradient(top, #95ae4a 0%, #6d7f39 100%);
+    /*background-image: -webkit-linear-gradient(top, #00dff6 0%, #00b9de 100%);*/
+    /*background-image: -webkit-linear-gradient(top, #a7bccc 0%, #8e9eaf 100%);*/
+    background-image: -webkit-linear-gradient(top, #535353 0%,#2c2c2c 70%,#353535 75%,#505050 98%, #727272 99%, #949494 100%); 
 }
 
-.titleBarText {
+.titleBarTextTitle {
     font-family: 'Roboto', sans-serif;
     color: #FFF;
     font-size: 12px; 
@@ -629,9 +728,18 @@ select.nvram-dropdown:hover {
     line-height: 36px;
 }
 
+.titleBarTextDescription {
+    font-family: 'Roboto', sans-serif;
+    color: #FFF;
+    font-size: 12px; 
+    font-weight: bold;
+    padding: 0px 0px 0px 12px;
+    line-height: 36px;
+}
+
 #BootLogContainer {
     width: 100%;
-    height: 156px;
+    height: auto; /* Height value varies depending on number of rows of data set to display */
     border-top: 2px solid #333;
     opacity: 0.95;
 }
@@ -641,7 +749,7 @@ select.nvram-dropdown:hover {
     border-bottom: 1px solid #000;
     float: left;
     height: 25px;
-    width: 20%;
+    width: 17%;
 }
 
 #bandDescription {
@@ -649,7 +757,7 @@ select.nvram-dropdown:hover {
     border-bottom: 1px solid #000;
     float: left;
     height: 25px;
-    width: 80%;
+    width: 83%;
     float: left;
 }
 
@@ -659,11 +767,12 @@ select.nvram-dropdown:hover {
 
 #bandColumnRight {
     position: absolute;
-    left: 470px;
+    left: 460px;
 }
 
 .infoTitle {
     font-family: 'Roboto', sans-serif;
+    font-weight: bold;
     color: #a6a9a7;
     font-size: 12px;
     padding: 0px 0px 0px 24px;
@@ -672,7 +781,35 @@ select.nvram-dropdown:hover {
 
 .infoBody {
     font-family: 'Roboto', sans-serif;
+    font-weight: bold;
     color: #FFF;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyGreen {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #4bfb68;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyRed {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #fb4b4b;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyTheme {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #7bf4f5;
     font-size: 12px;
     padding: 10px 0px 0px 4px;
     line-height: 24px;	
@@ -690,6 +827,14 @@ select.nvram-dropdown:hover {
 /*                           TEXT CLASSES                                */
 /* ===================================================================== */
 
+.textTitle {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #AAA;
+    text-align:left;
+}
+
 .textBody {
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
@@ -698,9 +843,18 @@ select.nvram-dropdown:hover {
     text-align:left;
 }
 
+.textBodyRight {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFF;
+    text-align:right;
+}
+
 .textHeaderSmall {
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
+    font-weight: bold;
     color: #a1a1a1;
     -webkit-user-select: none;
 }
@@ -708,6 +862,7 @@ select.nvram-dropdown:hover {
 .textFreeSpace {
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
+    font-weight: bold;
     color: #3ef14b;
     vertical-align: bottom;
     -webkit-user-select: none;
@@ -716,6 +871,7 @@ select.nvram-dropdown:hover {
 .textThemeCount {
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
+    font-weight: bold;
     color: #FFF;
     vertical-align: bottom;
     -webkit-user-select: none;
@@ -741,6 +897,61 @@ select.nvram-dropdown:hover {
     margin-top:10px;
 }
 
+.themeName {
+    color: #7bf4f5;
+}
+
+.predictionText {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #9bc762;
+}
+
+.changeThemeSetTo {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #a1a1a1;
+    -webkit-user-select: none;
+}
+
+/* ===================================================================== */
+/*                       COLOUR FILL CLASSES                             */
+/* ===================================================================== */
+
+.blackFill {
+    background-image: -webkit-linear-gradient(top, rgba(111,111,111,1) 0%,rgba(0,0,0,1) 100%); 
+}
+
+.fillGrey {
+    background-image: -webkit-linear-gradient(top, rgba(247,247,247,1) 0%,rgba(142,142,142,1) 100%); 
+}
+
+.bootlogBandFill {
+    background-image: -webkit-linear-gradient(top, #535353 0%,#202020 70%,#1c1c1c 75%,#363636 98%, #666666 100%); 
+}
+
+.nvramFillWorking {
+   background-image: -webkit-linear-gradient(top, #67c334 0%, #428420 100%);
+}
+
+.nvramFillNotWorking {
+    background-image: -webkit-linear-gradient(top, #ab3bb3 0%, #742179 100%); 
+}
+
+.nvramFillRed {
+    background-image: -webkit-linear-gradient(top, #df212a 0%, #921519 100%); 
+}
+
+.fillDarkGrey {
+   background-image: -webkit-linear-gradient(top, #4b4e51, #2f3134);
+}
+
+.fillDarkerGrey {
+   background-image: -webkit-linear-gradient(top, #303234, #212121);
+}
+
 /* ===================================================================== */
 /*                            MESSAGE BOX                                */
 /* ===================================================================== */
@@ -763,7 +974,7 @@ http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slid
 .overlayTwo {
     background:transparent url(../assets/overlay.png) repeat top left;
     position:fixed;
-    top:32px;   /* same height as .meterTwo */
+    top:0px;   /* same height as .meterTwo */
     bottom:0px;
     left:0px;
     right:0px;
@@ -843,10 +1054,10 @@ a.boxclose:hover {
     top: 0; left: 0; bottom: 0; right: 0;
     background-image: 
         -webkit-gradient(linear, 0 0, 100% 100%, 
-            color-stop(.25, rgba(255, 255, 255, .2)), 
+            color-stop(.25, rgba(255, 255, 255, .4)), 
             color-stop(.25, transparent), color-stop(.5, transparent), 
-            color-stop(.5, rgba(255, 255, 255, .2)), 
-            color-stop(.75, rgba(255, 255, 255, .2)), 
+            color-stop(.5, rgba(255, 255, 255, .4)), 
+            color-stop(.75, rgba(255, 255, 255, .4)), 
             color-stop(.75, transparent), to(transparent)
         );
     z-index: 1;
@@ -877,16 +1088,16 @@ a.boxclose:hover {
     font-size: 12px;
     color: #FFF;
     padding: 8px 0px 0px 20px;
-    content: "Listing installed themes on this volume and checking updates...";
+    content: "Checking updates for the installed themes on this volume & maintaining prefs file...";
     
     position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;
     background-image: 
         -webkit-gradient(linear, 0 0, 100% 100%, 
-            color-stop(.25, rgba(255, 255, 255, .2)), 
+            color-stop(.25, rgba(255, 255, 255, .4)), 
             color-stop(.25, transparent), color-stop(.5, transparent), 
-            color-stop(.5, rgba(255, 255, 255, .2)), 
-            color-stop(.75, rgba(255, 255, 255, .2)), 
+            color-stop(.5, rgba(255, 255, 255, .4)), 
+            color-stop(.75, rgba(255, 255, 255, .4)), 
             color-stop(.75, transparent), to(transparent)
         );
     z-index: 1;

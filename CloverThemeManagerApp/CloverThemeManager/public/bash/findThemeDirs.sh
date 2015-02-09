@@ -23,25 +23,19 @@
 #
 # Credits - JrCs for partutil program.
 
-# ---------------------------------------------------------------------------------------
-WriteToLog() {
-    printf "@${1}@\n" >> "$logFile"
-}
+# Resolve path
+SELF_PATH=$(cd -P -- "$(dirname -- "$0")" && pwd -P) && SELF_PATH=$SELF_PATH/$(basename -- "$0")
+source "${SELF_PATH%/*}"/shared.sh
 
-TMPDIR="/tmp/CloverThemeManager"
-logFile="${TMPDIR}/CloverThemeManagerLog.txt"
-themeDirInfo="${TMPDIR}/themeDirInfo.txt"
-espList="${TMPDIR}/espList.txt"
-
-# Enable for local testing
-#zeroUUID="00000000-0000-0000-0000-000000000000"
-#partutil="/tmp/partutil"
-#DEBUG=1
-
-[[ ! -f "$partutil" ]] && exit 1
-[[ ! -d "$TMPDIR" ]] && mkdir -p "$TMPDIR"
+# Check for missing files and dirs in case of local script testing.
+[[ ! -f "$partutil" ]] && echo "Missing tool: partutil. Expecting to find it in /tmp. Exiting." && exit 1
+[[ ! -d "$TEMPDIR" ]] && mkdir -p "$TEMPDIR"
 [[ -f "$themeDirInfo" ]] && rm "$themeDirInfo"
 [[ -f "$espList" ]] && rm "$espList"
+[[ -f "$mbrList" ]] && rm "$mbrList"
+
+[[ DEBUG -eq 1 ]] && WriteLinesToLog
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}findThemeDirs.sh"
 
 declare -a dfMounts
 declare -a dfMountpoints
@@ -52,13 +46,15 @@ declare -a espFound
 #WriteToLog "CTM_ThemeDirsScan"
 
 # Get List of mounted devices and mountpoints
-WriteToLog "Getting list of mounted devices"
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Getting list of mounted devices"
+
 oIFS="$IFS"; IFS=$'\r\n'
 dfMounts+=( $( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3  ))
 dfMountpoints+=( /$( df -laH | cut -d'/' -f 4- | tail -n +2 ))
 gpt+=( $( diskutil list | grep "GUID_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
+mbr+=( $( diskutil list | grep "FDisk_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
 IFS="$oIFS"
-WriteToLog "Check: dfMounts=${#dfMounts[@]}" 
+[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Check: dfMounts=${#dfMounts[@]}" 
 
 #Loop through all disk partitions
 for (( s=0; s<${#dfMounts[@]}; s++ ))
@@ -88,8 +84,8 @@ do
             _volName="$tmp"
         fi
 
-        WriteToLog "Volume $_volName on mountpoint $mp contains Clover themes directory" 
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${dfMounts[$s]} | $_volName | $mp | $_content"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Volume $_volName on mountpoint $mp contains Clover themes directory" 
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${dfMounts[$s]} | $_volName | $mp | $_content"
 
         # Read and save Unique partition GUID
         tmp=$( "$partutil" --show-uuid /dev/${dfMounts[$s]} )
@@ -122,13 +118,21 @@ do
         # Does this disk have an ESP?
         _content=$( "$partutil" --show-contenttype /dev/${gpt[$s]}s1 )
         if [ "$_content" == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${gpt[$s]}s1@U = unmounted ESP"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${gpt[$s]}s1@U = unmounted ESP"
             echo "${gpt[$s]}s1@U" >> "$espList"
         else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}${gpt[$s]} does not contain ESP"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${gpt[$s]} does not contain ESP"
         fi
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}$e | Already found mounted ESP for ${gpt[$s]}. Skipping"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$e | Already found mounted ESP for ${gpt[$s]}. Skipping"
     fi
 done
+
+# Print list of MBR partitioned devices
+for (( s=0; s<${#mbr[@]}; s++ ))
+do
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${gpt[$s]}s1@U = unmounted ESP"
+    echo "${mbr[$s]}" >> "$mbrList"
+done
+
 exit 0
