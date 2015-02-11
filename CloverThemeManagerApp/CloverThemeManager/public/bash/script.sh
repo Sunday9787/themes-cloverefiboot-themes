@@ -745,7 +745,7 @@ SetControlOptionHtmlSections()
                 <!--Menu entries will be appended here by cloverthememanager.js -->\
             <\/select>"
     ctNextBootTheme="        <div id=\"themePredictionTitle\">\
-                <span class=\"predictionText\">Theme determined for next boot from device $TARGET_THEME_DIR_DEVICE:<\/span>\
+                <span class=\"predictionText\">Theme determined for next boot from device $TARGET_THEME_DIR_DEVICE<\/span>\
         <\/div> <!-- End themePredictionTitle -->\
         <div id=\"themePredictionTheme\">\
                 <span class=\"predictionText\" id=\"predictionTheme\"><\/span>\
@@ -765,13 +765,15 @@ CreateControlOptionsHtmlAndInsert()
     
     local controlOptionsHtml="${ctOuterOpen}"
     
-    # Add nvram control band
+    # Add nvram control band if UEFI boot with Native NVRAM   or   Legacy boot AND Launch Daemon & rc scripts working
     if [[ "$gNvramPlistFullPath" == "Native NVRAM" ]] || [[ "$gBootType" == "Legacy" && $gNvramSave -eq 0 ]]; then
         controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvram}${ctClose}"
     fi
 
-    # Add nvram.plist control band
-    if [ "$gNvramPlistFullPath" != "" ] && [ "$gNvramPlistFullPath" != "Native NVRAM" ]; then
+    # Add nvram.plist control band if not using Native NVRAM AND Launch Daemon & rc scripts are not working
+    # This way user can manually change theme entry in nvram.plist
+    if [ "$gNvramPlistFullPath" != "" ] && [ "$gNvramPlistFullPath" != "Native NVRAM" ] && [ $gNvramSave -eq 1 ]; then
+
         controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvramP}${ctClose}"
     fi
 
@@ -1667,14 +1669,6 @@ GetSelfDevicePath()
             
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Boot device part type=${bootDevicePartType} | identifier=${identifier}"
             echo "$identifier"
-            
-            # Write results to file for bootlog.sh to use
-            #echo "$deviceType" >> 
-            #echo bootDevicePartition
-            #echo bootDevicePartType=
-            #echo bootDevicePartSignature
-            #echo bootDevicePartStart
-            #echo bootDevicePartSize
 
         else
             echo ""
@@ -1706,6 +1700,11 @@ CreateAndSendVolumeDropDownMenu()
         else
             pathToPrint="${themeDirPaths[$p]}"
         fi
+        
+        if [ "${duIdentifier[$p]}" == "$bootDeviceIdentifier" ]; then
+            pathToPrint="BOOT DEVICE | $pathToPrint"
+        fi
+        
         local newPathList="${newPathList}","${p};${pathToPrint} [${duIdentifier[$p]}] [${duPartitionGuid[$p]}]"
     done
 
@@ -1857,9 +1856,7 @@ ReadPrefsFile()
                 foundThemeName=1
             fi
         done
-        
-# Moved to MapLastSelectedPathToGUID()
-        
+
         # Add message in to log for initialise.js to detect.
         [[ $gFirstRun -eq 0 ]] && WriteToLog "CTM_ReadPrefsOK" && gFirstRun=1
     else
@@ -1871,23 +1868,22 @@ ReadPrefsFile()
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_PARTITIONGUID="-"
-        
+
         # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_ReadPrefsCreate"
     fi
-    
+
     if [ "$gSnow" == "" ]; then
         gSnow="On"
     fi
-    
+
     if [ "$gBootlogState" == "" ]; then
         gBootlogState="Open"
     fi
-    
+
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
-        
     [[ DEBUG -eq 1 ]] && SendInternalThemeArraysToLogFile
 }
 
@@ -2106,21 +2102,8 @@ RespondToUserDeviceSelection()
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordUnManagedThemesAndSendToUI
             CheckAndRemoveBareClonesNoLongerNeeded
-            #ReadAndSendCurrentNvramTheme
             CheckForThemeUpdates &
-            
-            # Check if this selected device is boot device or not
-            if [ "$TARGET_THEME_DIR_DEVICE" != "$bootDeviceIdentifier" ]; then
-                # Hide theme control options
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
-                SendToUI "ShowHideControlOptions@Hide@"
-            else
-                # Show theme control options
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Show@"
-                SendToUI "ShowHideControlOptions@Show@"
-            fi
+            ShowHideUIControlOptions
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
@@ -2139,6 +2122,26 @@ RespondToUserDeviceSelection()
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+ShowHideUIControlOptions()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ShowHideUIControlOptions()"
+    
+    # Check if this selected device is boot device or not
+    if [ "$TARGET_THEME_DIR_DEVICE" != "$bootDeviceIdentifier" ]; then
+        # Hide theme control options
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
+        SendToUI "ShowHideControlOptions@Hide@"
+    else
+        # Show theme control options
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Show@"
+        SendToUI "ShowHideControlOptions@Show@"
     fi
 }
 
@@ -2222,9 +2225,13 @@ CheckThemePathIsStillValid()
         do
             if [ $findDevice == ${duIdentifier[$i]} ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Device $TARGET_THEME_PARTITIONGUID is ${duIdentifier[$i]}"
-                stillMounted=1
-                # Ensure current TARGET_THEME_DIR_DEVICE matches device
-                TARGET_THEME_DIR_DEVICE=${duIdentifier[$i]}
+
+                # Check path actually exists
+                if [ -d "$TARGET_THEME_DIR" ]; then 
+                    stillMounted=1
+                    # Ensure current TARGET_THEME_DIR_DEVICE matches device
+                    TARGET_THEME_DIR_DEVICE=${duIdentifier[$i]}
+                fi
             fi
         done
     fi
@@ -2433,9 +2440,6 @@ PredictNextTheme()
     
     local themeToSend=""
     
-    # Also got available $gBootType which shows UEFI or Legacy
-    # Also got available $gNvramSave which can be either 0 or 1 to indicate working nvram
-
     if [ "$gBootType" == "UEFI" ]; then
         if [ "$CURRENT_THEME_ENTRY_NVRAM" != "" ]; then
             local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_NVRAM" )
@@ -2454,7 +2458,7 @@ PredictNextTheme()
             if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_NVRAM" == "embedded" ]; then
                 themeToSend="$CURRENT_THEME_ENTRY_NVRAM"
             fi
-        elif [ "$CURRENT_THEME_ENTRY_NVRAM_PLIST" != "" ]; then
+        elif [ "$CURRENT_THEME_ENTRY_NVRAM_PLIST" != "" ] && [ $gNvramSave -eq 1 ]; then
             local checkTheme=$( IsThemeInstalled "$CURRENT_THEME_ENTRY_NVRAM_PLIST" )
             if [ $checkTheme -eq 0 ] || [ "$CURRENT_THEME_ENTRY_NVRAM_PLIST" == "embedded" ]; then
                 themeToSend="$CURRENT_THEME_ENTRY_NVRAM_PLIST"
@@ -3286,12 +3290,6 @@ if [ "$gitCmd" != "" ]; then
 
         # Rebuild internal theme list as ESP may have been mounted
         ReadThemeDirList
-        CreateAndSendVolumeDropDownMenu
-        if [ $? -eq 0 ]; then
-            WriteToLog "CTM_DropDownListOK"
-        else
-            WriteToLog "CTM_DropDownListNone"
-        fi
 
         # If we have identified the mounted boot device, then set as target
         if [ "$bootDeviceIdentifier" != "" ] && [ "$bootDeviceIdentifier" != "Failed" ]; then # Failed = no currently mounted MBR device matches bootlog self devicepath.
@@ -3307,6 +3305,14 @@ if [ "$gitCmd" != "" ]; then
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
                 fi
             done
+        fi
+        
+        # Send list of volumes with /EFI/Clover/Themes directories to UI
+        CreateAndSendVolumeDropDownMenu
+        if [ $? -eq 0 ]; then
+            WriteToLog "CTM_DropDownListOK"
+        else
+            WriteToLog "CTM_DropDownListNone"
         fi
 
         # Run bootlog script to read bootlog for theme info.
@@ -3354,6 +3360,9 @@ if [ "$gitCmd" != "" ]; then
             # Read current config.plist theme entry and send to UI
             ReadAndSendCurrentConfigPlistTheme
         fi
+        
+        # Show theme setting control options depending on currently selected device
+        ShowHideUIControlOptions
         
         # If OS is newer than Lion then enable notifications
         if [ $(CheckOsVersion) -gt 11 ]; then
@@ -3414,7 +3423,6 @@ if [ "$gitCmd" != "" ]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
                 MountESPAndSearchThemesPath
-                # Test (move these from MountESPAndSearchThemesPath() and call separately)
                 ReadThemeDirList
                 CreateAndSendVolumeDropDownMenu
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"

@@ -23,6 +23,7 @@ var gInstalledThemeListStr="";
 //-------------------------------------------------------------------------------------
 // On initial load
 $(document).ready(function() {
+    SetCheckUpdateMessageAndProgressBarPosition();
     disableInterface();
     hideButtons();
     HideProgressBar();
@@ -405,7 +406,7 @@ function DisplayAppUpdates(updateID)
     // 2 - The inner public directory containing the html,css,js and associated files. These will change more frequently.
     //
     // Updates for 1 will be identified in the form of X.XX.X. For example: 0.75.6
-    // Updates for 2 will be identified by a single integer X. For example: 7
+    // Updates for 2 will be identified by a single integer X. For example: 38
 
     if (updateID != "") {
         disableInterface();
@@ -1000,10 +1001,27 @@ function SetFooterHeight(UseControlOption)
     var changeThemeContainerHeight = $('#changeThemeContainer').outerHeight();
     var footerLinksHeight = $('#FooterLinks').outerHeight();
     
+    // Read text in nvram band as it has a dual purpose.
+    // If not booted using Clover then it shows a message saying so.
+    var nvramBandText = $('#nvramTextArea span').text();
+    
     if(UseControlOption == "IncludeCO") {
+    
+        // Show nvram band if it's not displaying message about not being booted by Clover
+        if(nvramBandText != "This system was not booted using Clover.") { // set by bootlog.sh
+            $('#NvramFunctionalityBand').css("display","block");
+        } 
         var newFooterHeight = (changeThemeContainerHeight + nvramBandHeight + footerLinksHeight);
+        
     } else if(UseControlOption == "ExcludeCO") {
-        var newFooterHeight = (nvramBandHeight + footerLinksHeight);
+        
+        // Hide nvram band if it's not displaying message about not being booted by Clover
+        if(nvramBandText != "This system was not booted using Clover.") { // set by bootlog.sh
+            $('#NvramFunctionalityBand').css("display","none");
+            var newFooterHeight = (footerLinksHeight);
+        } else {
+            var newFooterHeight = (footerLinksHeight + nvramBandHeight);
+        }
     }
 
     // set height of footer
@@ -1015,7 +1033,7 @@ function SetFooterHeight(UseControlOption)
 
 
 //-------------------------------------------------------------------------------------
-function SetCheckUpdateMessageAndProgressBarPosition(state)
+function SetCheckUpdateMessageAndProgressBarPosition()
 {
     var pathSelectorTop = $('#PathSelector').offset().top;
     $("#CheckingUpdatesMessage").css({ top: (pathSelectorTop-5) });
@@ -1492,36 +1510,31 @@ function ResetButtonsAndBandsToDefault()
 }
 
 //-------------------------------------------------------------------------------------
-function ChangeButtonAndBandToUnInstall(themeName)
+function ChangeButtonAndBandToUnInstall(installedThemeName)
 {
-    // themeName will be the name of an installed theme
-  
     // Set class of this themes' button to UnInstall
     // Use an attribute selector to deal with themes with spaces in their name
-    $("[id='button_" + themeName + "']").attr('class', 'buttonUnInstall');
+    $("[id='button_" + installedThemeName + "']").attr('class', 'buttonUnInstall');
     
     // Set class of this themes' button text to UnInstall
-    $("[id='button_" + themeName + "']").html("UnInstall");
-    
-    // Change band of this themes' background to indicate installed.
-    //$("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
-    
+    $("[id='button_" + installedThemeName + "']").html("UnInstall");
+
     // Note: bash script supplies this theme list in alphabetical order.
     //       If themes are not called in alphabetical order this does not work.
     // Work out if band above is accordionInstalled. If yes then fill with accordionInstalledNoShadow
-    var currentThemeBand = $("[id='button_" + themeName + "']").closest("#ThemeBand");
+    var currentThemeBand = $("[id='button_" + installedThemeName + "']").closest("#ThemeBand");
     var currentBandClass = currentThemeBand.attr('class');
     var aboveBandClass = currentThemeBand.prevAll("#ThemeBand").first().attr('class');
     if(typeof aboveBandClass != 'undefined') { // not at top band
         if(aboveBandClass == "accordion") {
-            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
+            $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalled");
         } else if(aboveBandClass == "accordionInstalled") {
-            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+            $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
         } else if(aboveBandClass == "accordionInstalledNoShadow") {
-            $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+            $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
         }
     } else { // at top band
-        $("[id='button_" + themeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+        $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
     }
 }
 
@@ -1572,14 +1585,14 @@ function UpdateAndRefreshPartitionSelectMenu(list)
       
     // Add title menu option
     $("#partitionSelect").append("<option value=\"-\" disabled=\"disabled\">Select your target theme directory:</option>");
-        //$(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
     
+    // Add list send from bash script
     if (list != "") {
         splitList = (list).split(',');
         for (var t = 0; t < splitList.length; t++) {
             var parts = (splitList[t]).split(';');
             var id = (parts[0]);
-            var desc = (parts[1]);
+            var desc = (parts[1]);     
             $("#partitionSelect").append("<option value=\"" + id + "\">" + desc + "</option>");
         }
     }
@@ -1772,14 +1785,40 @@ function ShowHideControlOptions(state)
     if (state == "Show") {
         // check it's not already showing
         if (AreControlOptionsHidden) {
-            $("#changeThemeContainer").css("display","block");
-            SetFooterHeight("IncludeCO");
+            $('#changeThemeContainer').show(function() {
+                SetFooterHeight("IncludeCO");
+                //ChangeNvramFuncBandText(state);
+            });
         }
     } else if (state == "Hide"){
         // check it's not already hidden
         if (!AreControlOptionsHidden) {
-            $("#changeThemeContainer").css("display","none");
-            SetFooterHeight("ExcludeCO");
+            $('#changeThemeContainer').hide(function() {
+                SetFooterHeight("ExcludeCO");
+                //ChangeNvramFuncBandText(state);
+            });
         }
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function ChangeNvramFuncBandText(state)
+{
+    if (state == "Show") {
+        // Set NVRAM Functionality band content
+        $("#nvramTextArea").html(function(i,t){
+            return t.replace('<span class="highlightYellow">Boot device not selected. </span>','<span class="highlightYellow">Boot device selected. </span>')
+        });
+        $("#NvramFunctionalityBand").css("opacity","0.95");
+    } else if (state == "Hide"){
+        // Set NVRAM Functionality band text
+        $("#nvramTextArea").html(function(i,t){
+            return t.replace('<span class="highlightYellow">Boot device selected. </span>','')
+        });
+        $("#nvramTextArea").html(function(i,t){
+            return t.replace('<span class="highlightYellow">Boot device not selected. </span>','')
+        });
+        $("#nvramTextArea span").prepend('<span class="highlightYellow">Boot device not selected. </span>');
+        $("#NvramFunctionalityBand").css("opacity","0.6");
     }
 }

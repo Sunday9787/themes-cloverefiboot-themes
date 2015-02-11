@@ -19,6 +19,9 @@
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetHtmlBootlogSectionTemplates()"
+    
     blcOpen="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device Info<\/span><\/div>"
     blcLineDeviceInfoMbr="        <div id=\"bandDescription\">\
             <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Type:<\/span><span class=\"infoBody\">${blBootDeviceType} (${blBootDevicePartType})<\/span><\/div>\
@@ -45,6 +48,7 @@ SetHtmlBootlogSectionTemplates()
     blcLineNvramNoTheme="        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
         <div id=\"bandDescription\">\
             <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${blNvramReadFromPrint}<\/span><\/div>\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover.Theme:<\/span><span class=\"infoBodyTheme\"><\/span><\/div>\
         <\/div>"
     blcLineConfig="        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\
         <div id=\"bandDescription\">\
@@ -54,7 +58,7 @@ SetHtmlBootlogSectionTemplates()
     blcLineThemeAsked="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\
         <div id=\"bandDescription\">\
             <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBody\">${blThemeAskedForPathPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme existed?<\/span><span class=\"${themeExistCssClass}\">${blThemeExists}<\/span><\/div>\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">did theme exist?<\/span><span class=\"${themeExistCssClass}\">${blThemeAskedForExisted}<\/span><\/div>\
         <\/div>"
     blcLineThemeUsed="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\
         <div id=\"bandDescription\">\
@@ -70,6 +74,9 @@ SetHtmlBootlogSectionTemplates()
 # ---------------------------------------------------------------------------------------
 SetBootlogTextColourClasses()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetBootlogTextColourClasses()"
+    
     # Set class and text of NVRAM theme exists
     if [ $blNvramThemeExists -eq 0 ]; then
         nvramThemeExistsCssClass="infoBodyGreen"
@@ -80,7 +87,7 @@ SetBootlogTextColourClasses()
     fi
     
     # Set class of 'theme exists' text
-    if [ "$blThemeExists" == "No" ]; then
+    if [ "$blThemeAskedForExisted" == "No" ]; then
         themeExistCssClass="infoBodyRed"
     else
         themeExistCssClass="infoBodyGreen"
@@ -90,231 +97,225 @@ SetBootlogTextColourClasses()
 # ---------------------------------------------------------------------------------------
 ReadBootLog()
 {
-    if [ -f "$bootLogFile" ]; then
-    
-        # Is bootlog from Clover?
-        local checkLog=$( grep "Starting Clover" $bootLogFile )
-        if [ "$checkLog" != "" ]; then
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadBootLog()"
                
-            # Set default vars
-            blCloverRevision=""               # Clover revision
-            blBootType=""                     # Either legacy or UEFI
-            blBootDeviceType="-"              # Example: USB, SATA, VenHW
-            blBootDevicePartition=""          # Example: 1
-            blBootDevicePartType=""           # Example: MBR, GPT
-            blBootDevicePartSignature=""      # Example: GUID (for GPT), 0x00000000 (for MBR)
-            blBootDevicePartStart=""          # Example: 0x28
-            blBootDevicePartSize=""           # Example: 0x64000
-            blConfigOem=""                    # Example: OEM
-            blNvramPlistVolume=""             # OS X volume name: Example: Macintosh HD
-            blNvramPlistExists=1              # Set to 0 if existence of nvram.plist is detected
-            blNvramThemeEntry=""              # Theme name from nvram
-            blNvramBootArgs=1                 # Set to 0 if boot-args found in NVRAM. (Shows NVRAM is working if Clover.Theme var not used).
-            blNvramReadFrom=""                 # Either full path to nvram.plist or 'Native NVRAM'
-            blNvramThemeExists=1              # Set to 0 if theme exists
-            blNvramThemeAbsent=1              # Set to 0 if theme in nvram is absent
-            blConfigPlistFilePath=""          # Path for config.plist
-            blConfigPlistThemeEntry=""        # Theme name from config.plist
-            blGuiOverrideTheme=""             # Theme name if set from GUI
-            blGuiOverrideThemeChanged=1       # Set to 0 if theme set in GUI was used
-            blThemeAskedForPath=""            # Set to path
-            blThemeAskedForTitle=""           # Set to theme name as it's detected.
-            blThemeExists="Yes"               # Set to 'No' if not exists, or 'Always' if embedded.
-            blUsedRandomTheme=1               # Set to 0 if no default theme set and random theme used
-            blThemeUsedPath=""                # Path of the theme used
-            blUsingTheme=""                   # Theme used
-            blThemeNameChosen=""              # Name of theme finally chosen
-            blUsingEmbedded=1                 # Set to 0 if embedded theme used
+    # Set default vars
+    blCloverRevision=""               # Clover revision
+    blBootType=""                     # Either legacy or UEFI
+    blBootDeviceType="-"              # Example: USB, SATA, VenHW
+    blBootDevicePartition=""          # Example: 1
+    blBootDevicePartType=""           # Example: MBR, GPT
+    blBootDevicePartSignature=""      # Example: GUID (for GPT), 0x00000000 (for MBR)
+    blBootDevicePartStart=""          # Example: 0x28
+    blBootDevicePartSize=""           # Example: 0x64000
+    blConfigOem=""                    # Example: OEM
+    blEmuVariable=1                   # Set to 0 is EmuVariable driver is loaded
+    blNvramPlistVolume=""             # OS X volume name: Example: Macintosh HD
+    blNvramPlistExists=1              # Set to 0 if existence of nvram.plist is detected
+    blNvramThemeEntry=""              # Theme name from nvram
+    blNvramBootArgs=1                 # Set to 0 if boot-args found in NVRAM. (Shows NVRAM is working if Clover.Theme var not used).
+    blNvramReadFrom=""                # Either full path to nvram.plist or 'Native NVRAM'
+    blNvramThemeExists=1              # Set to 0 if theme exists
+    blNvramThemeAbsent=1              # Set to 0 if theme in nvram is absent
+    blConfigPlistFilePath=""          # Path for config.plist
+    blConfigPlistThemeEntry=""        # Theme name from config.plist
+    blGuiOverrideTheme=""             # Theme name if set from GUI
+    blGuiOverrideThemeChanged=1       # Set to 0 if theme set in GUI was used
+    blThemeAskedForPath=""            # Set to path
+    blThemeAskedForTitle=""           # Set to theme name as it's detected.
+    blThemeAskedForExisted="Yes"      # Set to 'No' if not exists, or 'Always' if embedded.
+    blUsedRandomTheme=1               # Set to 0 if no default theme set and random theme used
+    blThemeUsedPath=""                # Path of the theme used
+    blUsingTheme=""                   # Theme used
+    blThemeNameChosen=""              # Name of theme finally chosen
+    blUsingEmbedded=1                 # Set to 0 if embedded theme used
             
-            # gBootDeviceIdentifier is passed from script.sh # Example disk0s1 or 'Failed'
-            mountpoint=""
-            mountpointPrint=""
+    # gBootDeviceIdentifier is passed from script.sh # Example disk0s1 or 'Failed'
+    mountpoint=""
+    mountpointPrint=""
 
-            while read -r lineRead
-            do
-            
-                if [[ "$lineRead" == *"Starting Clover"* ]]; then
-                    blCloverRevision="${lineRead##*Starting Clover rev }"
-                    blCloverRevision="${blCloverRevision% on*}"
-                    blBootType="${lineRead#*on }"
-                    if [[ "$blBootType" == *"CLOVER EFI"* ]]; then
-                        blBootType="Legacy"
-                    else
-                        blBootType="UEFI"
-                    fi
-                fi
-                
-                #0:100  0:000  SelfDevicePath=PciRoot(0x0)\Pci(0x1F,0x2)\Sata(0x0,0xFFFF,0x0)\HD(1,GPT,BC1B343C-2D6B-4C0C-8B88-71C2AFCF6E65,0x28,0x64000) @C7AA598
-                if [[ "$lineRead" == *"SelfDevicePath"* ]]; then
-
-                    # Get device path and split in to parts
-                    devicePath="${lineRead#*=}"
-                    declare -a devicePathArr
-                    IFS=$'\\'
-                    devicePathArr=($devicePath)
-                    IFS="$oIFS"
-                    blBootDeviceType="${devicePathArr[2]%(*}"
-                    
-                    for ((i=0; i<${#devicePathArr[@]}; i++))
-                    do
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}devicePathArr[$i]=${devicePathArr[$i]}"
-                    done
-
-                    # Split HD in to parts
-                    #devicePathHD="${devicePathArr[$hd]}"
-                    devicePathHD="${devicePathArr[3]%)*}"
-                    devicePathHD="${devicePathHD#*(}"
-                    # Should be something like these examples:
-                    #1,MBR,0x2A482A48,0x2,0x4EFC1B80
-                    #2,GPT,F55D9AC4-08A8-4269-9A8E-396DBE7C7943,0x64028,0x1C0000
-                    declare -a hdArr
-                    IFS=$','
-                    hdArr=($devicePathHD)
-                    IFS="$oIFS"
-                    blBootDevicePartition="${hdArr[0]}"
-                    blBootDevicePartType="${hdArr[1]}"
-                    blBootDevicePartSignature="${hdArr[2]}"
-                    blBootDevicePartStart="${hdArr[3]}"
-                    blBootDevicePartSize="${hdArr[4]}"
-
-                    if [[ "$blBootDevicePartType" == *GPT* ]]; then
-                        # Translate Device UUID to mountpoint
-                        if [ "$gBootDeviceIdentifier" != "" ]; then
-                            mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
-                            if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
-                                mountpointPrint="$mountpoint (aka /Volumes/EFI)"
-                            else
-                                mountpointPrint="$mountpoint"
-                            fi
-                        fi
-                    elif [[ "$blBootDevicePartType" == *MBR* ]]; then
-                        if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
-                            mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
-                            mountpointPrint="$mountpoint"
-                        fi
-                    fi
-                fi
-                
-                # 3:539  0:023  Using OEM config.plist at path: EFI\CLOVER\config.plist
-                if [[ "$lineRead" == *"config.plist at path:"* ]]; then
-                    blConfigOem="${lineRead##*Using }"
-                    blConfigOem="${blConfigOem% config.plist*}"
-                fi
-                
-                # 3:539  0:000  EFI\CLOVER\config.plist loaded: Success
-                if [[ "$lineRead" == *"config.plist loaded: Success"* ]]; then
-                    blConfigPlistFilePath=$( echo "$lineRead" | awk '{print $3}' )
-                    blConfigPlistFilePath="/"$( echo "$blConfigPlistFilePath" | sed 's/\\/\//g' )
-                fi
-                
-                # 0:110  0:000  Default theme: red
-                if [[ "$lineRead" == *"Default theme"* ]]; then
-                    blConfigPlistThemeEntry="${lineRead##*: }"
-                    blThemeAskedForTitle="$blConfigPlistThemeEntry"
-                fi
-                
-                # 6:149  0:172  Loading nvram.plist from Vol 'OSX' - loaded, size=2251
-                if [[ "$lineRead" == *"Loading nvram.plist"* ]]; then
-                    blNvramPlistVolume="${lineRead#*\'}"
-                    blNvramPlistVolume="${blNvramPlistVolume%\'*}"
-                fi
-                
-                # 6:167  0:018  PutNvramPlistToRtVars ...
-                if [[ "$lineRead" == *"PutNvramPlistToRtVars"* ]]; then
-                    blNvramPlistExists=0
-                fi
-                
-                # 6:167  0:000   Adding Key: Clover.Theme: Size = 11, Data: 62 6C 61 63 6B 5F 67 72 65 65 6E 
-                if [[ "$lineRead" == *"Adding Key: Clover.Theme:"* ]]; then
-                    # Remove any trailing spaces
-                    blNvramThemeEntry=$( echo "${lineRead##*Data:}" | sed 's/ *$//g' )
-                    # Check for new style boot log
-                    if [ "${blNvramThemeEntry:0:5}" != " Size" ]; then
-                        blNvramThemeEntry="${blNvramThemeEntry// /\\x}"
-                        blNvramThemeEntry="$blNvramThemeEntry\\n"
-                        blNvramThemeEntry=$( printf "$blNvramThemeEntry" )
-                        blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
-                        blThemeAskedForTitle="$blNvramThemeEntry"
-                    else # older style boot log
-                        blNvramThemeEntry="not shown in bootlog"
-                        blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
-                    fi
-                fi
-                
-                # 0:718  0:000  theme ios7 chosen from nvram is absent, using theme defined in config: red
-                if [[ "$lineRead" == *"chosen from nvram is absent"* ]]; then
-                    blNvramThemeEntry="${lineRead#*theme }"
-                    blNvramThemeEntry=$( echo "${blNvramThemeEntry%chosen from*}" | sed 's/ *$//g' )
-                    if [ "$blNvramReadFrom" == "" ]; then
-                        blNvramReadFrom="Native NVRAM"
-                    fi
-                    blNvramThemeAbsent=0
-                    blThemeAskedForTitle="$blConfigPlistThemeEntry"
-                fi
-                
-                # 0:732  0:000  found boot-args in NVRAM:-v kext-dev-mode=1, size=18
-                if [[ "$lineRead" == *"found boot-args in NVRAM"* ]]; then
-                    blNvramBootArgs=0
-                fi
-                
-                if [[ "$lineRead" == *"EDITED:"* ]]; then
-                    blGuiOverrideTheme="${lineRead##*: }"
-                fi
-                
-                if [[ "$lineRead" == *"change theme"* ]]; then
-                    if [ "$blGuiOverrideTheme" != "" ]; then
-                        blGuiOverrideThemeChanged=0
-                    fi
-                fi
-                
-                if [[ "$lineRead" == *"no default theme"* ]]; then
-                    if [[ "$lineRead" == *"get random"* ]]; then
-                        blUsedRandomTheme=0
-                    fi
-                fi
-                
-                # 0:718  0:000  Using theme 'red' (EFI\CLOVER\themes\red)
-                if [[ "$lineRead" == *"Using theme"* ]]; then
-                    blUsingTheme="${lineRead#*\'}"
-                    blUsingTheme="${blUsingTheme%\'*}"
-                    blThemeUsedPath="${lineRead#*(}"
-                    blThemeUsedPath="${blThemeUsedPath%)*}"
-                    blThemeUsedPath=$( echo "$blThemeUsedPath" | sed 's/\\/\//g' )
-                    blThemeUsedPath="/${blThemeUsedPath%/*}"
-                fi
-                
-                # 6:208  0:000  theme black_green defined in NVRAM found and theme.plist parsed
-                if [[ "$lineRead" == *"defined in NVRAM found"* ]]; then
-                    blNvramThemeEntry="${lineRead#*theme }"
-                    blNvramThemeEntry="${blNvramThemeEntry% defined*}"
-                    if [ "$blNvramReadFrom" == "" ]; then
-                        blNvramReadFrom="Native NVRAM"
-                    fi
-                    blNvramThemeExists=0
-                fi
-                
-                # 6:227  0:000  Choosing theme black_green
-                if [[ "$lineRead" == *"Choosing theme"* ]]; then
-                    blThemeNameChosen=$( echo "${lineRead##*Choosing theme }" | sed 's/ *$//' )
-                fi
-                
-                # 1:848  0:000  no themes available, using embedded
-                if [[ "$lineRead" == *"no themes available, using embedded"* ]]; then
-                    blUsingEmbedded=0
-                fi
-
-            done < "$bootLogFile"
-        else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot.log but Not Clover."
+    while read -r lineRead
+    do
+    
+        if [[ "$lineRead" == *"Starting Clover"* ]]; then
+            blCloverRevision="${lineRead##*Starting Clover rev }"
+            blCloverRevision="${blCloverRevision% on*}"
+            blBootType="${lineRead#*on }"
+            if [[ "$blBootType" == *"CLOVER EFI"* ]]; then
+        blBootType="Legacy"
+            else
+        blBootType="UEFI"
+            fi
         fi
-    else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$bootLogFile was not found."
-    fi
+        
+        #0:100  0:000  SelfDevicePath=PciRoot(0x0)\Pci(0x1F,0x2)\Sata(0x0,0xFFFF,0x0)\HD(1,GPT,BC1B343C-2D6B-4C0C-8B88-71C2AFCF6E65,0x28,0x64000) @C7AA598
+        if [[ "$lineRead" == *"SelfDevicePath"* ]]; then
+
+            # Get device path and split in to parts
+            devicePath="${lineRead#*=}"
+            declare -a devicePathArr
+            IFS=$'\\'
+            devicePathArr=($devicePath)
+            IFS="$oIFS"
+            blBootDeviceType="${devicePathArr[2]%(*}"
+            # Split HD in to parts
+            #devicePathHD="${devicePathArr[$hd]}"
+            devicePathHD="${devicePathArr[3]%)*}"
+            devicePathHD="${devicePathHD#*(}"
+            # Should be something like these examples:
+            #1,MBR,0x2A482A48,0x2,0x4EFC1B80
+            #2,GPT,F55D9AC4-08A8-4269-9A8E-396DBE7C7943,0x64028,0x1C0000
+            declare -a hdArr
+            IFS=$','
+            hdArr=($devicePathHD)
+            IFS="$oIFS"
+            blBootDevicePartition="${hdArr[0]}"
+            blBootDevicePartType="${hdArr[1]}"
+            blBootDevicePartSignature="${hdArr[2]}"
+            blBootDevicePartStart="${hdArr[3]}"
+            blBootDevicePartSize="${hdArr[4]}"
+
+            if [[ "$blBootDevicePartType" == *GPT* ]]; then
+        # Translate Device UUID to mountpoint
+        if [ "$gBootDeviceIdentifier" != "" ]; then
+            mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
+            if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
+                mountpointPrint="$mountpoint (aka /Volumes/EFI)"
+            else
+                mountpointPrint="$mountpoint"
+            fi
+        fi
+            elif [[ "$blBootDevicePartType" == *MBR* ]]; then
+        if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
+            mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
+            mountpointPrint="$mountpoint"
+        fi
+            fi
+        fi
+        
+        # 3:539  0:023  Using OEM config.plist at path: EFI\CLOVER\config.plist
+        if [[ "$lineRead" == *"config.plist at path:"* ]]; then
+            blConfigOem="${lineRead##*Using }"
+            blConfigOem="${blConfigOem% config.plist*}"
+        fi
+        
+        # 3:539  0:000  EFI\CLOVER\config.plist loaded: Success
+        if [[ "$lineRead" == *"config.plist loaded: Success"* ]]; then
+            blConfigPlistFilePath=$( echo "$lineRead" | awk '{print $3}' )
+            blConfigPlistFilePath="/"$( echo "$blConfigPlistFilePath" | sed 's/\\/\//g' )
+        fi
+        
+        # 0:110  0:000  Default theme: red
+        if [[ "$lineRead" == *"Default theme"* ]]; then
+            blConfigPlistThemeEntry="${lineRead##*: }"
+            blThemeAskedForTitle="$blConfigPlistThemeEntry"
+        fi
+        
+        # 1:104  0:000  EmuVariable InstallEmulation: orig vars copied, emu.va.....
+        if [[ "$lineRead" == *"EmuVariable InstallEmulation"* ]] && [[ "$lineRead" == *"orig vars copied"* ]] ; then
+            blEmuVariable=0
+        fi
+        
+        # 6:149  0:172  Loading nvram.plist from Vol 'OSX' - loaded, size=2251
+        if [[ "$lineRead" == *"Loading nvram.plist"* ]]; then
+            blNvramPlistVolume="${lineRead#*\'}"
+            blNvramPlistVolume="${blNvramPlistVolume%\'*}"
+        fi
+        
+        # 6:167  0:018  PutNvramPlistToRtVars ...
+        if [[ "$lineRead" == *"PutNvramPlistToRtVars"* ]]; then
+            blNvramPlistExists=0
+        fi
+        
+        # 6:167  0:000   Adding Key: Clover.Theme: Size = 11, Data: 62 6C 61 63 6B 5F 67 72 65 65 6E 
+        if [[ "$lineRead" == *"Adding Key: Clover.Theme:"* ]]; then
+            # Remove any trailing spaces
+            blNvramThemeEntry=$( echo "${lineRead##*Data:}" | sed 's/ *$//g' )
+            # Check for new style boot log
+            if [ "${blNvramThemeEntry:0:5}" != " Size" ]; then
+                blNvramThemeEntry="${blNvramThemeEntry// /\\x}"
+                blNvramThemeEntry="$blNvramThemeEntry\\n"
+                blNvramThemeEntry=$( printf "$blNvramThemeEntry" )
+                blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
+                blThemeAskedForTitle="$blNvramThemeEntry"
+            else # older style boot log
+                blNvramThemeEntry="not shown in bootlog"
+                blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
+            fi
+        fi
+        
+        # 0:718  0:000  theme ios7 chosen from nvram is absent, using theme defined in config: red
+        if [[ "$lineRead" == *"chosen from nvram is absent"* ]]; then
+            blNvramThemeEntry="${lineRead#*theme }"
+            blNvramThemeEntry=$( echo "${blNvramThemeEntry%chosen from*}" | sed 's/ *$//g' )
+            if [ "$blNvramReadFrom" == "" ]; then
+                blNvramReadFrom="Native NVRAM"
+            fi
+            blNvramThemeAbsent=0
+            blThemeAskedForTitle="$blConfigPlistThemeEntry"
+        fi
+        
+        # 0:732  0:000  found boot-args in NVRAM:-v kext-dev-mode=1, size=18
+        if [[ "$lineRead" == *"found boot-args in NVRAM"* ]]; then
+            blNvramBootArgs=0
+        fi
+        
+        if [[ "$lineRead" == *"EDITED:"* ]]; then
+            blGuiOverrideTheme="${lineRead##*: }"
+        fi
+        
+        if [[ "$lineRead" == *"change theme"* ]]; then
+            if [ "$blGuiOverrideTheme" != "" ]; then
+                blGuiOverrideThemeChanged=0
+            fi
+        fi
+        
+        if [[ "$lineRead" == *"no default theme"* ]]; then
+            if [[ "$lineRead" == *"get random"* ]]; then
+                blUsedRandomTheme=0
+            fi
+        fi
+        
+        # 0:718  0:000  Using theme 'red' (EFI\CLOVER\themes\red)
+        if [[ "$lineRead" == *"Using theme"* ]]; then
+            blUsingTheme="${lineRead#*\'}"
+            blUsingTheme="${blUsingTheme%\'*}"
+            blThemeUsedPath="${lineRead#*(}"
+            blThemeUsedPath="${blThemeUsedPath%)*}"
+            blThemeUsedPath=$( echo "$blThemeUsedPath" | sed 's/\\/\//g' )
+            blThemeUsedPath="/${blThemeUsedPath%/*}"
+        fi
+        
+        # 6:208  0:000  theme black_green defined in NVRAM found and theme.plist parsed
+        if [[ "$lineRead" == *"defined in NVRAM found"* ]]; then
+            blNvramThemeEntry="${lineRead#*theme }"
+            blNvramThemeEntry="${blNvramThemeEntry% defined*}"
+            if [ "$blNvramReadFrom" == "" ]; then
+                blNvramReadFrom="Native NVRAM"
+            fi
+            blNvramThemeExists=0
+        fi
+        
+        # 6:227  0:000  Choosing theme black_green
+        if [[ "$lineRead" == *"Choosing theme"* ]]; then
+            blThemeNameChosen=$( echo "${lineRead##*Choosing theme }" | sed 's/ *$//' )
+        fi
+        
+        # 1:848  0:000  no themes available, using embedded
+        if [[ "$lineRead" == *"no themes available, using embedded"* ]]; then
+            blUsingEmbedded=0
+        fi
+
+    done < "$bootLogFile"
 }
 
 # ---------------------------------------------------------------------------------------
 PostProcess()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PostProcess()"
+    
     if [ $blUsingEmbedded -eq 0 ]; then
         blThemeUsedPath="internal"
         blThemeNameChosen="embedded"
@@ -327,17 +328,36 @@ PostProcess()
     else
         blThemeAskedForTitle=""
     fi
+    
+    # No theme asked for so nothing could have existed
+    if [ "$blThemeAskedForTitle" == "" ]; then
+        blThemeAskedForExisted=""
+    fi
 
     if [ "$blThemeAskedForTitle" == "$blUsingTheme" ]; then
         blThemeAskedForPath="${blThemeUsedPath}"/"${blThemeAskedForTitle}"
-    else
+    elif [ "$blThemeAskedForTitle" != "" ]; then
         if [ "$blUsingTheme" == "" ] && [ "$blThemeAskedForTitle" == "embedded" ]; then
             blThemeAskedForPath="internal"
-            blThemeExists="Always"
-        else
-            blThemeAskedForPath="${blConfigPlistFilePath%/*}/Themes/${blThemeAskedForTitle}"
-            blThemeExists="No"
+            blThemeAskedForExisted="Always"
+            
+            # Removed the following because if no theme was set in nvram/nvram.plist or config.plist then no theme was asked for.
+        #else
+        #    blThemeAskedForPath="${blConfigPlistFilePath%/*}/Themes/${blThemeAskedForTitle}"
+        
+        
+        #    blThemeAskedForExisted="No"
         fi
+    fi
+    
+    # No theme asked for so nothing could have existed
+    if [ "$blThemeAskedForTitle" == "" ]; then
+        blThemeAskedForExisted=""
+    fi
+
+    # NVRAM entry points to non-existent theme OR no default theme found
+    if [ $blNvramThemeAbsent -eq 0 ] && [ $blUsedRandomTheme -eq 0 ]; then
+        blThemeAskedForExisted="No"
     fi
 
     #if [ $blUsedRandomTheme -eq 0 ]; then
@@ -367,16 +387,22 @@ PostProcess()
     if [ "$mountpoint" != "" ]; then
         if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
             blConfigPlistFilePathPrint="/Volumes/EFI${blConfigPlistFilePath}"
-            blThemeAskedForPathPrint="/Volumes/EFI${blThemeAskedForPath}"
+            if [ "$blThemeAskedForPath" != "" ]; then
+               blThemeAskedForPathPrint="/Volumes/EFI${blThemeAskedForPath}"
+            fi
         else
             blConfigPlistFilePathPrint="${mountpoint}${blConfigPlistFilePath}"
-            blThemeAskedForPathPrint="${mountpoint}${blThemeAskedForPath}"
+            if [ "$blThemeAskedForPath" != "" ]; then
+                blThemeAskedForPathPrint="${mountpoint}${blThemeAskedForPath}"
+            fi
         fi
         blConfigPlistFilePath="${mountpoint}${blConfigPlistFilePath}"
     else
         mountpoint="not found" && mountpointPrint="not found"
         blConfigPlistFilePathPrint="${blConfigPlistFilePath}"
-        blThemeAskedForPathPrint="${blThemeAskedForPath}"
+        if [ "$blThemeAskedForPath" != "" ]; then
+            blThemeAskedForPathPrint="${blThemeAskedForPath}"
+        fi
     fi
     
     # Convert device hex info to human readable
@@ -390,6 +416,9 @@ PostProcess()
 # ---------------------------------------------------------------------------------------
 EscapeVarsForHtml()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}EscapeVarsForHtml()"
+    
     gBootDeviceIdentifierPrint=$( echo "$gBootDeviceIdentifier" | sed 's/\//\\\//g' )
     mountpointPrint=$( echo "$mountpointPrint" | sed 's/\//\\\//g' )
     blConfigPlistFilePathPrint=$( echo "$blConfigPlistFilePathPrint" | sed 's/\//\\\//g' )
@@ -401,36 +430,84 @@ EscapeVarsForHtml()
 # ---------------------------------------------------------------------------------------
 CheckNvramIsWorking()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckNvramIsWorking()"
+    
     # $blBootType (either UEFI or Legacy) / $gNvramWorkingType (either Fake or Native)
     if [ "$blBootType" != "" ] && [ "$gNvramWorkingType" != "" ]; then
     
-        if [ "$blBootType" == "Legacy" ]; then
+        if [ "$blBootType" == "Legacy" ] || [[ "$blBootType" == "UEFI" && $blEmuVariable -eq 0 ]]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Boot type=$blBootType | blEmuVariable=$blEmuVariable"
             # Check for necessary files to save nvram.plist file to disk
             if [ -f /Library/LaunchDaemons/com.projectosx.clover.daemon.plist ]; then
                 local checkState=$( grep -A1 "RunAtLoad" /Library/LaunchDaemons/com.projectosx.clover.daemon.plist)
                 if [[ "$checkState" == *true* ]]; then
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/LaunchDaemons/com.projectosx.clover.daemon.plist exists and set to RunAtLoad"
                     if [ -f "/Library/Application Support/Clover/CloverDaemon" ]; then
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/Application Support/Clover/CloverDaemon exists"
                         if [ -f /private/etc/rc.clover.lib ]; then
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.clover.lib exists"
                             if [ -f /private/etc/rc.shutdown.d/80.save_nvram_plist.local ]; then
-                                gNvramWorking=0
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.shutdown.d/80.save_nvram_plist.local exists"
+                                local checkMd5=$( md5 /private/etc/rc.shutdown.d/80.save_nvram_plist.local )
+                                checkMd5="${checkMd5##*= }"
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.shutdown.d/80.save_nvram_plist.local md5=$checkMd5"
+                                if [ "$checkMd5" != "" ] && [[ "$checkMd5" = "44b326ce35acbbeb223031a941baf1a8" || "$checkMd5" = "0cf4ee82fd2da0aa20621c289e70939c" ]]; then
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Fake nvram should be working. Setting gNvramWorking to 0"
+                                    gNvramWorking=0
+                                fi
+                            else
+                                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.shutdown.d/80.save_nvram_plist.local does not exist"
                             fi
+                        else
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.clover.lib does not exist"
                         fi
+                    else
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/Application Support/Clover/CloverDaemon does not exist"
                     fi
+                else
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/LaunchDaemons/com.projectosx.clover.daemon.plist is not set to RunAtLoad"
                 fi
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/LaunchDaemons/com.projectosx.clover.daemon.plist does not exist"
             fi
         fi
+    
+        #if [ "$gNvramWorkingType" == "Fake" ]; then
+        #    # Check for necessary files to save nvram.plist file to disk
+        #    if [ -f /Library/LaunchDaemons/com.projectosx.clover.daemon.plist ]; then
+        #        local checkState=$( grep -A1 "RunAtLoad" /Library/LaunchDaemons/com.projectosx.clover.daemon.plist)
+        #        if [[ "$checkState" == *true* ]]; then
+        #            if [ -f "/Library/Application Support/Clover/CloverDaemon" ]; then
+        #                if [ -f /private/etc/rc.clover.lib ]; then
+        #                    if [ -f /private/etc/rc.shutdown.d/80.save_nvram_plist.local ]; then
+        #                        gNvramWorking=0
+        #                    fi
+        #                fi
+        #            fi
+        #        fi
+        #    fi
+        #fi
 
-        if [ "$blBootType" == "UEFI" ]; then
+        #if [ "$blBootType" == "UEFI" ]; then
+        if [[ "$blBootType" == "UEFI" && $blEmuVariable -eq 1 ]]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}UEFI boot and EmuVariable Driver was not used."
             if [ "$gNvramWorkingType" == "Native" ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Native nvram is working. Setting gNvramWorking to 0"
                 gNvramWorking=0
             fi
         fi
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Skipped because blBootType=$blBootType AND gNvramWorkingType=$gNvramWorkingType"
     fi
 }
 
 # ---------------------------------------------------------------------------------------
 PrintVarsToLog()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PrintVarsToLog()"
+    
     WriteToLog "${debugIndentTwo}Read Boot Log"
     WriteToLog "${debugIndentTwo}Clover Revision=$blCloverRevision"
     WriteToLog "${debugIndentTwo}Boot Type=$blBootType"
@@ -444,13 +521,15 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}Config.plist OEM=$blConfigOem"
     WriteToLog "${debugIndentTwo}Config.plist file path: $blConfigPlistFilePath"
     WriteToLog "${debugIndentTwo}Config.plist theme entry: $blConfigPlistThemeEntry"
+    WriteToLog "${debugIndentTwo}EmuVariable Driver used? (1=No, 0=Yes): $blEmuVariable"
     WriteToLog "${debugIndentTwo}NVRAM.plist volume location: $blNvramPlistVolume"
     WriteToLog "${debugIndentTwo}NVRAM.plist exists? (1=No, 0=Yes): $blNvramPlistExists"
     WriteToLog "${debugIndentTwo}NVRAM read from: $blNvramReadFrom"
     WriteToLog "${debugIndentTwo}NVRAM theme entry: $blNvramThemeEntry"
     WriteToLog "${debugIndentTwo}NVRAM theme absent? (1=No, 0=Yes): $blNvramThemeAbsent"
     WriteToLog "${debugIndentTwo}NVRAM theme exist? (1=No, 0=Yes): $blNvramThemeExists"
-    WriteToLog "${debugIndentTwo}Theme asked for path: $blThemeAskedForPath"
+    WriteToLog "${debugIndentTwo}Theme asked for title: $blThemeAskedForTitle"
+    WriteToLog "${debugIndentTwo}Theme asked for full path: $blThemeAskedForPath"
     WriteToLog "${debugIndentTwo}Theme asked for exist: $themeExist"
     WriteToLog "${debugIndentTwo}Theme set in UI? (1=No, 0=Yes): $blGuiOverrideThemeChanged"
     WriteToLog "${debugIndentTwo}Random theme used? (1=No, 0=Yes):$blUsedRandomTheme"
@@ -459,7 +538,7 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}Theme used chosen: $blThemeNameChosen"
     WriteLinesToLog
     WriteToLog "${debugIndentTwo}NVRAM working type: $gNvramWorkingType"
-    WriteToLog "${debugIndentTwo}Is nvram working? (1=No, 0=Yes): $gNvramWorking"
+    WriteToLog "${debugIndentTwo}Is nvram working on currently booted system? (1=No, 0=Yes): $gNvramWorking"
     WriteLinesToLog
     WriteToLog "${debugIndentTwo}mountpointPrint=$mountpointPrint"
     WriteToLog "${debugIndentTwo}blConfigPlistFilePathPrint=$blConfigPlistFilePathPrint"
@@ -472,6 +551,9 @@ PrintVarsToLog()
 # ---------------------------------------------------------------------------------------
 PopulateNvramFunctionalityBand()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateNvramFunctionalityBand()"
+    
     local message=""
     local fillColour=""
     
@@ -482,8 +564,8 @@ PopulateNvramFunctionalityBand()
     
         if [ $gNvramWorking -eq 0 ]; then
             if [ "$blBootType" == "Legacy" ]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Launch Daemon \&amp; rc scripts are installed and operational. NVRAM changes will be saved."
-                message="Launch Daemon \&amp; rc scripts are installed and operational. NVRAM changes will be saved."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Launch daemon \&amp; rc scripts appear to be working. NVRAM changes will be saved (to nvram.plist)"
+                message="Launch daemon \&amp; rc scripts appear to be working. NVRAM changes will be saved (to nvram.plist)"
                 fillColour="nvramFillWorking"
             elif [ "$blBootType" == "UEFI" ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Native NVRAM is functional and direct changes will be retained next boot."
@@ -503,11 +585,20 @@ PopulateNvramFunctionalityBand()
                         message="Bootlog showed NVRAM is not being used for default theme choice."
                         fillColour="nvramFillNotWorking"
                     fi
+                elif [ "$gNvramWorkingType" == "Fake" ] && [ $blEmuVariable -eq 0 ]; then
+                    message="Launch daemon \&amp; rc scripts are not operational. Direct changes to NVRAM won't be retained next boot. Run Clover Installer to fix."
+                    fillColour="nvramFillNotWorking"
                 fi
             fi
         fi
     
     elif [ "$1" == "1" ]; then
+
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}This system was booted using Clover older than r2025."
+        message="This system was booted using a Clover revision older than r2025."
+        fillColour="nvramFillRed"
+    
+    elif [ "$1" == "2" ]; then
         
         if [ ! -f "$bootLogFile" ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}This system was not booted using Clover."
@@ -534,6 +625,9 @@ PopulateNvramFunctionalityBand()
 # ---------------------------------------------------------------------------------------
 PopulateBootLogTitleBand()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateBootLogTitleBand()"
+    
     # Create bootlog band and title html
     bootlogBandTitleHtml="    <div id=\"BootLogTitleBar\" class=\"bootlogBandFill\">"
     bandTitle="        <span class=\"titleBarTextTitle\">LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|<\/span>"
@@ -552,9 +646,12 @@ PopulateBootLogTitleBand()
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">$blThemeNameChosen<\/span> as set in ${blConfigPlistFilePathPrint} as NVRAM theme was absent<\/span>"
 
     # Any pointed to theme does not exist AND embedded theme was not used AND random theme was used
-    #elif [ "$themeExist" == "No" ] && [ $blUsingEmbedded -eq 1 ]; then
-    elif [ $blNvramThemeExists -eq 1 ] && [ $blUsingEmbedded -eq 1 ] && [ $blUsedRandomTheme -eq 0 ]; then
-        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme as it couldn't find the theme asked for<\/span>"
+    elif [ $blNvramThemeAbsent -eq 0 ] && [ $blUsingEmbedded -eq 1 ] && [ $blUsedRandomTheme -eq 0 ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as it couldn't find the theme asked for<\/span>"
+    
+    # nvram entry was blank AND config.plist entry was blank AND embedded theme was not used AND random theme was used
+    elif [ "$blNvramThemeEntry" == "" ] && [ "$blConfigPlistThemeEntry" == "" ] && [ $blUsingEmbedded -eq 1 ] && [ $blUsedRandomTheme -eq 0 ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as no theme was set<\/span>"
     
     # Embedded theme was used
     elif [ $blUsingEmbedded -eq 0 ]; then
@@ -574,6 +671,9 @@ PopulateBootLogTitleBand()
 # ---------------------------------------------------------------------------------------
 PopulateBootLog()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateBootLog()"
+    
     # Create bootlog container HTML
     bootlogHtml="    <div id=\"BootLogContainer\" class=\"nvramFillNone\">"
 
@@ -593,9 +693,15 @@ PopulateBootLog()
         fi
     fi
     
-    # Add HTML for Config.plist / Theme asked for sections
-    bootlogHtml="${bootlogHtml}${blcLineConfig}${blcLineThemeAsked}"
+    # Add HTML for Config.plist section
+    bootlogHtml="${bootlogHtml}${blcLineConfig}"
     
+    # Add HTML for Theme asked for section (providing a theme was asked for)
+    if [ "$blThemeAskedForPath" != "" ] && [ "$blThemeAskedForTitle" != "" ]; then
+        bootlogHtml="${bootlogHtml}${blcLineThemeAsked}"
+    fi
+    
+    # If GUI was used to override theme then add this HTML section
     if [ $blGuiOverrideThemeChanged -eq 0 ] && [ "$blGuiOverrideTheme" != "" ]; then
         bootlogHtml="${bootlogHtml}${blcLineOverrideUi}"
     fi
@@ -616,65 +722,6 @@ PopulateBootLog()
     fi
 }
 
-# ---------------------------------------------------------------------------------------
-CheckNvramIsWorkingAndInserthtml()
-{
-    # $blBootType (either UEFI or Legacy) / $gNvramWorkingType (either Fake or Native)
-    if [ "$blBootType" != "" ] && [ "$gNvramWorkingType" != "" ]; then
-    
-        local message=""
-        local colour=""
-        
-        if [ "$blBootType" == "Legacy" ]; then
-            # Check for necessary files to save nvram.plist file to disk
-            if [ -f /Library/LaunchDaemons/com.projectosx.clover.daemon.plist ]; then
-                local checkState=$( grep -A1 "RunAtLoad" /Library/LaunchDaemons/com.projectosx.clover.daemon.plist)
-                if [[ "$checkState" == *true* ]]; then
-                    if [ -f "/Library/Application Support/Clover/CloverDaemon" ]; then
-                        if [ -f /private/etc/rc.clover.lib ]; then
-                            if [ -f /private/etc/rc.shutdown.d/80.save_nvram_plist.local ]; then
-                                gNvramWorking=0
-                            fi
-                        fi
-                    fi
-                fi
-            fi
-            if [ $gNvramWorking -eq 0 ]; then
-                message="Launch Daemon \&amp; rc scripts are installed and operational. NVRAM changes will be saved."
-                colour="nvramFillWorking"
-            elif [ $gNvramWorking -eq 1 ]; then
-                message="Launch Daemon \&amp; rc scripts not operational. Direct changes to NVRAM won't be retained next boot. Run Clover Installer to fix."
-                colour="nvramFillNotWorking"
-            fi
-        fi
-
-        if [ "$blBootType" == "UEFI" ]; then
-            if [ "$gNvramWorkingType" == "Native" ]; then
-                message="Native NVRAM is functional and changes will be saved."
-                colour="nvramFillWorking"
-                gNvramWorking=0
-            fi
-        fi
-        
-    else
-        message="This system was not booted using Clover."
-        colour="nvramFillRed"
-    fi
-    
-    if [ "$message" != "" ]; then
-        # Create html mesasage
-        #local htmlToInsert="        <span class=\"textBody\">${message}<\/span>"
-        local htmlToInsert="    <div id=\"NvramFunctionalityBand\" class=\"${colour}\">\
-        <div id=\"nvramTextArea\">\
-            <span class=\"textBody\">${message}<\/span>\
-        <\/div>\
-    <\/div> <!-- End NvramFunctionalityBand -->"
-
-        # Insert bootlog Html in to placeholder
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting nvram functionality message HTML in to managethemes.html"
-        LANG=C sed -ie "s/<!--INSERT_NVRAM_MESSAGE_BAND_HERE-->/${htmlToInsert}/g" "${PUBLIC_DIR}"/managethemes.html
-    fi
-}
 
 
 # Resolve path
@@ -699,44 +746,61 @@ insertCount=0                     # increments each time an html block is inject
 gBootDeviceIdentifier="$1"
 
 if [ -f "$bootLogFile" ]; then
-    ReadBootLog
-    PostProcess
-    CheckNvramIsWorking
-    EscapeVarsForHtml
-    [[ DEBUG -eq 1 ]] && PrintVarsToLog
 
-    # Write boot device info to file
-    echo "${blBootDevicePartition}@${blBootDevicePartType}@${blBootDevicePartSignature}@${blBootDevicePartStartDec}@${blBootDevicePartSizeDec}" > "$bootDeviceInfo"
+    # Note: Clover r2025 rebranded rEFIt to Clover.
+    #       So any log pre r2025 will not be read correctly.
 
-    # Create NVRAM functionality band
-    PopulateNvramFunctionalityBand "0"
+    checkLog=$( grep "Starting Clover" "$bootLogFile" )
+    if [ "$checkLog" != "" ]; then
+        ReadBootLog   
+        PostProcess
+        CheckNvramIsWorking
+        EscapeVarsForHtml
+        [[ DEBUG -eq 1 ]] && PrintVarsToLog
 
-    # Show user what happened last boot
-    PopulateBootLogTitleBand
-    SetBootlogTextColourClasses
-    SetHtmlBootlogSectionTemplates
-    PopulateBootLog
+        # Write boot device info to file
+        echo "${blBootDevicePartition}@${blBootDevicePartType}@${blBootDevicePartSignature}@${blBootDevicePartStartDec}@${blBootDevicePartSizeDec}" > "$bootDeviceInfo"
 
-    # Add message in to log for initialise.js to detect.
-    if [ $insertCount -eq 2 ]; then
-        WriteToLog "CTM_BootlogOK"
+        # Create NVRAM functionality band
+        PopulateNvramFunctionalityBand "0"
+
+        # Show user what happened last boot
+        PopulateBootLogTitleBand
+        SetBootlogTextColourClasses
+        SetHtmlBootlogSectionTemplates
+        PopulateBootLog
+
+        # Add message in to log for initialise.js to detect.
+        if [ $insertCount -eq 2 ]; then
+            WriteToLog "CTM_BootlogOK"
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}insertCount=$insertCount | boot.log html failed to be inserted".
+        fi
+
+        # Write some vars to file for script.sh to use.
+        if [ "$blNvramReadFrom" != "" ]; then
+            echo "nvram@$blNvramReadFrom" >> "$bootlogScriptOutfile"
+        elif [ $blNvramBootArgs -eq 0 ]; then
+            echo "nvram@Native NVRAM" >> "$bootlogScriptOutfile"
+        fi
+        [[ "$blConfigPlistFilePath" != "" ]] && echo "config@$blConfigPlistFilePath" >> "$bootlogScriptOutfile"
+        [[ "$blBootType" != "" ]] && echo "bootType@$blBootType" >> "$bootlogScriptOutfile"
+        echo "nvramSave@$gNvramWorking" >> "$bootlogScriptOutfile"
+    
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}insertCount=$insertCount | boot.log html failed to be inserted".
+        checkLog=$( grep "Starting rEFIt" "$bootLogFile" )
+        if [ "$checkLog" != "" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found Clover boot.log but revision is older than r2025"
+            # Create NVRAM functionality band
+            PopulateNvramFunctionalityBand "1"
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot.log but Not Clover."
+        fi
     fi
-
-    # Write some vars to file for script.sh to use.
-    if [ "$blNvramReadFrom" != "" ]; then
-        echo "nvram@$blNvramReadFrom" >> "$bootlogScriptOutfile"
-    elif [ $blNvramBootArgs -eq 0 ]; then
-        echo "nvram@Native NVRAM" >> "$bootlogScriptOutfile"
-    fi
-    [[ "$blConfigPlistFilePath" != "" ]] && echo "config@$blConfigPlistFilePath" >> "$bootlogScriptOutfile"
-    [[ "$blBootType" != "" ]] && echo "bootType@$blBootType" >> "$bootlogScriptOutfile"
-    echo "nvramSave@$gNvramWorking" >> "$bootlogScriptOutfile"
     
 else
-    # TO FIGURE OUT
-    PopulateNvramFunctionalityBand "1"
+    # Show message that system was booted without using Clover
+    PopulateNvramFunctionalityBand "2"
     
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_BootlogMissing"

@@ -581,6 +581,10 @@ a:hover {
     -webkit-user-select: none;
 }
 
+.highlightYellow {
+    color: #efd526;
+}
+
 #changeThemeContainer {
     width: 100%;
     height: auto;
@@ -722,10 +726,9 @@ select.changeThemeDropdown:hover:enabled {
 .titleBarTextTitle {
     font-family: 'Roboto', sans-serif;
     color: #FFF;
-    font-size: 12px; 
+    font-size: 11px; 
     font-weight: bold;
     padding: 0px 0px 0px 24px;
-    line-height: 36px;
 }
 
 .titleBarTextDescription {
@@ -734,7 +737,7 @@ select.changeThemeDropdown:hover:enabled {
     font-size: 12px; 
     font-weight: bold;
     padding: 0px 0px 0px 12px;
-    line-height: 36px;
+    line-height: 35px;
 }
 
 #BootLogContainer {
@@ -1141,4 +1144,3 @@ a.boxclose:hover {
     background-image: -webkit-linear-gradient(top, #c7c1ee, #bfb8e6);
     border: 1px solid #c0b6eb;
 }
-
