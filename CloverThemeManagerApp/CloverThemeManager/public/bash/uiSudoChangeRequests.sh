@@ -318,7 +318,7 @@ FindMbrDevice()
                     signatureLE="${bootDeviceInfo[2]:8:2}${bootDeviceInfo[2]:6:2}${bootDeviceInfo[2]:4:2}${bootDeviceInfo[2]:2:2}"
                     signature=$( echo $signature | tr '[:upper:]' '[:lower:]' )
                     signatureLE=$( echo $signatureLE | tr '[:upper:]' '[:lower:]' )
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Comparing signatures: $signature vs $$signatureLE"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Comparing signatures: $signature vs $signatureLE"
                     if [ "$signature" == "$signatureLE" ]; then # We have a match on signature
                         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found signature match: $signature"
                         foundDisk="${mbrDisks[$d]}s${partNum}"

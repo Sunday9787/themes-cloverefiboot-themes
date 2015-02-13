@@ -179,20 +179,24 @@ ReadBootLog()
             blBootDevicePartSize="${hdArr[4]}"
 
             if [[ "$blBootDevicePartType" == *GPT* ]]; then
-        # Translate Device UUID to mountpoint
-        if [ "$gBootDeviceIdentifier" != "" ]; then
-            mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
-            if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
-                mountpointPrint="$mountpoint (aka /Volumes/EFI)"
-            else
-                mountpointPrint="$mountpoint"
-            fi
-        fi
+                # Translate Device UUID to mountpoint
+                if [ "$gBootDeviceIdentifier" != "" ]; then
+                    mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
+                    if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
+                        mountpointPrint="$mountpoint (aka /Volumes/EFI)"
+                    else
+                        mountpointPrint="$mountpoint"
+                    fi
+                fi
             elif [[ "$blBootDevicePartType" == *MBR* ]]; then
-        if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
-            mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
-            mountpointPrint="$mountpoint"
-        fi
+                if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
+                    mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
+                    # If only a forward slash then get current volume name
+                    if [ "$mountpoint" == "/" ]; then
+                        mountpoint="/Volumes/"$(ls -1F /Volumes | sed -n 's:@$::p')
+                    fi
+                    mountpointPrint="$mountpoint"
+                fi
             fi
         fi
         
@@ -342,13 +346,6 @@ PostProcess()
         if [ "$blUsingTheme" == "" ] && [ "$blThemeAskedForTitle" == "embedded" ]; then
             blThemeAskedForPath="internal"
             blThemeAskedForExisted="Always"
-            
-            # Removed the following because if no theme was set in nvram/nvram.plist or config.plist then no theme was asked for.
-        #else
-        #    blThemeAskedForPath="${blConfigPlistFilePath%/*}/Themes/${blThemeAskedForTitle}"
-        
-        
-        #    blThemeAskedForExisted="No"
         fi
     fi
     
