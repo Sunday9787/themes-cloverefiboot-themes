@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.75.9"
+VERS="0.76.0"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -183,6 +183,7 @@ MaintainInstalledThemeListInPrefs()
     closeArray="</array>"
     openDict="<dict>"
     closeDict="</dict>"
+    local themeToAppend=0
     
     InsertDictionaryIntoArray()
     {
@@ -216,7 +217,6 @@ MaintainInstalledThemeListInPrefs()
     if [ "$gNewInstalledThemeName" != "" ] && [ "$gNewinstalledThemePartitionGUID" != "$zeroUUID" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Newly installed theme to be added to prefs: $gNewInstalledThemeName"
         # Is this new theme already installed elsewhere?
-        local themeToAppend=0
         for ((n=0; n<${#installedThemeName[@]}; n++ ));
         do
             if [ "$gNewInstalledThemeName" == "${installedThemeName[$n]}" ]; then
@@ -269,7 +269,7 @@ MaintainInstalledThemeListInPrefs()
             # This indicates the theme entry in no longer required.
             if [ "${installedThemeName[$n]}" != "-" ]; then
             
-                # Add theme key
+                # Add theme key
                 if [ "${installedThemeName[$n]}" != "$lastAddedThemeName" ]; then
 
                     # Check if there's a newly installed theme to append to this current array
@@ -974,7 +974,16 @@ IsRepositoryLive()
     local noConnection=1
     
     # First check if there is a network connection. Check IPv4
-    local defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
+    if [ $(CheckOsVersion) -gt 11 ]; then
+        # Newer than Lion
+        local defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
+    else
+        local defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
+        if [ "$defaultGateway" != "" ]; then
+            defaultGateway="${defaultGateway##*:}"
+        fi
+    fi
+    
     if [ "$defaultGateway" != "" ]; then
         dotCheck=$( echo "$defaultGateway" | sed 's/[0-9]*//g' )
         if [ "$dotCheck" == "..." ]; then

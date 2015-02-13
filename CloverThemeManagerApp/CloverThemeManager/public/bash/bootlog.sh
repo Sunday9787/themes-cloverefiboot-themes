@@ -15,6 +15,8 @@
 # 
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
+
+# v0.76.0
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -552,13 +554,10 @@ PrintVarsToLog()
 PopulateNvramFunctionalityBand()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateNvramFunctionalityBand()"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}PopulateNvramFunctionalityBand() option $1"
     
     local message=""
     local fillColour=""
-    
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}PopulateNvramFunctionalityBand() option $1"
     
     if [ "$1" == "0" ]; then
     
@@ -574,7 +573,7 @@ PopulateNvramFunctionalityBand()
             fi
         elif [ $gNvramWorking -eq 1 ]; then
             if [ "$blBootType" == "Legacy" ]; then
-                message="Launch Daemon \&amp; rc scripts not operational. Direct changes to NVRAM won't be retained next boot. Run Clover Installer to fix."
+                message="Launch Daemon \&amp; rc scripts not operational. Direct NVRAM changes won't be retained next boot. Run Clover Installer to fix."
                 fillColour="nvramFillNotWorking"
             elif [ "$blBootType" == "UEFI" ]; then
                 if [ "$gNvramWorkingType" == "" ]; then
@@ -586,7 +585,7 @@ PopulateNvramFunctionalityBand()
                         fillColour="nvramFillNotWorking"
                     fi
                 elif [ "$gNvramWorkingType" == "Fake" ] && [ $blEmuVariable -eq 0 ]; then
-                    message="Launch daemon \&amp; rc scripts are not operational. Direct changes to NVRAM won't be retained next boot. Run Clover Installer to fix."
+                    message="Launch daemon \&amp; rc scripts are not operational. Direct NVRAM changes won't be retained next boot. Run Clover Installer to fix."
                     fillColour="nvramFillNotWorking"
                 fi
             fi

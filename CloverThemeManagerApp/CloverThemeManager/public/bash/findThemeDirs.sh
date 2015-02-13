@@ -131,7 +131,7 @@ done
 # Print list of MBR partitioned devices
 for (( s=0; s<${#mbr[@]}; s++ ))
 do
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${gpt[$s]}s1@U = unmounted ESP"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found MBR device:${mbr[$s]}"
     echo "${mbr[$s]}" >> "$mbrList"
 done
 

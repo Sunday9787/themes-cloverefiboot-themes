@@ -29,6 +29,7 @@ WriteToLog() {
 # ---------------------------------------------------------------------------------------
 MoveThemeToTarget()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MoveThemeToTarget()"
     
     local successFlag=1
@@ -53,6 +54,7 @@ MoveThemeToTarget()
 # ---------------------------------------------------------------------------------------
 UnInstallTheme()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}UnInstallTheme()"
     
     local successFlag=1
@@ -68,6 +70,7 @@ UnInstallTheme()
 # ---------------------------------------------------------------------------------------
 UpdateTheme()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}UpdateTheme()"
     
     local successFlag=1
@@ -95,6 +98,7 @@ UpdateTheme()
 # ---------------------------------------------------------------------------------------
 SetNVRAMVariable()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetNVRAMVariable()"
     
     local successFlag=1
@@ -108,6 +112,7 @@ SetNVRAMVariable()
 # ---------------------------------------------------------------------------------------
 DeleteNVRAMVariable()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DeleteNVRAMVariable()"
     
     local successFlag=1
@@ -121,6 +126,7 @@ DeleteNVRAMVariable()
 # ---------------------------------------------------------------------------------------
 SetNVRAMFile()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetNVRAMFile()"
     
     local successFlag=1
@@ -149,6 +155,7 @@ SetNVRAMFile()
 # ---------------------------------------------------------------------------------------
 DeletePlistEntry()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}DeletePlistEntry()"
     
     local successFlag=1
@@ -183,6 +190,7 @@ DeletePlistEntry()
 # ---------------------------------------------------------------------------------------
 UpdateApp()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}UpdateApp()"
     
     local successFlag=1
@@ -198,6 +206,7 @@ UpdateApp()
 # ---------------------------------------------------------------------------------------
 MountESP()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MountESP()"
     
     local passedDevice="$1"
@@ -232,6 +241,7 @@ ManageESP()
     # Store identifiers for unmounted ESP's in array
     # espList.txt is created by findThemeDirs.sh script.
     
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ManageESP()"
     
     local mountSuccess=1
@@ -267,6 +277,9 @@ ManageESP()
 # ---------------------------------------------------------------------------------------
 FindMbrDevice()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}FindMbrDevice()"
+    
     local foundDisk=""
     
     fileToRead="${TEMPDIR}/bootDeviceInfo.txt"
@@ -278,30 +291,36 @@ FindMbrDevice()
 
     declare -a mbrDisks
     mbrDisks=( $( diskutil list | grep "FDisk_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
-
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}mbrDisks=${#mbrDisks[@]}"
+    
     for ((d=0; d<${#mbrDisks[@]}; d++))
     do
         #echo "Checking ${mbrDisks[$d]}"
         readFdisk=$( sudo fdisk /dev/"${mbrDisks[$d]}" | grep "${bootDeviceInfo[4]}" )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}readFdisk=$readFdisk"
+        
         if [ $readFdisk ]; then # We have a match on total sectors
-            #echo "Found block size match: ${bootDeviceInfo[4]}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found block size match: ${bootDeviceInfo[4]}"
         
             # Check if partition number is the same
-            partNum=$( echo "${readFdisk%:*}" | tr -d ' ' )
+            partNum=$( echo "${readFdisk%:*}" | tr -d '* ' )
             if [ "$partNum" == "${bootDeviceInfo[0]}" ]; then # We have a match on partition number
-                #echo "Found partition number match: $partNum"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found partition number match: $partNum"
         
                 # Check if start block is the same
                 startBlock=$( echo "${readFdisk#*[}" | tr -d ' ' )
                 startBlock=$( echo "${startBlock%%-*}" )
                 if [ "$startBlock" == "${bootDeviceInfo[3]}" ]; then # We have a match on start block
-                    #echo "Found start block match: $startBlock"
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found start block match: $startBlock"
             
                     # Check Signature matches by comparing bytes 01B8->01BE
                     signature=$( sudo dd 2>/dev/null if="/dev/${mbrDisks[$d]}" bs=4 count=1 skip=110 | perl -ne '@a=split"";for(@a){printf"%02x",ord}' )
                     signatureLE="${bootDeviceInfo[2]:8:2}${bootDeviceInfo[2]:6:2}${bootDeviceInfo[2]:4:2}${bootDeviceInfo[2]:2:2}"
+                    signature=$( echo $signature | tr '[:upper:]' '[:lower:]' )
+                    signatureLE=$( echo $signatureLE | tr '[:upper:]' '[:lower:]' )
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Comparing signatures: $signature vs $$signatureLE"
                     if [ "$signature" == "$signatureLE" ]; then # We have a match on signature
-                        #echo "Found signature match: $signature"
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found signature match: $signature"
                         foundDisk="${mbrDisks[$d]}s${partNum}"
                         break
                     fi

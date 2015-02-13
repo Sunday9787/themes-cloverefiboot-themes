@@ -614,7 +614,7 @@ a:hover {
 }
 
 #themePredictionTitle {
-    width: 45%;
+    width: 52%;
     float: left;
     margin: 2px 0px 0px 24px;
     /*-webkit-user-select: none;*/
@@ -631,11 +631,11 @@ a:hover {
 
 
 .ctOptionTitle {
-    width: 40%;
+    width: 47%;
     float: left;
     margin: 4px 0px 0px 24px;
     font-family: 'Roboto', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     color: #FFF;    
 }
@@ -654,7 +654,7 @@ a:hover {
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     color: #FFF;    
 }
@@ -665,7 +665,7 @@ a:hover {
     font-weight: bold;
     color: #ababab;    
     position:absolute;
-    margin: 6px 0px 0px 70%;
+    margin: 6px 0px 0px 73%;
 }
 
 #changeThemeSelector {
@@ -676,7 +676,7 @@ a:hover {
 }
 
 #changeThemeSelector select {
-    width: 18%;
+    width: 16%;
     max-width: 98% !important;
 }
 
@@ -694,7 +694,7 @@ select.changeThemeDropdown {
     opacity: 0.8;
     float: right;
     margin-right: 30px;
-    width: 158px;
+    width: 138px;
 }
 
 select.changeThemeDropdown:disabled {
@@ -906,7 +906,7 @@ select.changeThemeDropdown:hover:enabled {
 
 .predictionText {
     font-family: 'Roboto', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     color: #9bc762;
 }

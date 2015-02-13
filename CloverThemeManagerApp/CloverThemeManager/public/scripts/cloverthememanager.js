@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.4
+//Version=0.75.6
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -224,7 +224,7 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetBootLogState(firstLineSplit[1]);
                 // Adjust footer height also
-                SetFooterHeight("IncludeCO");
+                //SetFooterHeight("IncludeCO");
                 break;
             case "SetPrediction":
                 // Bash sends: "SetPrediction@${themeToSend}@"
@@ -1014,7 +1014,7 @@ function SetFooterHeight(UseControlOption)
         var newFooterHeight = (changeThemeContainerHeight + nvramBandHeight + footerLinksHeight);
         
     } else if(UseControlOption == "ExcludeCO") {
-        
+
         // Hide nvram band if it's not displaying message about not being booted by Clover
         if(nvramBandText != "This system was not booted using Clover.") { // set by bootlog.sh
             $('#NvramFunctionalityBand').css("display","none");
@@ -1769,7 +1769,7 @@ function ToggleSnow(action)
 //-------------------------------------------------------------------------------------
 function sendNotification(messageBody)
 {
-    macgap.notice.notify({ title: 'Clover Theme Manager', content: messageBody, sound: true});
+    // INSERT_NOTIFICATION_CODE_HERE
 }
 
 //-------------------------------------------------------------------------------------
@@ -1781,22 +1781,34 @@ function SetPredictionText(message)
 //-------------------------------------------------------------------------------------
 function ShowHideControlOptions(state)
 {
-    var AreControlOptionsHidden = $('#changeThemeContainer').is(":hidden"); 
+    // Does the changeThemeContainer div exist in the DOM?
+    var ctcDiv=$("#changeThemeContainer");
+    if (jQuery.contains(document, ctcDiv[0])) {
+        var ctcDivExist=1;
+    }
+    
+    var controlOptionsHidden = $('#changeThemeContainer').is(":hidden"); 
     if (state == "Show") {
         // check it's not already showing
-        if (AreControlOptionsHidden) {
+        if (ctcDivExist == 1 && controlOptionsHidden) {
             $('#changeThemeContainer').show(function() {
                 SetFooterHeight("IncludeCO");
                 //ChangeNvramFuncBandText(state);
             });
+        } else {
+            // #changeThemeContainer does not exist.
+            SetFooterHeight("IncludeCO");
         }
     } else if (state == "Hide"){
         // check it's not already hidden
-        if (!AreControlOptionsHidden) {
+        if (ctcDivExist == 1 && !controlOptionsHidden) {
             $('#changeThemeContainer').hide(function() {
                 SetFooterHeight("ExcludeCO");
                 //ChangeNvramFuncBandText(state);
             });
+        } else {
+            // #changeThemeContainer does not exist.
+            SetFooterHeight("ExcludeCO");
         }
     }
 }
