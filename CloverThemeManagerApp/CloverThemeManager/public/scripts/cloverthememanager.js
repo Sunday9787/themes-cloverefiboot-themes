@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.6
+//Version=0.75.7
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -484,10 +484,13 @@ function SetCurrentThemeEntry(textToChange,themeName)
 {
     if (textToChange == "Nvram") {
         $('#ctEntryNvram').text(themeName);
+        SetDropDownNvram(themeName);
     } else if (textToChange == "NvramP") {
         $('#ctEntryNvramP').text(themeName);
+        SetDropDownNvramP(themeName);
     } else if (textToChange == "ConfigP") {
         $('#ctEntryConfig').text(themeName);
+        SetDropDownConfigP(themeName);
     }
 }
 

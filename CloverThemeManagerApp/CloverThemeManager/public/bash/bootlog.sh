@@ -371,7 +371,7 @@ PostProcess()
         gNvramWorkingType="Fake"
     fi
     
-    if [ "$blNvramReadFrom" == "" ] && [ $blNvramPlistExists -eq 0 ] && [ "$blNvramThemeEntry" == "" ]; then
+    if [ "$blNvramReadFrom" == "" ] && [ $blNvramPlistExists -eq 0 ] && [ "$blNvramThemeEntry" == "" ] && [ "$blNvramPlistVolume" != "" ]; then
         blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
     fi
     
