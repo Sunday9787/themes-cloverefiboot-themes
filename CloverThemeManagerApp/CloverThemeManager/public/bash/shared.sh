@@ -28,8 +28,7 @@ espList="${TEMPDIR}/espList.txt"
 mbrList="${TEMPDIR}/mbrList.txt"
 bootlogScriptOutfile="${TEMPDIR}/bootlogOut.txt"
 bootDeviceInfo="${TEMPDIR}/bootDeviceInfo.txt"
-#export bootLogFile="${TEMPDIR}/boot.log"
-bootLogFile="/tmp/boot.log"
+bootLogFile="${TEMPDIR}/boot.log"
 partutil="${TOOLS_DIR}"/partutil
 logJsToBash="${TEMPDIR}/jsToBash" # Note - this is created in AppDelegate.m
 logBashToJs="${TEMPDIR}/bashToJs" # Note - this is created in AppDelegate.m
@@ -42,7 +41,6 @@ debugIndent="    "
 debugIndentTwo="${debugIndent}${debugIndent}"
 COMMANDLINE=0
 DEBUG=1
-
 
 # Common Functions
 # ---------------------------------------------------------------------------------------

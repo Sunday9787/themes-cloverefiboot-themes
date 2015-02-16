@@ -38,8 +38,16 @@ SetHtmlBootlogSectionTemplates()
         <\/div>"
     blcLineDevice="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
         <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\
+            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\
+            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\
+        <\/div>"
+    blcLineDeviceRescan="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
+        <div id=\"bandDescription\">\
+            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\
+            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\
+            <div id=\"RescanButton\">\
+                <button type=\"button\" id=\"RescanBootDeviceButton\" class=\"rescanButton\">Rescan Boot Device<\/button>\
+            <\/div> <!-- End RescanButton -->\
         <\/div>"
     blcLineNvram="        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
         <div id=\"bandDescription\">\
@@ -134,7 +142,7 @@ ReadBootLog()
     blUsingEmbedded=1                 # Set to 0 if embedded theme used
             
     # gBootDeviceIdentifier is passed from script.sh # Example disk0s1 or 'Failed'
-    mountpoint=""
+    # gBootDeviceMountpoint is passed from script.sh
     mountpointPrint=""
 
     while read -r lineRead
@@ -181,21 +189,21 @@ ReadBootLog()
             if [[ "$blBootDevicePartType" == *GPT* ]]; then
                 # Translate Device UUID to mountpoint
                 if [ "$gBootDeviceIdentifier" != "" ]; then
-                    mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
-                    if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
-                        mountpointPrint="$mountpoint (aka /Volumes/EFI)"
+                    #mountpoint=$( "$partutil" --show-mountpoint "$gBootDeviceIdentifier" )
+                    if [[ "$gBootDeviceMountpoint" == *$gESPMountPrefix* ]]; then
+                        mountpointPrint="$gBootDeviceMountpoint (aka /Volumes/EFI)"
                     else
-                        mountpointPrint="$mountpoint"
+                        mountpointPrint="$gBootDeviceMountpoint"
                     fi
                 fi
             elif [[ "$blBootDevicePartType" == *MBR* ]]; then
                 if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
-                    mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
+                    #mountpoint="/"$( df -laH | grep /dev/"$gBootDeviceIdentifier" | cut -d'/' -f 4- )
                     # If only a forward slash then get current volume name
-                    if [ "$mountpoint" == "/" ]; then
-                        mountpoint="/Volumes/"$(ls -1F /Volumes | sed -n 's:@$::p')
+                    if [ "$gBootDeviceMountpoint" == "/" ]; then
+                        gBootDeviceMountpoint="/Volumes/"$(ls -1F /Volumes | sed -n 's:@$::p')
                     fi
-                    mountpointPrint="$mountpoint"
+                    mountpointPrint="$gBootDeviceMountpoint"
                 fi
             fi
         fi
@@ -322,6 +330,13 @@ PostProcess()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PostProcess()"
     
+    # check for random set by user
+    if [ "$blConfigPlistThemeEntry" == "random" ] || [ "$blNvramThemeEntry" == "random" ]; then
+        if [ "$blThemeNameChosen" == "random" ] && [ "$blUsingTheme" != "" ]; then
+            blThemeNameChosen="$blUsingTheme"
+        fi
+    fi
+            
     if [ $blUsingEmbedded -eq 0 ]; then
         blThemeUsedPath="internal"
         blThemeNameChosen="embedded"
@@ -375,29 +390,29 @@ PostProcess()
         blNvramReadFrom="/Volumes/${blNvramPlistVolume}/nvram.plist"
     fi
     
-    if [ "$mountpoint" != "" ]; then
-        if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
+    if [ "$gBootDeviceMountpoint" != "" ]; then
+        if [[ "$gBootDeviceMountpoint" == *$gESPMountPrefix* ]]; then
             blThemeUsedPath="/Volumes/EFI${blThemeUsedPath}"
         else
-            blThemeUsedPath="${mountpoint}${blThemeUsedPath}"
+            blThemeUsedPath="${gBootDeviceMountpoint}${blThemeUsedPath}"
         fi
     fi
 
-    if [ "$mountpoint" != "" ]; then
-        if [[ "$mountpoint" == *$gESPMountPrefix* ]]; then
+    if [ "$gBootDeviceMountpoint" != "" ]; then
+        if [[ "$gBootDeviceMountpoint" == *$gESPMountPrefix* ]]; then
             blConfigPlistFilePathPrint="/Volumes/EFI${blConfigPlistFilePath}"
             if [ "$blThemeAskedForPath" != "" ]; then
                blThemeAskedForPathPrint="/Volumes/EFI${blThemeAskedForPath}"
             fi
         else
-            blConfigPlistFilePathPrint="${mountpoint}${blConfigPlistFilePath}"
+            blConfigPlistFilePathPrint="${gBootDeviceMountpoint}${blConfigPlistFilePath}"
             if [ "$blThemeAskedForPath" != "" ]; then
-                blThemeAskedForPathPrint="${mountpoint}${blThemeAskedForPath}"
+                blThemeAskedForPathPrint="${gBootDeviceMountpoint}${blThemeAskedForPath}"
             fi
         fi
-        blConfigPlistFilePath="${mountpoint}${blConfigPlistFilePath}"
+        blConfigPlistFilePath="${gBootDeviceMountpoint}${blConfigPlistFilePath}"
     else
-        mountpoint="not found" && mountpointPrint="not found"
+        gBootDeviceMountpoint="not found" && mountpointPrint="not found"
         blConfigPlistFilePathPrint="${blConfigPlistFilePath}"
         if [ "$blThemeAskedForPath" != "" ]; then
             blThemeAskedForPathPrint="${blThemeAskedForPath}"
@@ -408,8 +423,12 @@ PostProcess()
     blBootDevicePartStartDec=$(echo "ibase=16; ${blBootDevicePartStart#*x}" | bc)
     blBootDevicePartSizeDec=$(echo "ibase=16; ${blBootDevicePartSize#*x}" | bc)
     
-    [[ "$gBootDeviceIdentifier" == "" ]] && gBootDeviceIdentifier="not found"
-    [[ "$gBootDeviceIdentifier" == "Failed" ]] && gBootDeviceIdentifier="Failed to detect"
+    if [ "$gBootDeviceIdentifier" == "" ]; then
+        gBootDeviceIdentifier="not found"
+    else
+        gBootDeviceIdentifierPrint="$gBootDeviceIdentifier"
+    fi
+    [[ "$gBootDeviceIdentifier" == "Failed" ]] && gBootDeviceIdentifierPrint="Failed to detect"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -418,7 +437,7 @@ EscapeVarsForHtml()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}EscapeVarsForHtml()"
     
-    gBootDeviceIdentifierPrint=$( echo "$gBootDeviceIdentifier" | sed 's/\//\\\//g' )
+    gBootDeviceIdentifierPrint=$( echo "$gBootDeviceIdentifierPrint" | sed 's/\//\\\//g' )
     mountpointPrint=$( echo "$mountpointPrint" | sed 's/\//\\\//g' )
     blConfigPlistFilePathPrint=$( echo "$blConfigPlistFilePathPrint" | sed 's/\//\\\//g' )
     blNvramReadFromPrint=$( echo "$blNvramReadFrom" | sed 's/\//\\\//g' )
@@ -471,24 +490,7 @@ CheckNvramIsWorking()
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/Library/LaunchDaemons/com.projectosx.clover.daemon.plist does not exist"
             fi
         fi
-    
-        #if [ "$gNvramWorkingType" == "Fake" ]; then
-        #    # Check for necessary files to save nvram.plist file to disk
-        #    if [ -f /Library/LaunchDaemons/com.projectosx.clover.daemon.plist ]; then
-        #        local checkState=$( grep -A1 "RunAtLoad" /Library/LaunchDaemons/com.projectosx.clover.daemon.plist)
-        #        if [[ "$checkState" == *true* ]]; then
-        #            if [ -f "/Library/Application Support/Clover/CloverDaemon" ]; then
-        #                if [ -f /private/etc/rc.clover.lib ]; then
-        #                    if [ -f /private/etc/rc.shutdown.d/80.save_nvram_plist.local ]; then
-        #                        gNvramWorking=0
-        #                    fi
-        #                fi
-        #            fi
-        #        fi
-        #    fi
-        #fi
 
-        #if [ "$blBootType" == "UEFI" ]; then
         if [[ "$blBootType" == "UEFI" && $blEmuVariable -eq 1 ]]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}UEFI boot and EmuVariable Driver was not used."
             if [ "$gNvramWorkingType" == "Native" ]; then
@@ -516,7 +518,7 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}bootDevice partLBA=$blBootDevicePartStart"
     WriteToLog "${debugIndentTwo}bootDevice partSize=$blBootDevicePartSize"
     WriteToLog "${debugIndentTwo}identifier: ${gBootDeviceIdentifier}"
-    WriteToLog "${debugIndentTwo}mountpoint: ${mountpoint}"
+    WriteToLog "${debugIndentTwo}mountpoint: ${gBootDeviceMountpoint}"
     WriteToLog "${debugIndentTwo}Config.plist OEM=$blConfigOem"
     WriteToLog "${debugIndentTwo}Config.plist file path: $blConfigPlistFilePath"
     WriteToLog "${debugIndentTwo}Config.plist theme entry: $blConfigPlistThemeEntry"
@@ -527,6 +529,7 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}NVRAM theme entry: $blNvramThemeEntry"
     WriteToLog "${debugIndentTwo}NVRAM theme absent? (1=No, 0=Yes): $blNvramThemeAbsent"
     WriteToLog "${debugIndentTwo}NVRAM theme exist? (1=No, 0=Yes): $blNvramThemeExists"
+    WriteToLog "${debugIndentTwo}Using theme: $blUsingTheme"
     WriteToLog "${debugIndentTwo}Theme asked for title: $blThemeAskedForTitle"
     WriteToLog "${debugIndentTwo}Theme asked for full path: $blThemeAskedForPath"
     WriteToLog "${debugIndentTwo}Theme asked for exist: $themeExist"
@@ -631,15 +634,15 @@ PopulateBootLogTitleBand()
     
     # No nvram theme entry and chosen theme matches config.plist entry
     if [ "$blNvramThemeEntry" == "" ] && [ "$blThemeNameChosen" == "$blConfigPlistThemeEntry" ]; then
-        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">$blThemeNameChosen<\/span> as set in ${blConfigPlistFilePathPrint} on device ${gBootDeviceIdentifier}<\/span>"
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as set in ${blConfigPlistFilePathPrint} on device ${gBootDeviceIdentifier}<\/span>"
     
     # nvram theme entry was used
     elif [ "$blNvramThemeEntry" != "" ] && [ "$blThemeNameChosen" == "$blNvramThemeEntry" ]; then
-        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">$blThemeNameChosen<\/span> as set in Clover.Theme var from ${blNvramReadFromPrint}<\/span>"
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as set in Clover.Theme var from ${blNvramReadFromPrint}<\/span>"
     
     # nvram theme entry points to non-existent theme AND chosen theme matches config.plist entry
     elif [ "$blNvramThemeEntry" != "" ] && [ $blNvramThemeExists -eq 1 ] && [ "$blThemeNameChosen" == "$blConfigPlistThemeEntry" ] && [ "$themeExist" == "Yes" ] && [ $blNvramThemeAbsent -eq 0 ]; then
-        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">$blThemeNameChosen<\/span> as set in ${blConfigPlistFilePathPrint} as NVRAM theme was absent<\/span>"
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as set in ${blConfigPlistFilePathPrint} as NVRAM theme was absent<\/span>"
 
     # Any pointed to theme does not exist AND embedded theme was not used AND random theme was used
     elif [ $blNvramThemeAbsent -eq 0 ] && [ $blUsingEmbedded -eq 1 ] && [ $blUsedRandomTheme -eq 0 ]; then
@@ -652,6 +655,10 @@ PopulateBootLogTitleBand()
     # Embedded theme was used
     elif [ $blUsingEmbedded -eq 0 ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded theme embedded as it couldn't find any themes<\/span>"
+    
+    # User set random
+    elif [ "$blConfigPlistThemeEntry" == "random" ] || [ "$blNvramThemeEntry" == "random" ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as a random theme was asked for<\/span>"
     
     # Something else happened
     else
@@ -674,10 +681,19 @@ PopulateBootLog()
     bootlogHtml="    <div id=\"BootLogContainer\" class=\"nvramFillNone\">"
 
     # Add HTML for Boot Device Info / Boot Device Sections
-    if [ "$blBootDevicePartType" == "MBR" ]; then
-        bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoMbr}${blcLineDevice}"
-    elif [ "$blBootDevicePartType" == "GPT" ]; then
-        bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoGpt}${blcLineDevice}"
+    # If boot device was not found then present rescan button.
+    if [ "$gBootDeviceIdentifier" != "Failed" ]; then
+        if [ "$blBootDevicePartType" == "MBR" ]; then
+            bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoMbr}${blcLineDevice}"
+        elif [ "$blBootDevicePartType" == "GPT" ]; then
+            bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoGpt}${blcLineDevice}"
+        fi
+    else
+        if [ "$blBootDevicePartType" == "MBR" ]; then
+            bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoMbr}${blcLineDeviceRescan}"
+        elif [ "$blBootDevicePartType" == "GPT" ]; then
+            bootlogHtml="${bootlogHtml}${blcOpen}${blcLineDeviceInfoGpt}${blcLineDeviceRescan}"
+        fi
     fi
 
     # Add HTML for NVRAM section
@@ -739,7 +755,9 @@ source "${SELF_PATH%/*}"/shared.sh
 gNvramWorkingType=""
 gNvramWorking=1                   # Set to 0 if writing to nvram can be saved for next boot
 insertCount=0                     # increments each time an html block is injected in to managethemes.html
-gBootDeviceIdentifier="$1"
+gRunInfo="$1"                     # Will be either 'Init' or 'Rescan'
+gBootDeviceIdentifier="$2"        # The boot device identifier (if found)
+gBootDeviceMountpoint="$3"        # The boot device mountpoint (if found)
 
 if [ -f "$bootLogFile" ]; then
 
@@ -751,26 +769,31 @@ if [ -f "$bootLogFile" ]; then
         ReadBootLog   
         PostProcess
         CheckNvramIsWorking
-        EscapeVarsForHtml
-        [[ DEBUG -eq 1 ]] && PrintVarsToLog
+        if [ "$gRunInfo" == "Init" ]; then
+            EscapeVarsForHtml
+            [[ DEBUG -eq 1 ]] && PrintVarsToLog
+            
+            # Write boot device info to file
+            echo "${blBootDevicePartition}@${blBootDevicePartType}@${blBootDevicePartSignature}@${blBootDevicePartStartDec}@${blBootDevicePartSizeDec}" > "$bootDeviceInfo"
+            
+            # Create NVRAM functionality band
+            PopulateNvramFunctionalityBand "0"
+            
+            # Show user what happened last boot
+            PopulateBootLogTitleBand
+            SetBootlogTextColourClasses
+            SetHtmlBootlogSectionTemplates
+            PopulateBootLog
 
-        # Write boot device info to file
-        echo "${blBootDevicePartition}@${blBootDevicePartType}@${blBootDevicePartSignature}@${blBootDevicePartStartDec}@${blBootDevicePartSizeDec}" > "$bootDeviceInfo"
-
-        # Create NVRAM functionality band
-        PopulateNvramFunctionalityBand "0"
-
-        # Show user what happened last boot
-        PopulateBootLogTitleBand
-        SetBootlogTextColourClasses
-        SetHtmlBootlogSectionTemplates
-        PopulateBootLog
-
-        # Add message in to log for initialise.js to detect.
-        if [ $insertCount -eq 2 ]; then
-            WriteToLog "CTM_BootlogOK"
-        else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}insertCount=$insertCount | boot.log html failed to be inserted".
+            # Add message in to log for initialise.js to detect.
+            if [ $insertCount -eq 2 ]; then
+                WriteToLog "CTM_BootlogOK"
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}insertCount=$insertCount | boot.log html failed to be inserted".
+            fi
+        elif [ "$gRunInfo" == "Rescan" ]; then
+            # Remove paths file, incase this script is run a second time.
+            [[ -f "$bootlogScriptOutfile" ]] && rm "$bootlogScriptOutfile"
         fi
 
         # Write some vars to file for script.sh to use.

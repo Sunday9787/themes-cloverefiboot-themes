@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.7
+//Version=0.75.8
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -143,19 +143,16 @@ function readBashToJsMessageFile()
                 // Bash sends: "Nvram@${themeName}@"
                 macgap.app.removeMessage(firstLine);
                 SetCurrentThemeEntry("Nvram",firstLineSplit[1]);
-                //SetDropDownNvram(firstLineSplit[1]);
                 break;
             case "NvramP":
                 // Bash sends: "NvramP@${themeName}@"
                 macgap.app.removeMessage(firstLine);
                 SetCurrentThemeEntry("NvramP",firstLineSplit[1]);
-                //SetDropDownNvramP(firstLineSplit[1]);
                 break;
             case "ConfigP":
                 // Bash sends: "ConfigP@${themeName}@"
                 macgap.app.removeMessage(firstLine);
                 SetCurrentThemeEntry("ConfigP",firstLineSplit[1]);
-                //SetDropDownConfigP(firstLineSplit[1]);
                 break;
             case "Success":
                 // Bash sends: "Success@${passedAction}@$themeTitleToActOn"
@@ -204,9 +201,14 @@ function readBashToJsMessageFile()
                 AppUpdateFeedback(firstLineSplit[1]);
                 break;
             case "MessageESP":
-                // Bash sends: "MessageESP@Mounted@${checkMountPoints##* }"
+                // Bash sends: "MessageESP@Mounted@${espMountedCount}"
                 macgap.app.removeMessage(firstLine);
                 UpdateMessageBox(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "BootDevice":
+                // Bash sends: "BootDevice@Mounted@${bootDeviceIdentifier}@${gBootDeviceMountPoint}" or "BootDevice@Failed@@"
+                macgap.app.removeMessage(firstLine);
+                ShowMessageBootDevice(firstLineSplit[1],firstLineSplit[2],firstLineSplit[3]);
                 break;
             case "NewVolumeDropDown":
                 // Bash sends: "NewVolumeDropDown@${newThemeList}"
@@ -501,6 +503,7 @@ function SetDropDownNvram(themeName)
     if(themeName != "") {
         $('#installedThemeDropDownNvram option').each(function(){
             if(this.value == themeName) {
+                // Note: Bash script sends '-' when no theme is set
                 $("#installedThemeDropDownNvram").val(themeName);
             }
         });  
@@ -514,6 +517,7 @@ function SetDropDownNvramP(themeName)
     if(themeName != "") {
         $('#installedThemeDropDownNvramP option').each(function(){
             if(this.value == themeName) {
+                // Note: Bash script sends '-' when no theme is set
                 $("#installedThemeDropDownNvramP").val(themeName);
             }
         });  
@@ -527,7 +531,8 @@ function SetDropDownConfigP(themeName)
     if(themeName != "") {
         $('#installedThemeDropDownConfigP option').each(function(){
             if(this.value == themeName) {
-                $("#installedThemeDropDownConfigP").val(themeName);
+                // Note: Bash script sends '-' when no theme is set
+                $("#installedThemeDropDownConfigP").val(themeName);;
             }
         });  
     }
@@ -719,6 +724,12 @@ $(function()
         
         // show all themes, even if asked to hide uninstalled
         $(".accordion").css("display","block");
+    });
+    
+    //-----------------------------------------------------
+    // On pressing the Rescan Boot Device button
+    $("#RescanBootDeviceButton").on('click', function() {
+        macgap.app.launch("RescanBootDevice");
     });
     
     //-----------------------------------------------------
@@ -1217,6 +1228,29 @@ function UpdateMessageBox(messageOne,messageTwo)
 }
 
 //-------------------------------------------------------------------------------------
+function ShowMessageBootDevice(result,deviceId,mountPoint)
+{
+    // Show a message to the user
+    if (result == "Failed") {
+        ChangeMessageBoxHeaderColour("red");                            
+        SetMessageBoxText("Boot Device","The boot device failed to be detected. Check it's mounted and then click the rescan button in the bootlog region.");
+        ShowMessageBoxClose();
+        ShowMessageBox();
+    } else if (result == "Mounted") {
+        // Update bootlog device text
+        $("#bandIdentifer span").last().html("<span class=\"infoBody\">" + deviceId + "<\/span>");
+        $("#bandMountpoint span").last().html("<span class=\"infoBody\">" + mountPoint + "<\/span>");
+        // Hide Rescan button
+        $("#RescanButton").hide();
+        // show message box confirming device found
+        ChangeMessageBoxHeaderColour("blue");                            
+        SetMessageBoxText("Boot Device",deviceId + " on mountpoint " + mountPoint + " was detected as the boot device ");
+        ShowMessageBoxClose();
+        ShowMessageBox();
+    }
+}
+
+//-------------------------------------------------------------------------------------
 function ChangeThumbnailSize(action)
 {
     // Adjust the width of each thumbnail image by 25px each time this is called.
@@ -1589,7 +1623,7 @@ function UpdateAndRefreshPartitionSelectMenu(list)
     // Add title menu option
     $("#partitionSelect").append("<option value=\"-\" disabled=\"disabled\">Select your target theme directory:</option>");
     
-    // Add list send from bash script
+    // Add list sent from bash script
     if (list != "") {
         splitList = (list).split(',');
         for (var t = 0; t < splitList.length; t++) {
@@ -1604,43 +1638,41 @@ function UpdateAndRefreshPartitionSelectMenu(list)
 //-------------------------------------------------------------------------------------
 function UpdateAndRefreshInstalledThemeDropDown(themeList)
 {
-    //if (themeList != "-") {
+    // If menus exist in the DOM then populate them
+    var test=$("#installedThemeDropDownNvram");
+    if (jQuery.contains(document, test[0])) {
+        $(installedThemeDropDownNvram).empty();
+        populateDropDownMenu(installedThemeDropDownNvram,themeList);
+    }
 
-        // If menus exist in the DOM then populate them
-        var test=$("#installedThemeDropDownNvram");
-        if (jQuery.contains(document, test[0])) {
-            $(installedThemeDropDownNvram).empty();
-            populateDropDownMenu(installedThemeDropDownNvram,themeList);
-        }
-
-        var test=$("#installedThemeDropDownNvramP");
-        if (jQuery.contains(document, test[0])) {
-            $(installedThemeDropDownNvramP).empty();
-            populateDropDownMenu(installedThemeDropDownNvramP,themeList);
-        }
+    var test=$("#installedThemeDropDownNvramP");
+    if (jQuery.contains(document, test[0])) {
+        $(installedThemeDropDownNvramP).empty();
+        populateDropDownMenu(installedThemeDropDownNvramP,themeList);
+    }
         
-        var test=$("#installedThemeDropDownConfigP");
-        if (jQuery.contains(document, test[0])) {
-            $(installedThemeDropDownConfigP).empty();
-            populateDropDownMenu(installedThemeDropDownConfigP,themeList);
-        }
-    //}
+    var test=$("#installedThemeDropDownConfigP");
+    if (jQuery.contains(document, test[0])) {
+        $(installedThemeDropDownConfigP).empty();
+        populateDropDownMenu(installedThemeDropDownConfigP,themeList);
+    }
 }
 
 //-------------------------------------------------------------------------------------
 function populateDropDownMenu(menu,themeList)
 {
-    //$(menu).append("<option value=\"-1\" disabled=\"disabled\">Select Action</option>");
-    $(menu).append("<option value=\"-\">Choose</option>");
+    // Note: Bash script sends '-' when no theme is set.
+    //       This then sets the menu to 'Select Action'
+    $(menu).append("<option value=\"-\" disabled=\"disabled\">Select Action</option>");
     $(menu).append("<option value=\"!Remove!\">Remove Current Entry</option>");
     $(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
-    $(menu).append("<option value=\"-\" disabled=\"disabled\">Installed Themes</option>");
+    $(menu).append("<option value=\"0\" disabled=\"disabled\">Installed Themes</option>");
     for (var t = 0; t < themeList.length; t++) {
         if (themeList[t] != "")
             $(menu).append("<option value=\"" + themeList[t] + "\">" + themeList[t] + "</option>");
     }
     $(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
-    $(menu).append("<option value=\"-\" disabled=\"disabled\">Other Choices</option>");
+    $(menu).append("<option value=\"0\" disabled=\"disabled\">Other Choices</option>");
     $(menu).append("<option value=\"random\">random</option>");
     $(menu).append("<option value=\"embedded\">embedded</option>");
 }
@@ -1796,7 +1828,6 @@ function ShowHideControlOptions(state)
         if (ctcDivExist == 1 && controlOptionsHidden) {
             $('#changeThemeContainer').show(function() {
                 SetFooterHeight("IncludeCO");
-                //ChangeNvramFuncBandText(state);
             });
         } else {
             // #changeThemeContainer does not exist.
@@ -1807,33 +1838,10 @@ function ShowHideControlOptions(state)
         if (ctcDivExist == 1 && !controlOptionsHidden) {
             $('#changeThemeContainer').hide(function() {
                 SetFooterHeight("ExcludeCO");
-                //ChangeNvramFuncBandText(state);
             });
         } else {
             // #changeThemeContainer does not exist.
             SetFooterHeight("ExcludeCO");
         }
-    }
-}
-
-//-------------------------------------------------------------------------------------
-function ChangeNvramFuncBandText(state)
-{
-    if (state == "Show") {
-        // Set NVRAM Functionality band content
-        $("#nvramTextArea").html(function(i,t){
-            return t.replace('<span class="highlightYellow">Boot device not selected. </span>','<span class="highlightYellow">Boot device selected. </span>')
-        });
-        $("#NvramFunctionalityBand").css("opacity","0.95");
-    } else if (state == "Hide"){
-        // Set NVRAM Functionality band text
-        $("#nvramTextArea").html(function(i,t){
-            return t.replace('<span class="highlightYellow">Boot device selected. </span>','')
-        });
-        $("#nvramTextArea").html(function(i,t){
-            return t.replace('<span class="highlightYellow">Boot device not selected. </span>','')
-        });
-        $("#nvramTextArea span").prepend('<span class="highlightYellow">Boot device not selected. </span>');
-        $("#NvramFunctionalityBand").css("opacity","0.6");
     }
 }

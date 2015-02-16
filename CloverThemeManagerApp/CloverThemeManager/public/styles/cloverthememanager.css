@@ -98,6 +98,154 @@ p {
                /* Note: js script toggles this from 1 to 0 when changing height for bootlog.*/
 }
 
+/* ======= */
+/* Bootlog */
+/* ======= */
+
+#BootLogTitleBar {
+    width: 100%;
+    height: 33px;
+    opacity: 0.95;
+    cursor: pointer;
+}
+
+#BootLogTitleBar:hover {
+    background-image: -webkit-linear-gradient(top, #535353 0%,#2c2c2c 70%,#353535 75%,#505050 98%, #727272 99%, #949494 100%); 
+}
+
+.titleBarTextTitle {
+    font-family: 'Roboto', sans-serif;
+    color: #FFF;
+    font-size: 11px; 
+    font-weight: bold;
+    padding: 0px 0px 0px 24px;
+}
+
+.titleBarTextDescription {
+    font-family: 'Roboto', sans-serif;
+    color: #FFF;
+    font-size: 11px; 
+    font-weight: bold;
+    padding: 0px 0px 0px 12px;
+    line-height: 35px;
+}
+
+#BootLogContainer {
+    width: 100%;
+    height: auto; /* Height value varies depending on number of rows of data set to display */
+    border-top: 2px solid #333;
+    opacity: 0.95;
+}
+
+#bandHeader {
+    background-color: #4a544d;
+    border-bottom: 1px solid #000;
+    float: left;
+    height: 25px;
+    width: 17%;
+}
+
+#bandDescription {
+    background-color: #1d2922;
+    border-bottom: 1px solid #000;
+    float: left;
+    height: 25px;
+    width: 83%;
+    float: left;
+}
+
+#bandColumnLeft {
+    float: left;
+}
+
+#bandColumnRight {
+    position: absolute;
+    left: 460px;
+}
+
+#bandIdentifer {
+    float: left;
+}
+
+#bandMountpoint {
+    float: left;
+}
+
+#RescanButton {
+    margin: 2px 0px 0px 24px;
+    float: left;
+}
+
+.rescanButton {
+    background: #555;
+    width: auto;
+    border: none;
+    border-radius: 4px;
+    padding: 0px 8px 0px 8px;
+    color: #FFF;
+    font-family: 'Roboto', sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    height: 19px;
+    text-align: center;
+    line-height: 15px;
+    cursor: pointer;
+}
+
+.rescanButton:hover {
+    background-image: -webkit-linear-gradient(top, #e5e5e5, #b6b6b6);
+    color:#333;
+}
+
+.infoTitle {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #a6a9a7;
+    font-size: 12px;
+    padding: 0px 0px 0px 24px;
+    line-height: 24px;	
+}
+
+.infoBody {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #FFF;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyGreen {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #4bfb68;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyRed {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #fb4b4b;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyTheme {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #7bf4f5;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+/* =========================== */
+/* Main header (Under bootlog) */
+/* =========================== */
+
 #CheckingUpdatesMessage {
     position: absolute;
     float: left;
@@ -627,8 +775,9 @@ a:hover {
     /*-webkit-user-select: none;*/
 }
 
-
-
+/* ============================ */
+/* Change theme control options */
+/* ============================ */
 
 .ctOptionTitle {
     width: 47%;
@@ -642,7 +791,7 @@ a:hover {
 
 .ctOptionEntryHeader {
     float: left;
-    margin: 6px 2px 0px 2px;
+    margin: 5px 2px 0px 2px;
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: bold;
@@ -687,7 +836,7 @@ select.changeThemeDropdown {
     color: #000;
     -webkit-border-radius: 4px;
     font-size: 12px;
-    padding: 1px 24px 2px 10px;
+    padding: 0px 24px 2px 10px;
     cursor: pointer;
     background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
     background-size: 19px 19px;
@@ -705,117 +854,6 @@ select.changeThemeDropdown:hover:enabled {
     background: #EEE url(../assets/dropdown_arrow_k.png) no-repeat right center;
     background-size: 19px 19px;
     opacity: 1;
-}
-
-
-
-#BootLogTitleBar {
-    width: 100%;
-    height: 33px;
-    /* border-top: 2px solid #333; */
-    opacity: 0.95;
-    cursor: pointer;
-}
-
-#BootLogTitleBar:hover {
-    /*background-image: -webkit-linear-gradient(top, #00dff6 0%, #00b9de 100%);*/
-    /*background-image: -webkit-linear-gradient(top, #a7bccc 0%, #8e9eaf 100%);*/
-    background-image: -webkit-linear-gradient(top, #535353 0%,#2c2c2c 70%,#353535 75%,#505050 98%, #727272 99%, #949494 100%); 
-}
-
-.titleBarTextTitle {
-    font-family: 'Roboto', sans-serif;
-    color: #FFF;
-    font-size: 11px; 
-    font-weight: bold;
-    padding: 0px 0px 0px 24px;
-}
-
-.titleBarTextDescription {
-    font-family: 'Roboto', sans-serif;
-    color: #FFF;
-    font-size: 12px; 
-    font-weight: bold;
-    padding: 0px 0px 0px 12px;
-    line-height: 35px;
-}
-
-#BootLogContainer {
-    width: 100%;
-    height: auto; /* Height value varies depending on number of rows of data set to display */
-    border-top: 2px solid #333;
-    opacity: 0.95;
-}
-
-#bandHeader {
-    background-color: #4a544d;
-    border-bottom: 1px solid #000;
-    float: left;
-    height: 25px;
-    width: 17%;
-}
-
-#bandDescription {
-    background-color: #1d2922;
-    border-bottom: 1px solid #000;
-    float: left;
-    height: 25px;
-    width: 83%;
-    float: left;
-}
-
-#bandColumnLeft {
-    float: left;
-}
-
-#bandColumnRight {
-    position: absolute;
-    left: 460px;
-}
-
-.infoTitle {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #a6a9a7;
-    font-size: 12px;
-    padding: 0px 0px 0px 24px;
-    line-height: 24px;	
-}
-
-.infoBody {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #FFF;
-    font-size: 12px;
-    padding: 10px 0px 0px 4px;
-    line-height: 24px;	
-}
-
-.infoBodyGreen {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #4bfb68;
-    font-size: 12px;
-    padding: 10px 0px 0px 4px;
-    line-height: 24px;	
-}
-
-.infoBodyRed {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #fb4b4b;
-    font-size: 12px;
-    padding: 10px 0px 0px 4px;
-    line-height: 24px;	
-}
-
-.infoBodyTheme {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #7bf4f5;
-    font-size: 12px;
-    padding: 10px 0px 0px 4px;
-    line-height: 24px;	
 }
 
 #FooterLinks {
@@ -840,19 +878,19 @@ select.changeThemeDropdown:hover:enabled {
 
 .textBody {
     font-family: 'Roboto', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     color: #FFF;
     text-align:left;
 }
 
-.textBodyRight {
+/*.textBodyRight {
     font-family: 'Roboto', sans-serif;
     font-size: 12px;
     font-weight: bold;
     color: #FFF;
     text-align:right;
-}
+}*/
 
 .textHeaderSmall {
     font-family: 'Roboto', sans-serif;

@@ -1569,6 +1569,37 @@ ReadThemeDirList()
 }
 
 # ---------------------------------------------------------------------------------------
+SetTargetAndMountpoint()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetTargetAndMountpoint()"
+
+    if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then # Failed = no currently mounted MBR device matches bootlog self devicepath.
+        for (( t=0; t<${#duIdentifier[@]}; t++ ))
+        do
+            if [ "${duIdentifier[$t]}" == "$gBootDeviceIdentifier" ]; then
+                TARGET_THEME_DIR="${themeDirPaths[$t]}"
+                TARGET_THEME_DIR_DEVICE="${duIdentifier[$t]}"
+                TARGET_THEME_PARTITIONGUID="${duPartitionGuid[$t]}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set target volume to boot device: $gBootDeviceIdentifier"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
+                gBootDeviceMountPoint="${TARGET_THEME_DIR%/EFI*}"
+                # Send result to UI
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Mounted@${gBootDeviceIdentifier}@${gBootDeviceMountPoint}"
+                SendToUI "BootDevice@Mounted@${gBootDeviceIdentifier}@${gBootDeviceMountPoint}"
+                break
+            fi
+        done
+    else
+        # Send result to UI
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@"
+        SendToUI "BootDevice@Failed@@"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
 GetBootlog()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
@@ -1593,6 +1624,35 @@ GetBootlog()
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bootlog from ioreg is blank"
     fi
+}
+
+# ---------------------------------------------------------------------------------------
+ReadBootLogAndSetPaths()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadBootLogAndSetPaths()"
+    
+    local runInfo="$1" # Will be either 'Init' or 'Rescan'
+    
+    # Run bootlog script to read bootlog for theme info.
+    # This script builds the bootlog html and injects it into the managethemes template.
+    "$bootlogScript" "$runInfo" "$gBootDeviceIdentifier" "$gBootDeviceMountPoint"
+        
+    # The bootlog script writes some paths (or text 'Native NVRAM') to file. Read them in.
+    if [ -f "$bootlogScriptOutfile" ]; then
+        gNvramPlistFullPath=$( grep "nvram@" "$bootlogScriptOutfile" ) && gNvramPlistFullPath="${gNvramPlistFullPath##*@}"
+        gConfigPlistFullPath=$( grep "config@" "$bootlogScriptOutfile" ) && gConfigPlistFullPath="${gConfigPlistFullPath##*@}"
+        gBootType=$( grep "bootType@" "$bootlogScriptOutfile" ) && gBootType="${gBootType##*@}"
+        gNvramSave=$( grep "nvramSave@" "$bootlogScriptOutfile" ) && gNvramSave="${gNvramSave##*@}"
+            
+        # Honour the users choice to have the bootlog closed or expanded
+        if [ "$gBootlogState" == "Close" ]; then
+            gBootlogState="ShowClosed"
+        else
+            gBootlogState="Show"
+        fi
+    fi
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Returned back from bootlog script: gNvramPlistFullPath=$gNvramPlistFullPath | gConfigPlistFullPath=$gConfigPlistFullPath"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1710,7 +1770,7 @@ CreateAndSendVolumeDropDownMenu()
             pathToPrint="${themeDirPaths[$p]}"
         fi
         
-        if [ "${duIdentifier[$p]}" == "$bootDeviceIdentifier" ]; then
+        if [ "${duIdentifier[$p]}" == "$gBootDeviceIdentifier" ]; then
             pathToPrint="BOOT DEVICE | $pathToPrint"
         fi
         
@@ -1746,17 +1806,7 @@ MountESPAndSearchThemesPath()
     fi
 
     if [ $espMountedCount -gt 0 ]; then
-
         "$findThemeDirs"
-        #ReadThemeDirList
-        #CreateAndSendVolumeDropDownMenu
-
-        # As volume selector dropdown menu entries have changed,
-        # send UI a partition to select
-        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
-        #SendToUI "Target@$espID"
-        
-        #RespondToUserDeviceSelection "@$espID"
     fi
     
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
@@ -1781,9 +1831,13 @@ DetectMBRDevice()
     
     if [ "$device" != "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot device. $deviceFound"
+        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDeviceMBR@Mounted@${device}@${gBootDeviceMountPoint}"
+        #SendToUI "BootDeviceMBR@Mounted@${device}@${gBootDeviceMountPoint}"
         echo "$device"
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to match a mounted boot device."
+        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDeviceMBR@Failed@"
+        #SendToUI "BootDeviceMBR@Failed@@"
         echo "Failed"
     fi
 }
@@ -1977,6 +2031,24 @@ SendInternalThemeArraysToLogFile()
 }
 
 # ---------------------------------------------------------------------------------------
+SendTargetToUiRunChecks()
+{
+    local entry=$( FindArrayIdFromTarget )
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
+    CheckThemePathIsStillValid
+    retVal=$? # returns 1 if invalid / 0 if valid
+    if [ $retVal -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
+        SendToUI "Target@$entry"
+        GetListOfInstalledThemesAndSendToUI
+        GetFreeSpaceOfTargetDeviceAndSendToUI 
+            
+        # Run this regardless of path chosen as JS is waiting to hear it.
+        CheckAndRecordUnManagedThemesAndSendToUI 
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
 SendUIInitData()
 {
     # This is called once after much of the initialisation routines have run.
@@ -1989,20 +2061,7 @@ SendUIInitData()
     SendToUI "BootlogView@${gBootlogState}@"
 
     if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
-
-        local entry=$( FindArrayIdFromTarget )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
-        CheckThemePathIsStillValid
-        retVal=$? # returns 1 if invalid / 0 if valid
-        if [ $retVal -eq 0 ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
-            SendToUI "Target@$entry"
-            GetListOfInstalledThemesAndSendToUI
-            GetFreeSpaceOfTargetDeviceAndSendToUI 
-            
-            # Run this regardless of path chosen as JS is waiting to hear it.
-            CheckAndRecordUnManagedThemesAndSendToUI 
-        fi
+        SendTargetToUiRunChecks
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
@@ -2042,6 +2101,21 @@ SendUIInitData()
 
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
+}
+
+# ---------------------------------------------------------------------------------------
+ReadThemeEntriesAndSendToUI()
+{
+    if [ "$TARGET_THEME_DIR" != "-" ] && [ "$TARGET_THEME_DIR_DEVICE" != "-" ] && [ "$TARGET_THEME_PARTITIONGUID" != "-" ]; then
+        # Read current Clover.Theme Nvram variable and send to UI.
+        ReadAndSendCurrentNvramTheme
+
+        # Read current nvram.plist theme var and send to UI
+        ReadAndSendCurrentNvramPlistTheme
+
+        # Read current config.plist theme entry and send to UI
+        ReadAndSendCurrentConfigPlistTheme
+    fi
 }
 
 
@@ -2141,7 +2215,7 @@ ShowHideUIControlOptions()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ShowHideUIControlOptions()"
     
     # Check if this selected device is boot device or not
-    if [ "$TARGET_THEME_DIR_DEVICE" != "$bootDeviceIdentifier" ]; then
+    if [ "$TARGET_THEME_DIR_DEVICE" != "$gBootDeviceIdentifier" ]; then
         # Hide theme control options
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
@@ -2550,6 +2624,8 @@ ReadAndSendCurrentNvramTheme()
         CURRENT_THEME_ENTRY_NVRAM="$themeName"
         PredictNextTheme
     else
+        # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
+        # which currently defaults to menu option 'Select Action'
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
@@ -2577,6 +2653,8 @@ ReadAndSendCurrentNvramPlistTheme()
             CURRENT_THEME_ENTRY_NVRAM_PLIST="$themeName"
             PredictNextTheme
         else
+            # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
+            # which currently defaults to menu option 'Select Action'
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@-@"
             SendToUI "NvramP@-@"
@@ -2606,6 +2684,8 @@ ReadAndSendCurrentConfigPlistTheme()
             CURRENT_THEME_ENTRY_CONFIG_PLIST="$themeName"
             PredictNextTheme
         else
+            # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
+            # which currently defaults to menu option 'Select Action'
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@-@"
             SendToUI "ConfigP@-@"
@@ -3142,6 +3222,8 @@ gNvramPlistFullPath=""                                             # Will become
 gConfigPlistFullPath=""                                            # Will become full path if theme entry exists in config.plist
 gBootType=""                                                       # Will become either UEFI or Legacy
 gNvramSave=1                                                       # Set to 0 if writing to NVRAM is saved for next boot
+gBootDeviceIdentifier=""                                           # Will become identifier of boot device
+gBootDeviceMountPoint=""                                           # Will become mountpoint of boot device
 
 CURRENT_THEME_ENTRY_NVRAM=""
 CURRENT_THEME_ENTRY_NVRAM_PLIST=""
@@ -3293,29 +3375,16 @@ if [ "$gitCmd" != "" ]; then
 
         # Identify boot device from bootlog and try to have it available.
         # If MBR, try to find it among currently mounted devices.
-        # If GPT, match GUID from devicepath. If unmounted ESP and mount.
+        # If GPT, match GUID from devicepath. If unmounted ESP, then mount.
         # Returns identifier. For example, disk0s1
-        bootDeviceIdentifier=$( GetSelfDevicePath ) # Calls MountESPAndSearchThemesPath (if GPT and unmounted ESP)
+        gBootDeviceIdentifier=$( GetSelfDevicePath ) # Calls MountESPAndSearchThemesPath (if GPT and ESP is not mounted)
 
-        # Rebuild internal theme list as ESP may have been mounted
+        # Build internal theme list
         ReadThemeDirList
-
-        # If we have identified the mounted boot device, then set as target
-        if [ "$bootDeviceIdentifier" != "" ] && [ "$bootDeviceIdentifier" != "Failed" ]; then # Failed = no currently mounted MBR device matches bootlog self devicepath.
-            for (( t=0; t<${#duIdentifier[@]}; t++ ))
-            do
-                if [ "${duIdentifier[$t]}" == "$bootDeviceIdentifier" ]; then
-                    TARGET_THEME_DIR="${themeDirPaths[$t]}"
-                    TARGET_THEME_DIR_DEVICE="${duIdentifier[$t]}"
-                    TARGET_THEME_PARTITIONGUID="${duPartitionGuid[$t]}"
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set target volume to boot device: $bootDeviceIdentifier"
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR=$TARGET_THEME_DIR"
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_DIR_DEVICE=$TARGET_THEME_DIR_DEVICE"
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}TARGET_THEME_PARTITIONGUID=$TARGET_THEME_PARTITIONGUID"
-                fi
-            done
-        fi
         
+        # Set internal target and mountpoint then notify UI
+        SetTargetAndMountpoint
+
         # Send list of volumes with /EFI/Clover/Themes directories to UI
         CreateAndSendVolumeDropDownMenu
         if [ $? -eq 0 ]; then
@@ -3324,25 +3393,8 @@ if [ "$gitCmd" != "" ]; then
             WriteToLog "CTM_DropDownListNone"
         fi
 
-        # Run bootlog script to read bootlog for theme info.
-        # This script builds the bootlog html and injects it into the managethemes template.
-        "$bootlogScript" "$bootDeviceIdentifier"
-        
-        # The bootlog script writes some paths (or text 'Native NVRAM') to file. Read them in.
-        if [ -f "$bootlogScriptOutfile" ]; then
-            gNvramPlistFullPath=$( grep "nvram@" "$bootlogScriptOutfile" ) && gNvramPlistFullPath="${gNvramPlistFullPath##*@}"
-            gConfigPlistFullPath=$( grep "config@" "$bootlogScriptOutfile" ) && gConfigPlistFullPath="${gConfigPlistFullPath##*@}"
-            gBootType=$( grep "bootType@" "$bootlogScriptOutfile" ) && gBootType="${gBootType##*@}"
-            gNvramSave=$( grep "nvramSave@" "$bootlogScriptOutfile" ) && gNvramSave="${gNvramSave##*@}"
-            
-            # Honour the users choice to have the bootlog closed or expanded
-            if [ "$gBootlogState" == "Close" ]; then
-                gBootlogState="ShowClosed"
-            else
-                gBootlogState="Show"
-            fi
-        fi
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Returned back from bootlog script: gNvramPlistFullPath=$gNvramPlistFullPath | gConfigPlistFullPath=$gConfigPlistFullPath"
+        # Run bootlog script to read bootlog for theme info and populate theme control paths
+        ReadBootLogAndSetPaths "Init"
 
         # Set last used volumes (as read from prefs), if boot device was not found.
         if [ "$TARGET_THEME_DIR" == "" ] || [ "$TARGET_THEME_DIR" == "-" ]; then
@@ -3350,25 +3402,19 @@ if [ "$gitCmd" != "" ]; then
         fi
         
         # Create footer control options for user to manage theme paths.
-        if [ "$TARGET_THEME_DIR_DEVICE" == "$bootDeviceIdentifier" ]; then
+        #if [ "$TARGET_THEME_DIR_DEVICE" == "$gBootDeviceIdentifier" ]; then
+        
+        # Inject this anyway as it will be hidden if boot device has not been identified.
+        # This way the html will exist so if the user decides to rescan boot device, the
+        # paths can be updated in cloverthememanager.js
             CreateControlOptionsHtmlAndInsert
-        fi
+        #fi
         
         # Send UI target theme entry to display, and other data to set default / restore state of main UI page
         SendUIInitData
 
         # Read each available place where theme entry could be
-        if [ "$TARGET_THEME_DIR" != "-" ] && [ "$TARGET_THEME_DIR_DEVICE" != "-" ] && [ "$TARGET_THEME_PARTITIONGUID" != "-" ]; then
-        
-            # Read current Clover.Theme Nvram variable and send to UI.
-           ReadAndSendCurrentNvramTheme
-        
-            # Read current nvram.plist theme var and send to UI
-            ReadAndSendCurrentNvramPlistTheme
-        
-            # Read current config.plist theme entry and send to UI
-            ReadAndSendCurrentConfigPlistTheme
-        fi
+        ReadThemeEntriesAndSendToUI
         
         # Show theme setting control options depending on currently selected device
         ShowHideUIControlOptions
@@ -3416,6 +3462,20 @@ if [ "$gitCmd" != "" ]; then
                 # js sends "CTM_selectedPartition@" + selectedPartition
                 # where selectedPartition is the array element id of 
                 RespondToUserDeviceSelection "$logLine"
+                
+            # Has the user clicked the MountESP button?
+            elif [[ "$logLine" == *RescanBootDevice* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                WriteToLog "User selected to Rescan boot device"
+                gBootDeviceIdentifier=$( GetSelfDevicePath )
+                ReadThemeDirList
+                SetTargetAndMountpoint
+                CreateAndSendVolumeDropDownMenu
+                ReadBootLogAndSetPaths "Rescan"
+                SendTargetToUiRunChecks
+                ReadThemeEntriesAndSendToUI
+                #UpdateUIControlOptionThemePaths ** TO DO **
+                ShowHideUIControlOptions
     
             # Has the user clicked the OpenPath button?
             elif [[ "$logLine" == *OpenPath* ]]; then
