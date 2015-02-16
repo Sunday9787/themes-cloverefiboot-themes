@@ -130,6 +130,7 @@ ReadBootLog()
     blNvramThemeAbsent=1              # Set to 0 if theme in nvram is absent
     blConfigPlistFilePath=""          # Path for config.plist
     blConfigPlistThemeEntry=""        # Theme name from config.plist
+    blConfigThemePlistNotFound=1      # Set to 0 if theme plist not found
     blGuiOverrideTheme=""             # Theme name if set from GUI
     blGuiOverrideThemeChanged=1       # Set to 0 if theme set in GUI was used
     blThemeAskedForPath=""            # Set to path
@@ -289,6 +290,12 @@ ReadBootLog()
             if [[ "$lineRead" == *"get random"* ]]; then
                 blUsedRandomTheme=0
             fi
+        fi
+        
+        # 1:805  0:000  GlobalConfig: theme.plist not found, get random theme BGM
+        if [[ "$lineRead" == *"theme.plist not found, get random theme"* ]]; then
+            blConfigThemePlistNotFound=0
+            blUsedRandomTheme=0
         fi
         
         # 0:718  0:000  Using theme 'red' (EFI\CLOVER\themes\red)
@@ -534,6 +541,7 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}Theme asked for full path: $blThemeAskedForPath"
     WriteToLog "${debugIndentTwo}Theme asked for exist: $themeExist"
     WriteToLog "${debugIndentTwo}Theme set in UI? (1=No, 0=Yes): $blGuiOverrideThemeChanged"
+    WriteToLog "${debugIndentTwo}theme.plist not found? (1=No, 0=Yes): $blConfigThemePlistNotFound"
     WriteToLog "${debugIndentTwo}Random theme used? (1=No, 0=Yes):$blUsedRandomTheme"
     WriteToLog "${debugIndentTwo}Theme chosen in UI: $blGuiOverrideTheme"
     WriteToLog "${debugIndentTwo}Theme used path: $blThemeUsedPath"
@@ -659,6 +667,11 @@ PopulateBootLogTitleBand()
     # User set random
     elif [ "$blConfigPlistThemeEntry" == "random" ] || [ "$blNvramThemeEntry" == "random" ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as a random theme was asked for<\/span>"
+    
+    # theme.plist missing so random theme chosen.
+    elif [ $blConfigThemePlistNotFound -eq 0 ] && [ $blUsedRandomTheme -eq 0 ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as theme asked for didn't exist.<\/span>"
+    
     
     # Something else happened
     else

@@ -723,21 +723,21 @@ SetControlOptionHtmlSections()
     # Set html sections
     ctOuterOpen="    <div id=\"changeThemeContainer\">"
     ctOpen="    <div id=\"changeThemeBand\" class=\"fillDarkerGrey\">"
-    ctBandNvram="        <div class=\"ctOptionTitle\">NVRAM<\/div>\
+    ctBandNvram="        <div class=\"ctOptionTitle\" id=\"ctTitleNvram\">NVRAM<\/div>\
             <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
             <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\
             <div class=\"ctOptionSetHeader\">Action:<\/div>\
             <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\">\
                 <!--Menu entries will be appended here by cloverthememanager.js -->\
             <\/select>"
-    ctBandNvramP="        <div class=\"ctOptionTitle\">${nvramPlistText}<\/div>\
+    ctBandNvramP="        <div class=\"ctOptionTitle\" id=\"ctTitleNvramP\"><span>${nvramPlistText}<\/span><\/div>\
             <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
             <div class=\"ctOptionEntryResult\" id=\"ctEntryNvramP\"><\/div>\
             <div class=\"ctOptionSetHeader\">Action:<\/div>\
             <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\
                 <!--Menu entries will be appended here by cloverthememanager.js -->\
             <\/select>"
-    ctBandNvramC="        <div class=\"ctOptionTitle\">${configPlistText}<\/div>\
+    ctBandConfig="        <div class=\"ctOptionTitle\" id=\"ctTitleConfig\"><span>${configPlistText}<\/span><\/div>\
             <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
             <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\
             <div class=\"ctOptionSetHeader\">Action:<\/div>\
@@ -779,7 +779,7 @@ CreateControlOptionsHtmlAndInsert()
 
     # Add config.plist control band
     if [ "$gConfigPlistFullPath" != "" ]; then
-        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvramC}${ctClose}"
+        controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandConfig}${ctClose}"
     fi
     
     # Add next boot theme prediction band
@@ -1593,9 +1593,11 @@ SetTargetAndMountpoint()
             fi
         done
     else
-        # Send result to UI
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@"
-        SendToUI "BootDevice@Failed@@"
+        # Send message to UI if identifier is set to 'Failed'. Otherwise a blank identifier could mean bootlog did not exist.
+        if [ "$gBootDeviceIdentifier" == "Failed" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@"
+            SendToUI "BootDevice@Failed@@"
+        fi
     fi
 }
 
@@ -1823,21 +1825,18 @@ DetectMBRDevice()
     
     local device=""
     if [ $(CheckOsVersion) -ge 13 ]; then
-        device=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                  /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+        #device=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
+        #          /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+        device=$( "/usr/bin/osascript" -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
     else
         device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
     fi
     
     if [ "$device" != "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot device. $deviceFound"
-        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDeviceMBR@Mounted@${device}@${gBootDeviceMountPoint}"
-        #SendToUI "BootDeviceMBR@Mounted@${device}@${gBootDeviceMountPoint}"
         echo "$device"
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to match a mounted boot device."
-        #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDeviceMBR@Failed@"
-        #SendToUI "BootDeviceMBR@Failed@@"
         echo "Failed"
     fi
 }
@@ -2296,7 +2295,7 @@ CheckThemePathIsStillValid()
     local stillMounted=0
     
     # Find device by previously used UUID.
-    if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
+    if [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ] && [ "$TARGET_THEME_PARTITIONGUID" != "-" ]; then
         findDevice=$( "$partutil" --search-uuid $TARGET_THEME_PARTITIONGUID )
     else
         findDevice="$TARGET_THEME_DIR_DEVICE"
@@ -3474,7 +3473,16 @@ if [ "$gitCmd" != "" ]; then
                 ReadBootLogAndSetPaths "Rescan"
                 SendTargetToUiRunChecks
                 ReadThemeEntriesAndSendToUI
-                #UpdateUIControlOptionThemePaths ** TO DO **
+                nvramPath=""
+                configPath=""
+                if [ -f "$gNvramPlistFullPath" ]; then
+                    nvramPath="$gNvramPlistFullPath"
+                fi
+                if [ -f "$gConfigPlistFullPath" ]; then
+                    configPath="$gConfigPlistFullPath"
+                fi
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateControlThemePaths@${nvramPath}@${configPath}"
+                SendToUI "UpdateControlThemePaths@${nvramPath}@${configPath}"
                 ShowHideUIControlOptions
     
             # Has the user clicked the OpenPath button?

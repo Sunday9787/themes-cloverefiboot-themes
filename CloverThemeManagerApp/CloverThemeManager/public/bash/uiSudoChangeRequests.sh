@@ -296,7 +296,7 @@ FindMbrDevice()
     for ((d=0; d<${#mbrDisks[@]}; d++))
     do
         #echo "Checking ${mbrDisks[$d]}"
-        readFdisk=$( sudo fdisk /dev/"${mbrDisks[$d]}" | grep "${bootDeviceInfo[4]}" )
+        readFdisk=$( fdisk /dev/"${mbrDisks[$d]}" | grep "${bootDeviceInfo[4]}" )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}readFdisk=$readFdisk"
         
         if [ $readFdisk ]; then # We have a match on total sectors
@@ -314,7 +314,7 @@ FindMbrDevice()
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found start block match: $startBlock"
             
                     # Check Signature matches by comparing bytes 01B8->01BE
-                    signature=$( sudo dd 2>/dev/null if="/dev/${mbrDisks[$d]}" bs=4 count=1 skip=110 | perl -ne '@a=split"";for(@a){printf"%02x",ord}' )
+                    signature=$( dd 2>/dev/null if="/dev/${mbrDisks[$d]}" bs=4 count=1 skip=110 | perl -ne '@a=split"";for(@a){printf"%02x",ord}' )
                     signatureLE="${bootDeviceInfo[2]:8:2}${bootDeviceInfo[2]:6:2}${bootDeviceInfo[2]:4:2}${bootDeviceInfo[2]:2:2}"
                     signature=$( echo $signature | tr '[:upper:]' '[:lower:]' )
                     signatureLE=$( echo $signatureLE | tr '[:upper:]' '[:lower:]' )

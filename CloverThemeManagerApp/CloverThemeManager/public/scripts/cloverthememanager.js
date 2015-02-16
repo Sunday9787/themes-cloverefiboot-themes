@@ -238,6 +238,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 ShowHideControlOptions(firstLineSplit[1]);
                 break;
+            case "UpdateControlThemePaths":
+                // Bash sends: "UpdateControlThemePaths@${gNvramPlistFullPath}@${gConfigPlistFullPath}"
+                macgap.app.removeMessage(firstLine);
+                UpdateControlThemePaths(firstLineSplit[1],firstLineSplit[2]);
+                break;
             default:
                 alert("Found else:"  + firstLine);
                 if(firstLine == "") {
@@ -500,13 +505,19 @@ function SetCurrentThemeEntry(textToChange,themeName)
 function SetDropDownNvram(themeName)
 {
     // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    
+    var themeNotInstalled=1
     if(themeName != "") {
         $('#installedThemeDropDownNvram option').each(function(){
             if(this.value == themeName) {
                 // Note: Bash script sends '-' when no theme is set
                 $("#installedThemeDropDownNvram").val(themeName);
+                themeNotInstalled=0
             }
-        });  
+        });
+        if(themeNotInstalled == 1) {
+            $("#installedThemeDropDownConfigP").val("-");
+        }
     }
 }
 
@@ -514,13 +525,19 @@ function SetDropDownNvram(themeName)
 function SetDropDownNvramP(themeName)
 {
     // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    
+    var themeNotInstalled=1
     if(themeName != "") {
         $('#installedThemeDropDownNvramP option').each(function(){
             if(this.value == themeName) {
                 // Note: Bash script sends '-' when no theme is set
                 $("#installedThemeDropDownNvramP").val(themeName);
+                themeNotInstalled=0
             }
         });  
+        if(themeNotInstalled == 1) {
+            $("#installedThemeDropDownConfigP").val("-");
+        }
     }
 }
 
@@ -528,13 +545,19 @@ function SetDropDownNvramP(themeName)
 function SetDropDownConfigP(themeName)
 {
     // Note: This menu is populated by UpdateAndRefreshInstalledThemeDropDown()
+    
+    var themeNotInstalled=1
     if(themeName != "") {
         $('#installedThemeDropDownConfigP option').each(function(){
             if(this.value == themeName) {
                 // Note: Bash script sends '-' when no theme is set
-                $("#installedThemeDropDownConfigP").val(themeName);;
+                $("#installedThemeDropDownConfigP").val(themeName);
+                themeNotInstalled=0
             }
         });  
+        if(themeNotInstalled == 1) {
+            $("#installedThemeDropDownConfigP").val("-");
+        }
     }
 }
 
@@ -1844,4 +1867,15 @@ function ShowHideControlOptions(state)
             SetFooterHeight("ExcludeCO");
         }
     }
+}
+
+//-------------------------------------------------------------------------------------
+function UpdateControlThemePaths(nvramPlistPath,configPlistPath)
+{
+    // Replace paths
+    $('#ctTitleNvramP span').text(nvramPlistPath);
+    $('#ctTitleConfig span').text(configPlistPath);
+    // Unset any disabled drop down menus
+    $('#installedThemeDropDownNvramP').prop("disabled", false);
+    $('#installedThemeDropDownConfigP').prop("disabled", false);
 }
