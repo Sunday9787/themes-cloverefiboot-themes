@@ -1,3 +1,7 @@
+/* CSS file for Clover Theme Manager */
+/* Blackosx 2014-2015                */
+/* v0.76.1                           */
+
 html, body {
     padding: 0;
     margin: 0;
@@ -207,6 +211,15 @@ p {
 }
 
 .infoBody {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: #FFF;
+    font-size: 12px;
+    padding: 10px 0px 0px 4px;
+    line-height: 24px;	
+}
+
+.infoBodyReplaceable {
     font-family: 'Roboto', sans-serif;
     font-weight: bold;
     color: #FFF;
@@ -940,6 +953,10 @@ select.changeThemeDropdown:hover:enabled {
 
 .themeName {
     color: #7bf4f5;
+}
+
+.themeAction {
+    color: #f3ce22;
 }
 
 .predictionText {

@@ -238,10 +238,10 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 ShowHideControlOptions(firstLineSplit[1]);
                 break;
-            case "UpdateControlThemePaths":
-                // Bash sends: "UpdateControlThemePaths@${gNvramPlistFullPath}@${gConfigPlistFullPath}"
+            case "UpdateThemePaths":
+                // Bash sends: "UpdateThemePaths@${gNvramPlistFullPath}@${gConfigPlistFullPath}@${mountpoint}"
                 macgap.app.removeMessage(firstLine);
-                UpdateControlThemePaths(firstLineSplit[1],firstLineSplit[2]);
+                UpdateThemePaths(firstLineSplit[1],firstLineSplit[2],firstLineSplit[3]);
                 break;
             default:
                 alert("Found else:"  + firstLine);
@@ -516,7 +516,7 @@ function SetDropDownNvram(themeName)
             }
         });
         if(themeNotInstalled == 1) {
-            $("#installedThemeDropDownConfigP").val("-");
+            $("#installedThemeDropDownNvram").val("-");
         }
     }
 }
@@ -536,7 +536,7 @@ function SetDropDownNvramP(themeName)
             }
         });  
         if(themeNotInstalled == 1) {
-            $("#installedThemeDropDownConfigP").val("-");
+            $("#installedThemeDropDownNvramP").val("-");
         }
     }
 }
@@ -1255,8 +1255,8 @@ function ShowMessageBootDevice(result,deviceId,mountPoint)
 {
     // Show a message to the user
     if (result == "Failed") {
-        ChangeMessageBoxHeaderColour("red");                            
-        SetMessageBoxText("Boot Device","The boot device failed to be detected. Check it's mounted and then click the rescan button in the bootlog region.");
+        ChangeMessageBoxHeaderColour("red"); 
+        SetMessageBoxText("Boot Device","The boot device failed to be detected. A Rescan button is available in the bootlog region.");
         ShowMessageBoxClose();
         ShowMessageBox();
     } else if (result == "Mounted") {
@@ -1870,12 +1870,21 @@ function ShowHideControlOptions(state)
 }
 
 //-------------------------------------------------------------------------------------
-function UpdateControlThemePaths(nvramPlistPath,configPlistPath)
+function UpdateThemePaths(nvramPlistPath,configPlistPath,mountpoint)
 {
-    // Replace paths
+    // Replace paths in theme control option area
     $('#ctTitleNvramP span').text(nvramPlistPath);
     $('#ctTitleConfig span').text(configPlistPath);
-    // Unset any disabled drop down menus
+    // Unset any disabled control option drop down menus
     $('#installedThemeDropDownNvramP').prop("disabled", false);
     $('#installedThemeDropDownConfigP').prop("disabled", false);
+    
+    // Update paths in bootlog
+    $('.infoBodyReplaceable').each(function(){
+        var str = $(this).text();
+        var strTest = str.toUpperCase();
+        if (strTest.match("^/EFI")) {
+            $(this).text(mountpoint+str);
+        }
+    });
 }

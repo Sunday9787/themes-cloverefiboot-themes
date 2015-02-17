@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.0"
+VERS="0.76.1"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -52,11 +52,6 @@ CreateSymbolicLinks()
         WriteToLog "CTM_SymbolicLinksFail"
     fi
 }
-
-# ---------------------------------------------------------------------------------------
-#SendToUI() {
-#    echo "${1}" >> "$logBashToJs"
-#}
 
 # ---------------------------------------------------------------------------------------
 SendToUIUVersionedDir() {
@@ -773,7 +768,6 @@ CreateControlOptionsHtmlAndInsert()
     # Add nvram.plist control band if not using Native NVRAM AND Launch Daemon & rc scripts are not working
     # This way user can manually change theme entry in nvram.plist
     if [ "$gNvramPlistFullPath" != "" ] && [ "$gNvramPlistFullPath" != "Native NVRAM" ] && [ $gNvramSave -eq 1 ]; then
-
         controlOptionsHtml="${controlOptionsHtml}${ctOpen}${ctBandNvramP}${ctClose}"
     fi
 
@@ -792,6 +786,11 @@ CreateControlOptionsHtmlAndInsert()
     # Insert control options band Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting control options band HTML in to managethemes.html"
     LANG=C sed -ie "s/<!--INSERT_CONTROL_OPTIONS_BAND_HERE-->/${controlOptionsHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
+    
+    # Clean up
+    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
+        rm "${PUBLIC_DIR}"/managethemes.htmle
+    fi
     
     # Add messages in to log for initialise.js to detect.
     if [ $check -eq 0 ]; then
@@ -837,13 +836,13 @@ CheckOsVersion()
 
 
 # ---------------------------------------------------------------------------------------
-ResolveMountPointFromGUID()
+ResolveVolumePathFromGUID()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ResolveMountPointFromGUID()"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ResolveVolumePathFromGUID()"
     
-    # Resolve volume mountpoint from GUID
-    local mountpoint=""
+    # Resolve volume path from GUID
+    local volumePath=""
     
     # MBR partition scheme does not use GUID's so check
     if [ "$1" != "$zeroUUID" ]; then
@@ -851,15 +850,15 @@ ResolveMountPointFromGUID()
         do
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Matching ${duPartitionGuid[$u]} : $1"
             if [[ "${duPartitionGuid[$u]}" == "$1" ]]; then
-                mountpoint="${themeDirPaths[$u]}"
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match: Mountpoint=$mountpoint"
+                volumePath="${themeDirPaths[$u]}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Match: Volume Path=$volumePath"
                 break
             fi
         done
     else
-        mountpoint=""
+        volumePath=""
     fi
-    echo "$mountpoint"
+    echo "$volumePath"
 }
     
 # ---------------------------------------------------------------------------------------
@@ -1504,7 +1503,6 @@ GetFreeSpaceOfTargetDeviceAndSendToUI()
     local found=99
     for (( d=0; d<${#deviceResult[@]}; d++ ))
     do
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}In Loop: d=$d"
         if [ "${deviceResult[$d]##*/}" == "$TARGET_THEME_DIR_DEVICE" ]; then
            found=$d
            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}found=$found"
@@ -1574,7 +1572,7 @@ SetTargetAndMountpoint()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetTargetAndMountpoint()"
 
-    if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then # Failed = no currently mounted MBR device matches bootlog self devicepath.
+    if [ "$gBootDeviceIdentifier" != "" ] && [ "$gBootDeviceIdentifier" != "Failed" ]; then
         for (( t=0; t<${#duIdentifier[@]}; t++ ))
         do
             if [ "${duIdentifier[$t]}" == "$gBootDeviceIdentifier" ]; then
@@ -1595,7 +1593,7 @@ SetTargetAndMountpoint()
     else
         # Send message to UI if identifier is set to 'Failed'. Otherwise a blank identifier could mean bootlog did not exist.
         if [ "$gBootDeviceIdentifier" == "Failed" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@@"
             SendToUI "BootDevice@Failed@@"
         fi
     fi
@@ -1704,13 +1702,12 @@ GetSelfDevicePath()
             IFS=$','
             hdArr=($devicePathHD)
             IFS="$oIFS"
-            bootDevicePartition="${hdArr[0]}"
-            bootDevicePartType="${hdArr[1]}"
-            bootDevicePartSignature="${hdArr[2]}"
-            bootDevicePartStart="${hdArr[3]}"
-            bootDevicePartSize="${hdArr[4]}"
-            
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}bootDevicePartType=$bootDevicePartType"
+            local bootDevicePartition="${hdArr[0]}"
+            local bootDevicePartType="${hdArr[1]}"
+            local bootDevicePartSignature="${hdArr[2]}"
+            local bootDevicePartStart="${hdArr[3]}"
+            local bootDevicePartSize="${hdArr[4]}"
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}PartType=$bootDevicePartType"
             if [ "$bootDevicePartType" == "GPT" ]; then
                 local identifier=$( "$partutil" --search-uuid $bootDevicePartSignature )
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}identifier=$identifier"
@@ -1720,14 +1717,14 @@ GetSelfDevicePath()
                     if [ "$checkESP" != "" ] && [[ "$checkESP" == *@U ]]; then
                         # Instruct UI to tell user that it needs password to mount ESP
                         WriteToLog "CTM_BootDeviceGPT"
-                        MountESPAndSearchThemesPath
+                        identifier=$(MountESPAndSearchThemesPath "$identifier")
                     fi
                 fi
-                [[ $identifier == "" ]] && identifier="Failed"
+                [[ "$identifier" == "" ]] && identifier="Failed"
             elif [ "$bootDevicePartType" == "MBR" ]; then
                 # Convert device hex values to human readable
-                bootDevicePartStartDec=$(echo "ibase=16; ${bootDevicePartStart#*x}" | bc)
-                bootDevicePartSizeDec=$(echo "ibase=16; ${bootDevicePartSize#*x}" | bc)
+                local bootDevicePartStartDec=$(echo "ibase=16; ${bootDevicePartStart#*x}" | bc)
+                local bootDevicePartSizeDec=$(echo "ibase=16; ${bootDevicePartSize#*x}" | bc)
                 
                 # Save boot device details to file
                 echo "${bootDevicePartition}@${bootDevicePartType}@${bootDevicePartSignature}@${bootDevicePartStartDec}@${bootDevicePartSizeDec}" > "$bootDeviceInfo"
@@ -1735,7 +1732,7 @@ GetSelfDevicePath()
                 # Instruct UI to tell user that it needs password for identifying MBR device
                 WriteToLog "CTM_BootDeviceMBR"
                 
-                local identifier=$( DetectMBRDevice )
+                local identifier=$(DetectMBRDevice)
             fi
             
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Boot device part type=${bootDevicePartType} | identifier=${identifier}"
@@ -1747,7 +1744,6 @@ GetSelfDevicePath()
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$bootLog not found"
     fi
-    
     WriteToLog "CTM_BootDeviceCloseWindow"
 }
 
@@ -1798,7 +1794,8 @@ MountESPAndSearchThemesPath()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}MountESPAndSearchThemesPath()"
         
-    espMountedCount=0
+    local espMountedCount=0
+    local identifier="$1"
     
     if [ $(CheckOsVersion) -ge 13 ]; then
         espMountedCount=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
@@ -1809,10 +1806,20 @@ MountESPAndSearchThemesPath()
 
     if [ $espMountedCount -gt 0 ]; then
         "$findThemeDirs"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
+        SendToUI "MessageESP@Mounted@${espMountedCount}"
+        echo "$identifier"
+    elif [ -z $espMountedCount ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User cancelled password dialog"
+        echo "Failed"
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to find an unmounted ESP with themes dir."
+        # Send UI message that no ESP's were mounted. This changes message box content and shows close box button.
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@0"
+        SendToUI "MessageESP@Mounted@0"
+        echo "Failed"
     fi
     
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
-    SendToUI "MessageESP@Mounted@${espMountedCount}"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1825,9 +1832,7 @@ DetectMBRDevice()
     
     local device=""
     if [ $(CheckOsVersion) -ge 13 ]; then
-        #device=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-        #          /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
-        device=$( "/usr/bin/osascript" -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
     else
         device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
     fi
@@ -1835,6 +1840,9 @@ DetectMBRDevice()
     if [ "$device" != "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot device. $deviceFound"
         echo "$device"
+    elif [ -z $device ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User cancelled password dialog"
+        echo "Failed"
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to match a mounted boot device."
         echo "Failed"
@@ -2159,9 +2167,9 @@ RespondToUserDeviceSelection()
 
         WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with GUID ${duPartitionGuid[$pathOption]}" 
 
-        local mountpoint=$( ResolveMountPointFromGUID "${duPartitionGuid[$pathOption]}" )
-        if [ "$mountpoint" != "" ]; then
-            TARGET_THEME_DIR="$mountpoint"
+        local volumePath=$( ResolveVolumePathFromGUID "${duPartitionGuid[$pathOption]}" )
+        if [ "$volumePath" != "" ]; then
+            TARGET_THEME_DIR="$volumePath"
         else
             TARGET_THEME_DIR="${themeDirPaths[$pathOption]}"
         fi
@@ -2186,13 +2194,14 @@ RespondToUserDeviceSelection()
             CheckAndRemoveBareClonesNoLongerNeeded
             CheckForThemeUpdates &
             ShowHideUIControlOptions
+            ReadThemeEntriesAndSendToUI
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
             CheckForThemeUpdates &
         fi
     else
-        WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
+        [[ DEBUG -eq 1 ]] && WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
         TARGET_THEME_DIR="-"
         TARGET_THEME_DIR_DEVICE="-"
         TARGET_THEME_PARTITIONGUID="-"
@@ -2318,7 +2327,7 @@ CheckThemePathIsStillValid()
         done
     fi
             
-    if [ $stillMounted -eq 0 ]; then
+    if [ $stillMounted -eq 0 ] && [ "$TARGET_THEME_DIR" != "-" ]; then
         WriteToLog "Theme directory $TARGET_THEME_DIR on $TARGET_THEME_PARTITIONGUID does not exist! Setting to -"
         
         local entry=$( FindArrayIdFromTarget )
@@ -2559,6 +2568,17 @@ PredictNextTheme()
         else
             themeToSend="embedded"
         fi
+    fi
+    
+    # Check for special themes (using /rEFIt_UEFI/Platform/Settings.c for ref)
+    local month=$( date +"%m" )
+    local day=$( date +"%d" )
+    if [[ $month -eq 12 ]] && [[ $day -ge 25 && $day -le 31 ]]; then 
+        local checkTheme=$( IsThemeInstalled "christmas" )
+        [[ checkTheme -eq 0 ]] && themeToSend="christmas"
+    elif [[ $month -eq 1 ]] && [[ $day -ge 1 && $day -le 7 ]]; then 
+        local checkTheme=$( IsThemeInstalled "newyear" )
+        [[ checkTheme -eq 0 ]] && themeToSend="newyear"
     fi
 
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: SetPrediction@${themeToSend}@"
@@ -3380,7 +3400,7 @@ if [ "$gitCmd" != "" ]; then
 
         # Build internal theme list
         ReadThemeDirList
-        
+
         # Set internal target and mountpoint then notify UI
         SetTargetAndMountpoint
 
@@ -3399,16 +3419,12 @@ if [ "$gitCmd" != "" ]; then
         if [ "$TARGET_THEME_DIR" == "" ] || [ "$TARGET_THEME_DIR" == "-" ]; then
             MapLastSelectedPathToGUID
         fi
-        
-        # Create footer control options for user to manage theme paths.
-        #if [ "$TARGET_THEME_DIR_DEVICE" == "$gBootDeviceIdentifier" ]; then
-        
-        # Inject this anyway as it will be hidden if boot device has not been identified.
+
+        # Inject this as it will be hidden if boot device has not been identified.
         # This way the html will exist so if the user decides to rescan boot device, the
         # paths can be updated in cloverthememanager.js
-            CreateControlOptionsHtmlAndInsert
-        #fi
-        
+        CreateControlOptionsHtmlAndInsert
+
         # Send UI target theme entry to display, and other data to set default / restore state of main UI page
         SendUIInitData
 
@@ -3462,7 +3478,7 @@ if [ "$gitCmd" != "" ]; then
                 # where selectedPartition is the array element id of 
                 RespondToUserDeviceSelection "$logLine"
                 
-            # Has the user clicked the MountESP button?
+            # Has the user clicked the Rescan Boot Device button?
             elif [[ "$logLine" == *RescanBootDevice* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 WriteToLog "User selected to Rescan boot device"
@@ -3475,14 +3491,19 @@ if [ "$gitCmd" != "" ]; then
                 ReadThemeEntriesAndSendToUI
                 nvramPath=""
                 configPath=""
+                mountpoint=""
                 if [ -f "$gNvramPlistFullPath" ]; then
                     nvramPath="$gNvramPlistFullPath"
                 fi
                 if [ -f "$gConfigPlistFullPath" ]; then
                     configPath="$gConfigPlistFullPath"
+                    configPath=$( RenameInternalESPMountPointToEFI "$configPath" )
                 fi
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateControlThemePaths@${nvramPath}@${configPath}"
-                SendToUI "UpdateControlThemePaths@${nvramPath}@${configPath}"
+                if [ "$gBootDeviceMountPoint" != "" ]; then
+                    mountpoint="$gBootDeviceMountPoint"
+                fi
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateThemePaths@${nvramPath}@${configPath}@${mountpoint}"
+                SendToUI "UpdateThemePaths@${nvramPath}@${configPath}@${mountpoint}"
                 ShowHideUIControlOptions
     
             # Has the user clicked the OpenPath button?

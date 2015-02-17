@@ -295,7 +295,6 @@ FindMbrDevice()
     
     for ((d=0; d<${#mbrDisks[@]}; d++))
     do
-        #echo "Checking ${mbrDisks[$d]}"
         readFdisk=$( fdisk /dev/"${mbrDisks[$d]}" | grep "${bootDeviceInfo[4]}" )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}readFdisk=$readFdisk"
         

@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.0
+# v0.76.1
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -62,17 +62,17 @@ SetHtmlBootlogSectionTemplates()
         <\/div>"
     blcLineConfig="        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\
         <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBody\">${blConfigPlistFilePathPrint}<\/span><\/div>\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blConfigPlistFilePathPrint}<\/span><\/div>\
             <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBodyTheme\">${blConfigPlistThemeEntry}<\/span><\/div>\
         <\/div>"
     blcLineThemeAsked="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\
         <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBody\">${blThemeAskedForPathPrint}<\/span><\/div>\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeAskedForPathPrint}<\/span><\/div>\
             <div id=\"bandColumnLeft\"><span class=\"infoTitle\">did theme exist?<\/span><span class=\"${themeExistCssClass}\">${blThemeAskedForExisted}<\/span><\/div>\
         <\/div>"
     blcLineThemeUsed="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\
         <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBody\">${blThemeUsedPathPrint}<\/span><\/div>\
+            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeUsedPathPrint}<\/span><\/div>\
             <div id=\"bandCbandColumnLeftolumnRight\"><span class=\"infoTitle\">Chosen:<\/span><span class=\"infoBodyTheme\">${blThemeNameChosen}<\/span><\/div>\
         <\/div>"
     blcLineOverrideUi="        <div id=\"bandHeader\"><span class=\"infoTitle\">Override in GUI<\/span><\/div>\
@@ -336,19 +336,21 @@ PostProcess()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PostProcess()"
-    
+
     # check for random set by user
     if [ "$blConfigPlistThemeEntry" == "random" ] || [ "$blNvramThemeEntry" == "random" ]; then
         if [ "$blThemeNameChosen" == "random" ] && [ "$blUsingTheme" != "" ]; then
             blThemeNameChosen="$blUsingTheme"
         fi
     fi
-            
+
+    # Was embedded theme used?
     if [ $blUsingEmbedded -eq 0 ]; then
         blThemeUsedPath="internal"
         blThemeNameChosen="embedded"
     fi
 
+    # Set theme asked for. Nvram setting takes precedence over config.plist
     if [ "$blNvramThemeEntry" != "" ] && [ $blNvramThemeAbsent -eq 1 ]; then
         blThemeAskedForTitle="$blNvramThemeEntry"
     elif [ "$blConfigPlistThemeEntry" != "" ]; then
@@ -356,24 +358,19 @@ PostProcess()
     else
         blThemeAskedForTitle=""
     fi
-    
-    # No theme asked for so nothing could have existed
-    if [ "$blThemeAskedForTitle" == "" ]; then
-        blThemeAskedForExisted=""
-    fi
 
-    if [ "$blThemeAskedForTitle" == "$blUsingTheme" ]; then
-        blThemeAskedForPath="${blThemeUsedPath}"/"${blThemeAskedForTitle}"
-    elif [ "$blThemeAskedForTitle" != "" ]; then
-        if [ "$blUsingTheme" == "" ] && [ "$blThemeAskedForTitle" == "embedded" ]; then
-            blThemeAskedForPath="internal"
-            blThemeAskedForExisted="Always"
-        fi
-    fi
-    
-    # No theme asked for so nothing could have existed
+    # No theme asked for so no theme could have existed
     if [ "$blThemeAskedForTitle" == "" ]; then
         blThemeAskedForExisted=""
+
+    # Was theme name asked for, used?
+    elif [ "$blThemeAskedForTitle" == "$blUsingTheme" ]; then
+        blThemeAskedForPath="${blThemeUsedPath}"/"${blThemeAskedForTitle}"
+    
+    # Was embedded theme asked for?
+    elif [ "$blThemeAskedForTitle" == "embedded" ] && [ "$blUsingTheme" == "" ] ; then
+        blThemeAskedForPath="internal"
+        blThemeAskedForExisted="Always"
     fi
 
     # NVRAM entry points to non-existent theme OR no default theme found
@@ -381,14 +378,12 @@ PostProcess()
         blThemeAskedForExisted="No"
     fi
 
-    #if [ $blUsedRandomTheme -eq 0 ]; then
-    #    blThemeNameChosen="$blThemeNameChosen (random)"s
-    #fi
-
+    # Is Native NVRAM working?
     if [ "$blNvramReadFrom" == "Native NVRAM" ]; then
         gNvramWorkingType="Native"
     fi
 
+    # Is nvram.plist being used?
     if [ $blNvramPlistExists -eq 0 ]; then
         gNvramWorkingType="Fake"
     fi
@@ -609,9 +604,11 @@ PopulateNvramFunctionalityBand()
         
         if [ ! -f "$bootLogFile" ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}This system was not booted using Clover."
-            message="This system was not booted using Clover."
-            fillColour="nvramFillRed"
+        else
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Bootlog file is not Clover bootlog."
         fi
+        message="This system was not booted using Clover."
+        fillColour="nvramFillRed"
     
     fi
     
@@ -640,8 +637,12 @@ PopulateBootLogTitleBand()
     bandTitle="        <span class=\"titleBarTextTitle\">LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|<\/span>"
     bandTitleDescStart="        <span class=\"titleBarTextDescription\">"
     
+    # Was the Christmas or NewYear theme used?
+    if [ "$blThemeNameChosen" == "christmas" ] ||  "$blThemeNameChosen" == "newyear" ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as it's that time of year. <span class=\"themeAction\">Uninstall theme if not wanted.<\/span><\/span>"
+
     # No nvram theme entry and chosen theme matches config.plist entry
-    if [ "$blNvramThemeEntry" == "" ] && [ "$blThemeNameChosen" == "$blConfigPlistThemeEntry" ]; then
+    elif [ "$blNvramThemeEntry" == "" ] && [ "$blThemeNameChosen" == "$blConfigPlistThemeEntry" ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as set in ${blConfigPlistFilePathPrint} on device ${gBootDeviceIdentifier}<\/span>"
     
     # nvram theme entry was used
@@ -671,7 +672,6 @@ PopulateBootLogTitleBand()
     # theme.plist missing so random theme chosen.
     elif [ $blConfigThemePlistNotFound -eq 0 ] && [ $blUsedRandomTheme -eq 0 ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as theme asked for didn't exist.<\/span>"
-    
     
     # Something else happened
     else
@@ -827,6 +827,7 @@ if [ -f "$bootLogFile" ]; then
             PopulateNvramFunctionalityBand "1"
         else
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found boot.log but Not Clover."
+            PopulateNvramFunctionalityBand "2"
         fi
     fi
     
