@@ -422,7 +422,7 @@ function DisplayAppUpdates(updateID)
         if (updateID.indexOf(".") >= 0) {
             // Show a message to the user
             ChangeMessageBoxHeaderColour("blue");                            
-            SetMessageBoxText("Application Framework Update:",'A new version of the main app (v' + updateID + ') is available.<br><br>Please download a new version of the app. You can find latest versions at either <a href="http://www.projectosx.com/forum/index.php?showtopic=3329" target="_blank">Projectosx</a> or <a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Insanleymac</a>');
+            SetMessageBoxText("Application Framework Update:",'A new version of the main app (v' + updateID + ') is available.<br><br>Please download a new version of the app. You can find latest versions at <a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Insanleymac</a>');
             // Send native notification
             sendNotification("Application framework update available. Please download a new version of the app.");
         } else {
