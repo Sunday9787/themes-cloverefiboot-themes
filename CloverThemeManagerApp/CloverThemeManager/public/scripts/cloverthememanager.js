@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.8
+//Version=0.75.9
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -1219,8 +1219,8 @@ function UpdateMessageBox(messageOne,messageTwo)
     HideProgressBar();
     if (messageOne != "" && messageTwo != "") {
         // Show a message to the user
-        ChangeMessageBoxHeaderColour("blue"); 
         if (messageOne == 'Mounted') {
+            ChangeMessageBoxHeaderColour("blue"); 
             if (messageTwo == '0') {
                 SetMessageBoxText("EFI System Partition(s)","There are no unmounted EFI system partitions with an existing /EFI/Clover/Themes directory.");
             } else {
@@ -1244,6 +1244,9 @@ function UpdateMessageBox(messageOne,messageTwo)
                 // show all themes, even if asked to hide uninstalled
                 $(".accordion").css("display","block");
             }
+        } else if (messageOne == 'Cancelled') {
+            ChangeMessageBoxHeaderColour("red"); 
+            SetMessageBoxText("EFI System Partition(s)","Operation cancelled.");
         }
         ShowMessageBoxClose();
         ShowMessageBox();

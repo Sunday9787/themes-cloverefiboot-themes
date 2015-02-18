@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.1"
+VERS="0.76.2"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -984,19 +984,14 @@ IsRepositoryLive()
     fi
     
     if [ "$defaultGateway" != "" ]; then
-        dotCheck=$( echo "$defaultGateway" | sed 's/[0-9]*//g' )
-        if [ "$dotCheck" == "..." ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default Gateway $defaultGateway"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default Gateway $defaultGateway"
             
-            # Continue to check is repository is live
-            local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gitRepositoryUrl"
-            local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
-            if [ "$testConnection" ]; then
-                WriteToLog "CTM_RepositorySuccess"
-            else
-                noConnection=0
-            fi
+        # Continue to check if repository is live
+        local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gitRepositoryUrl"
+        local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
+        if [ "$testConnection" ]; then
+            WriteToLog "CTM_RepositorySuccess"
         else
             noConnection=0
         fi
@@ -1811,6 +1806,9 @@ MountESPAndSearchThemesPath()
         echo "$identifier"
     elif [ -z $espMountedCount ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User cancelled password dialog"
+        # Send UI message so the message box shows close box button.
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Cancelled@0"
+        SendToUI "MessageESP@Cancelled@0"
         echo "Failed"
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to find an unmounted ESP with themes dir."
@@ -3520,12 +3518,14 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *MountESP* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
-                MountESPAndSearchThemesPath
-                ReadThemeDirList
-                CreateAndSendVolumeDropDownMenu
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
-                SendToUI "Target@$espID"
-                RespondToUserDeviceSelection "@$espID"
+                checkAction=$(MountESPAndSearchThemesPath "$gBootDeviceIdentifier")
+                if [ "$checkAction" != "Failed" ]; then
+                    ReadThemeDirList
+                    CreateAndSendVolumeDropDownMenu
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
+                    SendToUI "Target@$espID"
+                    RespondToUserDeviceSelection "@$espID"
+                fi
 
             # Has the user pressed a theme button to install, uninstall or update?
             elif [[ "$logLine" == *CTM_ThemeAction* ]]; then
