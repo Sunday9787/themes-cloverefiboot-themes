@@ -1,6 +1,6 @@
 /* CSS file for Clover Theme Manager */
 /* Blackosx 2014-2015                */
-/* v0.76.1                           */
+/* v0.76.2                           */
 
 html, body {
     padding: 0;
@@ -480,23 +480,23 @@ select.custom-dropdown:hover {
 }
 
 .accordionInstalled {
-    /* background-image: -webkit-linear-gradient(top, #5d88b4, #3a689c); */
-    /* background-image: -webkit-linear-gradient(top, #80a072, #608550); */
-    /* background-image: -webkit-linear-gradient(top, #1a1b1c, #2b2d2e); */
-    /* background-image: -webkit-linear-gradient(top, #0d1a28, #172e48); */
-    background-image: -webkit-linear-gradient(top, #232f43 0%,#305584 7%,#305584 98%,#305584 98%); 
+    background-image: -webkit-linear-gradient(top, #232f43 0%,#305584 7%,#305584 100%);
     border-top: 1px solid #000 !important;
-    /* border-bottom: 1px solid #000 !important; */
 }
 
 .accordionInstalledNoShadow {
     background-color: #305584;
     border-top: 1px solid #305584 !important;
-    /* border-bottom: 1px solid #000 !important; */
 }
 
 .accordionUpdate {
-    background-image: -webkit-linear-gradient(top, #6ec0eb, #55abeb);
+    background-image: -webkit-linear-gradient(top, #16304f 0%,#38aad7 7%,#38aad7 100%);
+    border-top: 1px solid #000 !important;
+}
+
+.accordionUpdateNoShadow {
+    background-color: #38aad7;
+    border-top: 1px solid #38aad7 !important;
 }
 
 .accordionContent {	
@@ -689,9 +689,9 @@ select.custom-dropdown:hover {
 }
 
 .buttonUpdate:hover {
-    background-color: #bbdbf5;
-    background-image: -webkit-linear-gradient(top, #5ea55c, #3d6c3c);
-    border: 1px solid #3b4e2f;
+    background-color: #6edffc;
+    background-image: -webkit-linear-gradient(top, #6edffc, #5cccf9);
+    border: 1px solid #b9e9fa;
 }
 
 .buttonUpdate:active {

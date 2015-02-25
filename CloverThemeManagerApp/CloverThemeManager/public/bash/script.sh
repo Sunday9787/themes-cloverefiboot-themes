@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.2"
+VERS="0.76.3"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -141,8 +141,8 @@ ResetInternalDiskArrays()
 # ---------------------------------------------------------------------------------------
 RenameInternalESPMountPointToEFI()
 {
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RenameInternalESPMountPointToEFI()"
+    #[[ DEBUG -eq 1 ]] && WriteLinesToLog
+    #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RenameInternalESPMountPointToEFI()"
 
     # Rename internal ESP internal mountpoint in supplied path to EFI
     if [[ "$1" == *"$gESPMountPrefix"* ]]; then
@@ -2076,10 +2076,6 @@ SendUIInitData()
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
-        
-        # Send list of updated themes to UI otherwise the UI interface will not be enabled.
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes@@"
-        SendToUI "UpdateAvailThemes@@"
     fi
       
     # Send UI setting for Snow
@@ -2196,7 +2192,7 @@ RespondToUserDeviceSelection()
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
-            CheckForThemeUpdates &
+            #CheckForThemeUpdates &
         fi
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
@@ -2212,6 +2208,9 @@ RespondToUserDeviceSelection()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
     fi
+    
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
+    SendToUI "EnableInterface@@"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2922,16 +2921,16 @@ CheckIfThemeNoLongerInstalledThenDeleteLocalTheme()
 CheckForThemeUpdates()
 {
     # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
-    # Plan: loop through this array and check for parent bare-repo theme.git in Support Dir.
-    #       If parent-repo theme.git is found then cd in to it and run a git fetch.
+    # Plan: loop through this array and check for commit hash saved in .hash file at root of local theme dir.
+    #       If found, get current commit hash from server and compare. Any change indicates an update.
 
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForThemeUpdates()"
-    
-    # Send UI a blank update message to enable UI.
-    SendToUI "UpdateAvailThemes@@"
-    
+
     local updateAvailThemeStr=""
+    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
+    local themeHashLocal=""
+    local themeHashRepo=""
 
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
@@ -2941,11 +2940,11 @@ CheckForThemeUpdates()
         do
             # read hash from currently installed theme
             if [ -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
-                local themeHashLocal=$( cat "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash )
+                themeHashLocal=$( cat "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash )
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashLocal=$themeHashLocal"
 
                 # get hash of theme in the repo
-                local themeHashRepo=$( "$gitCmd" ls-remote git://git.code.sf.net/p/cloverefiboot/themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master )
+                themeHashRepo=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master 2>&1)
                 themeHashRepo="${themeHashRepo:0:40}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashRepo=$themeHashRepo"
 
@@ -2963,6 +2962,10 @@ CheckForThemeUpdates()
                 fi
             fi
         done
+        
+        # Sort comma separated list. 
+        # This is necessary only for applying different fills (shadows/without shadows) in JS ChangeButtonAndBandToUpdate()
+        updateAvailThemeStr=$( LC_ALL=C; echo "$updateAvailThemeStr" | tr , "\n" | sort -f | tr "\n" , )
         
         if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
             # Remove leading comma from string
@@ -3455,6 +3458,9 @@ if [ "$gitCmd" != "" ]; then
         if [ $retVal -eq 1 ]; then
             CheckForThemeUpdates &   # CHECK - This is also called from RespondToUserDeviceSelection() which is called from SendUIInitData().
         fi
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
+        SendToUI "EnableInterface@@"
 
         # The messaging system is event driven and quite simple.
         # Run a loop for as long as the parent process ID still exists
@@ -3537,7 +3543,7 @@ if [ "$gitCmd" != "" ]; then
                     GetListOfInstalledThemesAndSendToUI
                     GetFreeSpaceOfTargetDeviceAndSendToUI
                     CheckAndRecordUnManagedThemesAndSendToUI
-                    CheckForThemeUpdates &
+                    #CheckForThemeUpdates &
                     ReadAndSendCurrentNvramTheme
                     ReadAndSendCurrentNvramPlistTheme
                     ReadAndSendCurrentConfigPlistTheme
@@ -3561,7 +3567,7 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "UnInstalledButton" "Show"
-                WriteToLog "User chose to show uninstalled themes"
+                WriteToLog "User chose to show all themes"
             
             # Has user chosen to show uninstalled themes?
             elif [[ "$logLine" == *CTM_showUninstalled* ]]; then

@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.1
+# v0.76.2
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -672,6 +672,10 @@ PopulateBootLogTitleBand()
     # theme.plist missing so random theme chosen.
     elif [ $blConfigThemePlistNotFound -eq 0 ] && [ $blUsedRandomTheme -eq 0 ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as theme asked for didn't exist.<\/span>"
+    
+    # was theme overridden from GUI?
+    elif [ $blGuiOverrideThemeChanged -eq 0 ] && [ "$blGuiOverrideTheme" != "" ] && [ "$blGuiOverrideTheme" == "$blThemeNameChosen" ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded theme <span class=\"themeName\">${blThemeNameChosen}<\/span> as chosen in the GUI<\/span>"
     
     # Something else happened
     else

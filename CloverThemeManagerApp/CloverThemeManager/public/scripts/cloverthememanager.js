@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.9
+//Version=0.75.8
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
-var gInstalledThemeListStr="";
+var gInstalledThemeListStr="";    // This is used for drawing upper shadow on installed theme bands
+var gUpdateThemeListStr="";       // This is used for drawing upper shadow on update theme bands
 
 //-------------------------------------------------------------------------------------
 // On initial load
@@ -132,7 +133,10 @@ function readBashToJsMessageFile()
                 // Bash sends: "UpdateAvailThemes@${updateAvailThemeStr}@"
                 // where $updateAvailThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
-                actOnUpdates(firstLineSplit[1]);
+                ShowThemeUpdatesAvailableMessage(firstLineSplit[1]);
+                ShowUpdateThemesInUI(firstLineSplit[1]);
+                // remember installed theme list
+                gUpdateThemeListStr=firstLineSplit[1];
                 break;
             case "UnversionedThemes":
                 // Bash sends: "UnversionedThemes@${unversionedThemeStr}@"
@@ -242,6 +246,11 @@ function readBashToJsMessageFile()
                 // Bash sends: "UpdateThemePaths@${gNvramPlistFullPath}@${gConfigPlistFullPath}@${mountpoint}"
                 macgap.app.removeMessage(firstLine);
                 UpdateThemePaths(firstLineSplit[1],firstLineSplit[2],firstLineSplit[3]);
+                break;
+            case "EnableInterface":
+                // Bash sends: "EnableInterface@@"
+                macgap.app.removeMessage(firstLine);
+                enableInterface(); 
                 break;
             default:
                 alert("Found else:"  + firstLine);
@@ -439,7 +448,7 @@ function DisplayAppUpdates(updateID)
 }
 
 //-------------------------------------------------------------------------------------
-function actOnUpdates(themeList)
+function ShowThemeUpdatesAvailableMessage(themeList)
 {    
     if (themeList != "") {
         disableInterface();
@@ -450,15 +459,15 @@ function actOnUpdates(themeList)
         
             // Update only installed themes with uninstall buttons
             for (var t = 0; t < localThemeUpdates.length; t++) {
-                    
-                // Here we change any installed themes to have an uninstall button.
-                ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
+            
+                if(localThemeUpdates[t] != "") {
                         
-                // Prepare text for pretty print
-                printString=(printString + "<br>" + localThemeUpdates[t]);
+                    // Prepare text for pretty print
+                    printString=(printString + "<br>" + localThemeUpdates[t]);
                 
-                // Send native notification
-                sendNotification("Theme update available for " + localThemeUpdates[t] + ".");
+                    // Send native notification
+                    sendNotification("Theme update available for " + localThemeUpdates[t] + ".");
+                }
             }
                     
             // Show a message to the user
@@ -468,9 +477,23 @@ function actOnUpdates(themeList)
             ShowMessageBox();
         }
     }
-    // re-enable UI
-    // This must be unconditional as the UI is disabled when user changes volume
-    enableInterface(); 
+}
+
+//-------------------------------------------------------------------------------------
+function ShowUpdateThemesInUI(themeList)
+{    
+    if (themeList != "") {
+        localThemeUpdates = (themeList).split(',');
+        if (localThemeUpdates != "") {
+        
+            // Update only installed themes with uninstall buttons
+            for (var t = 0; t < localThemeUpdates.length; t++) {
+                if(localThemeUpdates[t] != "") {
+                    ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
+                }
+            }
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -600,6 +623,9 @@ function themeActionSuccess(action,themeName)
         // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
         if (action == "Update") {
             printText="Updated";
+            
+            // while here, remove theme name from global update string
+            gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
         } else {
             printText=(action + "ed");
         }
@@ -617,7 +643,7 @@ function themeActionSuccess(action,themeName)
         hideButtons();
                 
         // Show Overlay Box to stop user interacting with buttons
-        disableInterface(); // it's re-enabled by actOnUpdates()
+        disableInterface();
     }
 }
 
@@ -725,7 +751,7 @@ $(function()
         if (selectedPartition != "-") {
         
             // Show Overlay Box to stop user interacting with buttons
-            disableInterface(); // it's re-enabled by actOnUpdates()
+            disableInterface();
             
             // Show the Free Space text
             ShowFreeSpace();
@@ -747,6 +773,9 @@ $(function()
         
         // show all themes, even if asked to hide uninstalled
         $(".accordion").css("display","block");
+        
+        // Reset global var for updated themes
+        gUpdateThemeListStr="";
     });
     
     //-----------------------------------------------------
@@ -1153,6 +1182,7 @@ function SetThemeBandHeight(setting)
             $(".accordionInstalled").css("height","36px");
             $(".accordionInstalledNoShadow").css("height","36px");
             $(".accordionUpdate").css("height","36px");
+            $(".accordionUpdateNoShadow").css("height","36px");
             // Reduce margin top of buttons
             $(".buttonInstall").css("margin-top","6px");
             $(".buttonUnInstall").css("margin-top","6px");
@@ -1190,6 +1220,7 @@ function SetThemeBandHeight(setting)
             $(".accordionInstalled").css("height",accordionHeight);
             $(".accordionInstalledNoShadow").css("height",accordionHeight);
             $(".accordionUpdate").css("height",accordionHeight);
+            $(".accordionUpdateNoShadow").css("height",accordionHeight);
             // Revert margin top of buttons
             // Note: When thumb=100px wide, default button top=24px
             var currentThumbWidth = $(".thumbnail img").first().width();
@@ -1219,8 +1250,8 @@ function UpdateMessageBox(messageOne,messageTwo)
     HideProgressBar();
     if (messageOne != "" && messageTwo != "") {
         // Show a message to the user
+        ChangeMessageBoxHeaderColour("blue"); 
         if (messageOne == 'Mounted') {
-            ChangeMessageBoxHeaderColour("blue"); 
             if (messageTwo == '0') {
                 SetMessageBoxText("EFI System Partition(s)","There are no unmounted EFI system partitions with an existing /EFI/Clover/Themes directory.");
             } else {
@@ -1244,9 +1275,6 @@ function UpdateMessageBox(messageOne,messageTwo)
                 // show all themes, even if asked to hide uninstalled
                 $(".accordion").css("display","block");
             }
-        } else if (messageOne == 'Cancelled') {
-            ChangeMessageBoxHeaderColour("red"); 
-            SetMessageBoxText("EFI System Partition(s)","Operation cancelled.");
         }
         ShowMessageBoxClose();
         ShowMessageBox();
@@ -1312,6 +1340,7 @@ function ChangeThumbnailSize(action)
         $(".accordionInstalled").css("height",newAccordionHeight);
         $(".accordionInstalledNoShadow").css("height",newAccordionHeight);
         $(".accordionUpdate").css("height",newAccordionHeight);
+        $(".accordionUpdateNoShadow").css("height",newAccordionHeight);
             
         // Change thumbnail size
         $(".thumbnail img").css("width",newThumbWidth);
@@ -1557,12 +1586,11 @@ function ResetButtonsAndBandsToDefault()
 
     // Change all installed band backgrounds to normal
     $(".accordionInstalled").attr("class","accordion");
-    
-    // Change all installed band backgrounds to normal
     $(".accordionInstalledNoShadow").attr("class","accordion");
     
     // Change all update band backgrounds to normal
     $(".accordionUpdate").attr("class","accordion");
+    $(".accordionUpdateNoShadow").attr("class","accordion");
     
     // Remove any update buttons
     $("[id^=button_Update]").remove();
@@ -1595,6 +1623,10 @@ function ChangeButtonAndBandToUnInstall(installedThemeName)
             $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
         } else if(aboveBandClass == "accordionInstalledNoShadow") {
             $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+        } else if(aboveBandClass == "accordionUpdate") {
+            $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
+        } else if(aboveBandClass == "accordionUpdateNoShadow") {
+            $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
         }
     } else { // at top band
         $("[id='button_" + installedThemeName + "']").closest('div[class="accordion"]').attr("class","accordionInstalledNoShadow");
@@ -1604,9 +1636,6 @@ function ChangeButtonAndBandToUnInstall(installedThemeName)
 //-------------------------------------------------------------------------------------
 function ChangeButtonAndBandToUpdate(themeName)
 {
-    // Change band background for installed themes
-    $("[id='button_" + themeName + "']").closest('div[class="accordionInstalled"]').attr("class","accordionUpdate");
-    
     // Add a new 'update' button beside the current 'UnInstall' button
     // http://stackoverflow.com/questions/12618214/binding-jquery-events-before-dom-insertion
     $( '<div class="buttonUpdate" id="button_Update_' + themeName + '"></div>' ).on('click', function(e) {
@@ -1620,6 +1649,22 @@ function ChangeButtonAndBandToUpdate(themeName)
     // set the vertical position to match the uninstall button
     var uninstallButtonTop=$("[id='button_" + themeName + "']").css("margin-top");
     $("[id='button_Update_" + themeName + "']").css("margin-top",uninstallButtonTop);
+    
+    // Change band background for themes with updates available   
+    // Note: bash script supplies this theme list in alphabetical order.
+    //       If themes are not called in alphabetical order this does not work.
+    var currentThemeBand = $("[id='button_" + themeName + "']").closest("#ThemeBand");
+    var currentBandClass = currentThemeBand.attr('class');
+    var aboveBandClass = currentThemeBand.prevAll("#ThemeBand").first().attr('class');
+    if(typeof aboveBandClass != 'undefined') { // not at top band
+        if(aboveBandClass == "accordion") {
+            $(currentThemeBand).attr("class","accordionUpdate");
+        } else {
+            $(currentThemeBand).attr("class","accordionUpdateNoShadow");
+        }
+    } else { // at top band
+        $(currentThemeBand).attr("class","accordionUpdateNoShadow");
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -1791,6 +1836,9 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
         // Remove all installed theme band shadows
         $(".accordionInstalled").attr("class","accordionInstalledNoShadow");
         
+        // Remove all update theme band shadows
+        $(".accordionUpdate").attr("class","accordionUpdateNoShadow");
+        
     } else if (showHide.indexOf("Hide") >= 0) {   
 
         if (expandCollapse.indexOf("Expand") >= 0) {
@@ -1801,10 +1849,15 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
             $(".accordion").next('[class="accordionContent"]').css("display","block");
         }
         
-        // Set all installed theme bands (not under another installed theme band) to
-        // a class of accordionInstalledNoShadow
+        // Reset all theme bands
         ResetButtonsAndBandsToDefault();
+                
+        // Set all installed theme bands
         updateBandsWithInstalledThemes(gInstalledThemeListStr);
+        
+        // Set all update theme bands
+        if(gUpdateThemeListStr != "" )
+            ShowUpdateThemesInUI(gUpdateThemeListStr);
     }
 }
 
