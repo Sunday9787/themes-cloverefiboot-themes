@@ -253,9 +253,11 @@ function readBashToJsMessageFile()
                 enableInterface(); 
                 break;
             default:
-                alert("Found else:"  + firstLine);
+                alert("Found else:" + firstLine + " | This is a problem and the app may not function correctly. Please report this error");
                 if(firstLine == "") {
                     macgap.app.removeMessage("");
+                } else {
+                    macgap.app.removeMessage(firstLine);
                 }
                 break;
         }
