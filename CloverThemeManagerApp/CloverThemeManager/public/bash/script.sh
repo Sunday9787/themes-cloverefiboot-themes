@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.3"
+VERS="0.76.4"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -1200,6 +1200,17 @@ CreateUpdateScript()
         # Escape any spaces
         tmpA=$( echo "$2" | sed 's/ /\\ /g' )
         tmpB=$( echo "$destination" | sed 's/ /\\ /g' )
+
+        # Note: cloverthememanager.js gets changed during runtime with sed.
+        #       If this file requires updating then we must replace cloverthememanager.jse.
+        #       When the app quits, cloverthememanager.js is deleted and cloverthememanager.jse is
+        #       renamed back to cloverthememanager.js ready for next run.
+        if [[ "$tmpA" == *cloverthememanager.js* ]]; then
+            if [ -f "$tmpB"/cloverthememanager.jse ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Update for cloverthememanager.js. cloverthememanager.jse exists"
+                tmpB="$tmpB"/cloverthememanager.jse
+            fi
+        fi
         printf "cp ${tmpA} ${tmpB}\n" >> "$updateScript"
     }
     
