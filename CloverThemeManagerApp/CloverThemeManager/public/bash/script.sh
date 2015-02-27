@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.4"
+VERS="0.76.5"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -2049,18 +2049,23 @@ SendInternalThemeArraysToLogFile()
 # ---------------------------------------------------------------------------------------
 SendTargetToUiRunChecks()
 {
-    local entry=$( FindArrayIdFromTarget )
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
-    CheckThemePathIsStillValid
-    retVal=$? # returns 1 if invalid / 0 if valid
-    if [ $retVal -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
-        SendToUI "Target@$entry"
-        GetListOfInstalledThemesAndSendToUI
-        GetFreeSpaceOfTargetDeviceAndSendToUI 
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SendTargetToUiRunChecks()"
+    
+    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
+        local entry=$( FindArrayIdFromTarget )
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
+        CheckThemePathIsStillValid
+        retVal=$? # returns 1 if invalid / 0 if valid
+        if [ $retVal -eq 0 ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
+            SendToUI "Target@$entry"
+            GetListOfInstalledThemesAndSendToUI
+            GetFreeSpaceOfTargetDeviceAndSendToUI 
             
-        # Run this regardless of path chosen as JS is waiting to hear it.
-        CheckAndRecordUnManagedThemesAndSendToUI 
+            # Run this regardless of path chosen as JS is waiting to hear it.
+            CheckAndRecordUnManagedThemesAndSendToUI 
+        fi
     fi
 }
 
@@ -2075,10 +2080,10 @@ SendUIInitData()
     # Send UI setting for BootlogView and adjust footer height
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: BootlogView@${gBootlogState}@"
     SendToUI "BootlogView@${gBootlogState}@"
+    
+    SendTargetToUiRunChecks
 
-    if [ ! "$TARGET_THEME_DIR" == "" ] && [ ! "$TARGET_THEME_DIR" == "-" ] ; then
-        SendTargetToUiRunChecks
-    else
+    if [ "$TARGET_THEME_DIR" == "" ] || [ "$TARGET_THEME_DIR" == "-" ] ; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
         SendToUI "NoPathSelected@@"
         
