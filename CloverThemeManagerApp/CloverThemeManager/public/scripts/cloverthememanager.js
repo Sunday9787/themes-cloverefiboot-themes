@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.8
+//Version=0.75.9
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -1638,34 +1638,49 @@ function ChangeButtonAndBandToUnInstall(installedThemeName)
 //-------------------------------------------------------------------------------------
 function ChangeButtonAndBandToUpdate(themeName)
 {
-    // Add a new 'update' button beside the current 'UnInstall' button
-    // http://stackoverflow.com/questions/12618214/binding-jquery-events-before-dom-insertion
-    $( '<div class="buttonUpdate" id="button_Update_' + themeName + '"></div>' ).on('click', function(e) {
-        e.preventDefault();
-        var pressedButton=$(this).attr('id');
-        var currentStatus=$(this).attr('class');
-        RespondToButtonPress(pressedButton,currentStatus);
-    }).insertAfter("[id='button_" + themeName + "']");
-    $("[id='button_Update_" + themeName + "']").html("Update");
+    // Check we have not already added an update button for this theme.
+    var buttonExistCheck=$("#button_Update_"+themeName);
+    if (!jQuery.contains(document, buttonExistCheck[0])) {
     
-    // set the vertical position to match the uninstall button
-    var uninstallButtonTop=$("[id='button_" + themeName + "']").css("margin-top");
-    $("[id='button_Update_" + themeName + "']").css("margin-top",uninstallButtonTop);
+        // Add a new 'update' button beside the current 'UnInstall' button
+        // http://stackoverflow.com/questions/12618214/binding-jquery-events-before-dom-insertion
+        $( '<div class="buttonUpdate" id="button_Update_' + themeName + '"></div>' ).on('click', function(e) {
+            e.preventDefault();
+            var pressedButton=$(this).attr('id');
+            var currentStatus=$(this).attr('class');
+            RespondToButtonPress(pressedButton,currentStatus);
+        }).insertAfter("[id='button_" + themeName + "']");
+        $("[id='button_Update_" + themeName + "']").html("Update");
+
+        // set the vertical position to match the uninstall button
+        var uninstallButtonTop=$("[id='button_" + themeName + "']").css("margin-top");
+        $("[id='button_Update_" + themeName + "']").css("margin-top",uninstallButtonTop);
+    }
     
     // Change band background for themes with updates available   
     // Note: bash script supplies this theme list in alphabetical order.
     //       If themes are not called in alphabetical order this does not work.
     var currentThemeBand = $("[id='button_" + themeName + "']").closest("#ThemeBand");
     var currentBandClass = currentThemeBand.attr('class');
-    var aboveBandClass = currentThemeBand.prevAll("#ThemeBand").first().attr('class');
-    if(typeof aboveBandClass != 'undefined') { // not at top band
-        if(aboveBandClass == "accordion") {
-            $(currentThemeBand).attr("class","accordionUpdate");
-        } else {
+    
+    // if UI is currently set to 'Hide Uninstalled' themes
+    // then we only need to show update bands without shadows.
+    var viewState = $(ShowHideToggleButton).text();
+    if (viewState.indexOf("Show") >= 0) {
+        $(currentThemeBand).attr("class","accordionUpdateNoShadow");
+    } else {
+        // UI is set to 'Show all' themes so we need to figure out
+        // if shadows are needed for the update bands.
+        var aboveBandClass = currentThemeBand.prevAll("#ThemeBand").first().attr('class');
+        if(typeof aboveBandClass != 'undefined') { // not at top band
+            if(aboveBandClass == "accordion") {
+                $(currentThemeBand).attr("class","accordionUpdate");
+            } else {
+                $(currentThemeBand).attr("class","accordionUpdateNoShadow");
+            }
+        } else { // at top band
             $(currentThemeBand).attr("class","accordionUpdateNoShadow");
         }
-    } else { // at top band
-        $(currentThemeBand).attr("class","accordionUpdateNoShadow");
     }
 }
 
@@ -1824,9 +1839,8 @@ function RemoveYesNoButtons(){
 
 //-------------------------------------------------------------------------------------
 function ShowHideUnInstalledThemes(showHide,expandCollapse)
-{        
+{
     if (showHide.indexOf("Show") >= 0) {
-
         if (expandCollapse.indexOf("Expand") >= 0) {
             $(".accordion").css("display","none");
         }
@@ -1841,8 +1855,8 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
         // Remove all update theme band shadows
         $(".accordionUpdate").attr("class","accordionUpdateNoShadow");
         
-    } else if (showHide.indexOf("Hide") >= 0) {   
-
+    } else if (showHide.indexOf("Hide") >= 0) {  
+     
         if (expandCollapse.indexOf("Expand") >= 0) {
             $(".accordion").css("display","block");
         }
@@ -1856,11 +1870,11 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
                 
         // Set all installed theme bands
         updateBandsWithInstalledThemes(gInstalledThemeListStr);
-        
-        // Set all update theme bands
-        if(gUpdateThemeListStr != "" )
-            ShowUpdateThemesInUI(gUpdateThemeListStr);
     }
+    
+    // Set all update theme bands
+    if(gUpdateThemeListStr != "" )
+        ShowUpdateThemesInUI(gUpdateThemeListStr);
 }
 
 //-------------------------------------------------------------------------------------
