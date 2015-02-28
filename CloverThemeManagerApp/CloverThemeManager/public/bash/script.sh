@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.5"
+VERS="0.76.6"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -484,6 +484,9 @@ RunThemeAction()
                             ;;
                  
                 "Update")   [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
+                
+                            # Save current path
+                            local currentPath=$( pwd )
 
                             # Check if bare git repo for this theme exists and delete if yes.
                             if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git ]; then
@@ -559,6 +562,9 @@ RunThemeAction()
                                     shopt -u dotglob
                                 fi
                             fi
+                            
+                            # change back to previous directory
+                            cd "$currentPath"
                             ;;
     esac
 
@@ -2960,7 +2966,9 @@ CheckForThemeUpdates()
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashLocal=$themeHashLocal"
 
                 # get hash of theme in the repo
-                themeHashRepo=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master 2>&1)
+echo "$gitCmd ls-remote ${gitRepositoryUrl}themes.git/themes/${installedThemesOnCurrentVolume[$t]}/theme | grep refs/heads/master"  >> ~/Desktop/check.txt
+                themeHashRepo=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master)
+echo "${installedThemesOnCurrentVolume[$t]} | $themeHashRepo" >> ~/Desktop/check.txt
                 themeHashRepo="${themeHashRepo:0:40}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashRepo=$themeHashRepo"
 
