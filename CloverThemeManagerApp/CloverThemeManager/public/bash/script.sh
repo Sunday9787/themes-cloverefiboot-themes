@@ -2966,9 +2966,7 @@ CheckForThemeUpdates()
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashLocal=$themeHashLocal"
 
                 # get hash of theme in the repo
-echo "$gitCmd ls-remote ${gitRepositoryUrl}themes.git/themes/${installedThemesOnCurrentVolume[$t]}/theme | grep refs/heads/master"  >> ~/Desktop/check.txt
                 themeHashRepo=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master)
-echo "${installedThemesOnCurrentVolume[$t]} | $themeHashRepo" >> ~/Desktop/check.txt
                 themeHashRepo="${themeHashRepo:0:40}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashRepo=$themeHashRepo"
 
