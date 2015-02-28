@@ -638,7 +638,7 @@ PopulateBootLogTitleBand()
     bandTitleDescStart="        <span class=\"titleBarTextDescription\">"
     
     # Was the Christmas or NewYear theme used?
-    if [ "$blThemeNameChosen" == "christmas" ] ||  "$blThemeNameChosen" == "newyear" ]; then
+    if [ "$blThemeNameChosen" == "christmas" ] || [ "$blThemeNameChosen" == "newyear" ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded <span class=\"themeName\">${blThemeNameChosen}<\/span> as it's that time of year. <span class=\"themeAction\">Uninstall theme if not wanted.<\/span><\/span>"
 
     # No nvram theme entry and chosen theme matches config.plist entry
