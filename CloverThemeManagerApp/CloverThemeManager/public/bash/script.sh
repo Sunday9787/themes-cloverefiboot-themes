@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.6"
+VERS="0.76.7"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -993,8 +993,9 @@ IsRepositoryLive()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default Gateway $defaultGateway"
             
         # Continue to check if repository is live
+        WriteToLog "CTM_RepositoryChecking"
         local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gitRepositoryUrl"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Connecting to $gitRepositoryUrl"
         local testConnection=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes )
         if [ "$testConnection" ]; then
             WriteToLog "CTM_RepositorySuccess"
@@ -2214,7 +2215,6 @@ RespondToUserDeviceSelection()
         else
             # Run these regardless of path chosen as JS is waiting to hear it. 
             CheckAndRecordUnManagedThemesAndSendToUI
-            #CheckForThemeUpdates &
         fi
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "User de-selected Volume path and chose menu title. Do Nothing."
@@ -3478,7 +3478,7 @@ if [ "$gitCmd" != "" ]; then
         retVal=$? # returns 1 if no update / 0 if valid is available
         # If update available then user will be notified so do not check for theme updates.
         if [ $retVal -eq 1 ]; then
-            CheckForThemeUpdates &   # CHECK - This is also called from RespondToUserDeviceSelection() which is called from SendUIInitData().
+            CheckForThemeUpdates &
         fi
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
@@ -3514,6 +3514,7 @@ if [ "$gitCmd" != "" ]; then
                 CreateAndSendVolumeDropDownMenu
                 ReadBootLogAndSetPaths "Rescan"
                 SendTargetToUiRunChecks
+                CheckForThemeUpdates &
                 ReadThemeEntriesAndSendToUI
                 nvramPath=""
                 configPath=""

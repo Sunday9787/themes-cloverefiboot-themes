@@ -189,7 +189,11 @@ function printLogtoScreen()
                 } else if (/CTM_HTMLTemplateFail/i.test(splitContent[i])) {
                            $("#status_HtmlTemplate").css("color","#DD171B");
                            
+                } else if (/CTM_RepositoryChecking/i.test(splitContent[i])) {
+                           $("#status_Repository").text( 'Connecting to repository...' ).append( '<span class="checkMark" id="check_Repository"></span>' );
+                           $("#status_Repository").css("color","#FFAE40"); 
                 } else if (/CTM_RepositorySuccess/i.test(splitContent[i])) {
+                           $("#status_Repository").text( 'Repository online' ).append( '<span class="checkMark" id="check_Repository"></span>' );
                            $("#check_Repository").append( "  \u2713" );
                            $("#status_Repository").css("color","#FFF"); 
                 } else if (/CTM_RepositoryError/i.test(splitContent[i])) {
