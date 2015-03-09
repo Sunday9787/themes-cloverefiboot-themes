@@ -1,7 +1,6 @@
 #import "WebViewDelegate.h"
 #import "Sound.h"
 #import "Dock.h"
-#import "Growl.h"
 #import "Notice.h"
 #import "Path.h"
 #import "App.h"
@@ -20,7 +19,6 @@
 
 @synthesize sound;
 @synthesize dock;
-@synthesize growl;
 @synthesize notice;
 @synthesize path;
 @synthesize app;
@@ -46,7 +44,6 @@
     JSContextRef context = [frame globalContext];
     if (self.sound == nil) { self.sound = [[Sound alloc] initWithContext:context]; }
 	if (self.dock == nil) { self.dock = [Dock new]; }
-	if (self.growl == nil) { self.growl = [Growl new]; }
 	if (self.path == nil) { self.path = [Path new]; }
 	if (self.clipboard == nil) { self.clipboard = [Clipboard new]; }
 	if (self.fonts == nil) { self.fonts = [Fonts new]; }
