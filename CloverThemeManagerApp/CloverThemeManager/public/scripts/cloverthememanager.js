@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.9
+//Version=0.76.0
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -433,17 +433,25 @@ function DisplayAppUpdates(updateID)
         if (updateID.indexOf(".") >= 0) {
             // Show a message to the user
             ChangeMessageBoxHeaderColour("blue");                            
-            SetMessageBoxText("Application Framework Update:",'A new version of the main app (v' + updateID + ') is available.<br><br>Please download a new version of the app. You can find latest versions at <a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Insanleymac</a>');
+            SetMessageBoxText("Application Framework Update:",'A new version of the main app (v' + updateID + ') is available.<br><br>You can download the latest version of this app by following this link to <a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Insanleymac</a> Forums.');
             // Send native notification
             sendNotification("Application framework update available. Please download a new version of the app.");
         } else {
-            // Show a message to the user
-            ChangeMessageBoxHeaderColour("blue");                            
-            SetMessageBoxText("Application Scripts Update:","There are updated scripts available (updateID: " + updateID + ").<br><br>It's recommended to update to the latest version.<br>Do you wish to update the Clover Theme Manager scripts?");
-            // Send native notification
-            sendNotification("Application scripts update available.");
-            HideMessageBoxClose();
-            AddYesNoButtons();
+            if (updateID == "ReadOnly") {
+                // Show a message to the user
+                ChangeMessageBoxHeaderColour("blue");                            
+                SetMessageBoxText("Application Scripts Update:","There are updated scripts available.<br><br>It's recommended to update to the latest version. However, this app is running on a read only volume so it can't be updated.");
+                // Send native notification
+                sendNotification("Application scripts update available.");
+            } else {
+                // Show a message to the user
+                ChangeMessageBoxHeaderColour("blue");                            
+                SetMessageBoxText("Application Scripts Update:","There are updated scripts available (updateID: " + updateID + ").<br><br>It's recommended to update to the latest version.<br>Do you wish to update the Clover Theme Manager scripts?");
+                // Send native notification
+                sendNotification("Application scripts update available.");
+                HideMessageBoxClose();
+                AddYesNoButtons();
+            }
         }
         ShowMessageBox();
     }
@@ -1277,6 +1285,9 @@ function UpdateMessageBox(messageOne,messageTwo)
                 // show all themes, even if asked to hide uninstalled
                 $(".accordion").css("display","block");
             }
+        } else if (messageOne == "Cancelled") {
+            ChangeMessageBoxHeaderColour("red"); 
+            SetMessageBoxText("EFI System Partition(s)","Password dialog cancelled.");
         }
         ShowMessageBoxClose();
         ShowMessageBox();

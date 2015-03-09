@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.2
+# v0.76.3
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -24,61 +24,81 @@ SetHtmlBootlogSectionTemplates()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}SetHtmlBootlogSectionTemplates()"
     
-    blcOpen="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device Info<\/span><\/div>"
-    blcLineDeviceInfoMbr="        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Type:<\/span><span class=\"infoBody\">${blBootDeviceType} (${blBootDevicePartType})<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Signature:<\/span><span class=\"infoBody\">${blBootDevicePartSignature}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Partition #:<\/span><span class=\"infoBody\">${blBootDevicePartition}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Start:<\/span><span class=\"infoBody\">${blBootDevicePartStartDec}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Size:<\/span><span class=\"infoBody\">${blBootDevicePartSizeDec}<\/span><\/div>\
-        <\/div>"
-    blcLineDeviceInfoGpt="        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Type:<\/span><span class=\"infoBody\">${blBootDeviceType} (${blBootDevicePartType})<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Signature:<\/span><span class=\"infoBody\">${blBootDevicePartSignature}<\/span><\/div>\
-        <\/div>"
-    blcLineDevice="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\
-            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\
-        <\/div>"
-    blcLineDeviceRescan="        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\
-            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\
-            <div id=\"RescanButton\">\
-                <button type=\"button\" id=\"RescanBootDeviceButton\" class=\"rescanButton\">Rescan Boot Device<\/button>\
-            <\/div> <!-- End RescanButton -->\
-        <\/div>"
-    blcLineNvram="        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${blNvramReadFromPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover.Theme:<\/span><span class=\"infoBodyTheme\">${blNvramThemeEntry}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme existed?:<\/span><span class=\"${nvramThemeExistsCssClass}\">${nvramExistText}<\/span><\/div>\
-        <\/div>"
-    blcLineNvramNoTheme="        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${blNvramReadFromPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover.Theme:<\/span><span class=\"infoBodyTheme\"><\/span><\/div>\
-        <\/div>"
-    blcLineConfig="        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blConfigPlistFilePathPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBodyTheme\">${blConfigPlistThemeEntry}<\/span><\/div>\
-        <\/div>"
-    blcLineThemeAsked="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeAskedForPathPrint}<\/span><\/div>\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">did theme exist?<\/span><span class=\"${themeExistCssClass}\">${blThemeAskedForExisted}<\/span><\/div>\
-        <\/div>"
-    blcLineThemeUsed="        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeUsedPathPrint}<\/span><\/div>\
-            <div id=\"bandCbandColumnLeftolumnRight\"><span class=\"infoTitle\">Chosen:<\/span><span class=\"infoBodyTheme\">${blThemeNameChosen}<\/span><\/div>\
-        <\/div>"
-    blcLineOverrideUi="        <div id=\"bandHeader\"><span class=\"infoTitle\">Override in GUI<\/span><\/div>\
-        <div id=\"bandDescription\">\
-            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme:<\/span><span class=\"infoBody\">${blGuiOverrideTheme}<\/span><\/div>\
-        <\/div>"
+    blcOpen=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device Info<\/span><\/div>\r")
+    
+    blcLineDeviceInfoMbr=$(printf "        <div id=\"bandDescription\">\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Type:<\/span><span class=\"infoBody\">${blBootDeviceType} (${blBootDevicePartType})<\/span><\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Signature:<\/span><span class=\"infoBody\">${blBootDevicePartSignature}<\/span><\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Partition #:<\/span><span class=\"infoBody\">${blBootDevicePartition}<\/span><\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Start:<\/span><span class=\"infoBody\">${blBootDevicePartStartDec}<\/span><\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Size:<\/span><span class=\"infoBody\">${blBootDevicePartSizeDec}<\/span><\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "        <\/div>\r")
+    blcLineDeviceInfoMbr="$blcLineDeviceInfoMbr"$(printf "\r")
+    
+    blcLineDeviceInfoGpt=$(printf "        <div id=\"bandDescription\">\r")
+    blcLineDeviceInfoGpt="$blcLineDeviceInfoGpt"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Type:<\/span><span class=\"infoBody\">${blBootDeviceType} (${blBootDevicePartType})<\/span><\/div>\r")
+    blcLineDeviceInfoGpt="$blcLineDeviceInfoGpt"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Signature:<\/span><span class=\"infoBody\">${blBootDevicePartSignature}<\/span><\/div>\r")
+    blcLineDeviceInfoGpt="$blcLineDeviceInfoGpt"$(printf "        <\/div>\r")
+    blcLineDeviceInfoGpt="$blcLineDeviceInfoGpt"$(printf "\r")
+    
+    blcLineDevice=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\r")
+    blcLineDevice="$blcLineDevice"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineDevice="$blcLineDevice"$(printf "            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\r")
+    blcLineDevice="$blcLineDevice"$(printf "            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\r")
+    blcLineDevice="$blcLineDevice"$(printf "        <\/div>\r")
+    blcLineDevice="$blcLineDevice"$(printf "\r")
+    
+    blcLineDeviceRescan=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Boot Device<\/span><\/div>\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "            <div id=\"bandIdentifer\"><span class=\"infoTitle\">Identifier:<\/span><span class=\"infoBody\">${gBootDeviceIdentifierPrint}<\/span><\/div>\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "            <div id=\"bandMountpoint\"><span class=\"infoTitle\">mountpoint:<\/span><span class=\"infoBody\">${mountpointPrint}<\/span><\/div>\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "            <div id=\"RescanButton\">\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "                <button type=\"button\" id=\"RescanBootDeviceButton\" class=\"rescanButton\">Rescan Boot Device<\/button>\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "            <\/div> <!-- End RescanButton -->\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "        <\/div>\r")
+    blcLineDeviceRescan="$blcLineDeviceRescan"$(printf "\r")
+    
+    blcLineNvram=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\r")
+    blcLineNvram="$blcLineNvram"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineNvram="$blcLineNvram"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${blNvramReadFromPrint}<\/span><\/div>\r")
+    blcLineNvram="$blcLineNvram"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover.Theme:<\/span><span class=\"infoBodyTheme\">${blNvramThemeEntry}<\/span><\/div>\r")
+    blcLineNvram="$blcLineNvram"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme existed?:<\/span><span class=\"${nvramThemeExistsCssClass}\">${nvramExistText}<\/span><\/div>\r")
+    blcLineNvram="$blcLineNvram"$(printf "        <\/div>\r")
+    blcLineNvram="$blcLineNvram"$(printf "\r")
+    
+    blcLineNvramNoTheme=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">NVRAM<\/span><\/div>\r")
+    blcLineNvramNoTheme="$blcLineNvramNoTheme"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineNvramNoTheme="$blcLineNvramNoTheme"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">read from:<\/span><span class=\"infoBody\">${blNvramReadFromPrint}<\/span><\/div>\r")
+    blcLineNvramNoTheme="$blcLineNvramNoTheme"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">Clover.Theme:<\/span><span class=\"infoBodyTheme\"><\/span><\/div>\r")
+    blcLineNvramNoTheme="$blcLineNvramNoTheme"$(printf "        <\/div>\r")
+    blcLineNvramNoTheme="$blcLineNvramNoTheme"$(printf "\r")
+    
+    blcLineConfig=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">config.plist<\/span><\/div>\r")
+    blcLineConfig="$blcLineConfig"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineConfig="$blcLineConfig"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blConfigPlistFilePathPrint}<\/span><\/div>\r")
+    blcLineConfig="$blcLineConfig"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme entry:<\/span><span class=\"infoBodyTheme\">${blConfigPlistThemeEntry}<\/span><\/div>\r")
+    blcLineConfig="$blcLineConfig"$(printf "        <\/div>\r")
+    blcLineConfig="$blcLineConfig"$(printf "\r")
+    
+    blcLineThemeAsked=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme asked for<\/span><\/div>\r")
+    blcLineThemeAsked="$blcLineThemeAsked"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineThemeAsked="$blcLineThemeAsked"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeAskedForPathPrint}<\/span><\/div>\r")
+    blcLineThemeAsked="$blcLineThemeAsked"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">did theme exist?<\/span><span class=\"${themeExistCssClass}\">${blThemeAskedForExisted}<\/span><\/div>\r")
+    blcLineThemeAsked="$blcLineThemeAsked"$(printf "        <\/div>\r")
+    blcLineThemeAsked="$blcLineThemeAsked"$(printf "\r")
+    
+    blcLineThemeUsed=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Theme used<\/span><\/div>\r")
+    blcLineThemeUsed="$blcLineThemeUsed"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineThemeUsed="$blcLineThemeUsed"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">path:<\/span><span class=\"infoBodyReplaceable\">${blThemeUsedPathPrint}<\/span><\/div>\r")
+    blcLineThemeUsed="$blcLineThemeUsed"$(printf "            <div id=\"bandCbandColumnLeftolumnRight\"><span class=\"infoTitle\">Chosen:<\/span><span class=\"infoBodyTheme\">${blThemeNameChosen}<\/span><\/div>\r")
+    blcLineThemeUsed="$blcLineThemeUsed"$(printf "        <\/div>\r")
+    blcLineThemeUsed="$blcLineThemeUsed"$(printf "\r")
+    
+    blcLineOverrideUi=$(printf "        <div id=\"bandHeader\"><span class=\"infoTitle\">Override in GUI<\/span><\/div>\r")
+    blcLineOverrideUi="$blcLineOverrideUi"$(printf "        <div id=\"bandDescription\">\r")
+    blcLineOverrideUi="$blcLineOverrideUi"$(printf "            <div id=\"bandColumnLeft\"><span class=\"infoTitle\">theme:<\/span><span class=\"infoBody\">${blGuiOverrideTheme}<\/span><\/div>\r")
+    blcLineOverrideUi="$blcLineOverrideUi"$(printf "        <\/div>\r")
+    blcLineOverrideUi="$blcLineOverrideUi"$(printf "\r")
 }
 
 # ---------------------------------------------------------------------------------------
@@ -154,15 +174,16 @@ ReadBootLog()
             blCloverRevision="${blCloverRevision% on*}"
             blBootType="${lineRead#*on }"
             if [[ "$blBootType" == *"CLOVER EFI"* ]]; then
-        blBootType="Legacy"
+                blBootType="Legacy"
             else
-        blBootType="UEFI"
+                blBootType="UEFI"
             fi
         fi
         
         #0:100  0:000  SelfDevicePath=PciRoot(0x0)\Pci(0x1F,0x2)\Sata(0x0,0xFFFF,0x0)\HD(1,GPT,BC1B343C-2D6B-4C0C-8B88-71C2AFCF6E65,0x28,0x64000) @C7AA598
         if [[ "$lineRead" == *"SelfDevicePath"* ]]; then
 
+            oIFS="$IFS"
             # Get device path and split in to parts
             devicePath="${lineRead#*=}"
             declare -a devicePathArr
@@ -613,16 +634,24 @@ PopulateNvramFunctionalityBand()
     fi
     
     if [ "$message" != "" ]; then
+    
         # Create html mesasage
-        local htmlToInsert="    <div id=\"NvramFunctionalityBand\" class=\"${fillColour}\">\
-        <div id=\"nvramTextArea\">\
-            <span class=\"textBody\">${message}<\/span>\
-        <\/div>\
-    <\/div> <!-- End NvramFunctionalityBand -->"
-
+        local htmlToInsert=""
+        htmlToInsert="$htmlToInsert"$(printf "    <div id=\"NvramFunctionalityBand\" class=\"${fillColour}\">\r")
+        htmlToInsert="$htmlToInsert"$(printf "        <div id=\"nvramTextArea\">\r")
+        htmlToInsert="$htmlToInsert"$(printf "            <span class=\"textBody\">${message}<\/span>\r")
+        htmlToInsert="$htmlToInsert"$(printf "        <\/div>\r")
+        htmlToInsert="$htmlToInsert"$(printf "    <\/div> <!-- End NvramFunctionalityBand -->\r")
+        
         # Insert bootlog Html in to placeholder
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting nvram functionality message HTML in to managethemes.html"
-        LANG=C sed -ie "s/<!--INSERT_NVRAM_MESSAGE_BAND_HERE-->/${htmlToInsert}/g" "${PUBLIC_DIR}"/managethemes.html
+        #LANG=C sed -ie "s/<!--INSERT_NVRAM_MESSAGE_BAND_HERE-->/${htmlToInsert}/g" "${PUBLIC_DIR}"/managethemes.html
+        LANG=C sed -ie "s/<!--INSERT_NVRAM_MESSAGE_BAND_HERE-->/${htmlToInsert}/g" "${TEMPDIR}"/managethemes.html
+        
+        # Clean up
+        if [ -f "${TEMPDIR}"/managethemes.htmle ]; then
+            rm "${TEMPDIR}"/managethemes.htmle
+        fi
     fi
 }
 
@@ -633,9 +662,9 @@ PopulateBootLogTitleBand()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateBootLogTitleBand()"
     
     # Create bootlog band and title html
-    bootlogBandTitleHtml="    <div id=\"BootLogTitleBar\" class=\"bootlogBandFill\">"
-    bandTitle="        <span class=\"titleBarTextTitle\">LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|<\/span>"
-    bandTitleDescStart="        <span class=\"titleBarTextDescription\">"
+    bootlogBandTitleHtml=$(printf "    <div id=\"BootLogTitleBar\" class=\"bootlogBandFill\">\r")
+    bandTitle=$(printf "        <span class=\"titleBarTextTitle\">LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|<\/span>")
+    bandTitleDescStart=$(printf "<span class=\"titleBarTextDescription\">")
     
     # Was the Christmas or NewYear theme used?
     if [ "$blThemeNameChosen" == "christmas" ] || [ "$blThemeNameChosen" == "newyear" ]; then
@@ -681,11 +710,18 @@ PopulateBootLogTitleBand()
     else
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision}<\/span>"
     fi
-    bootlogBandTitleHtml="${bootlogBandTitleHtml}    <\/div> <!-- End BootLogTitleBar -->"
+    
+    bootlogBandTitleHtml="$bootlogBandTitleHtml"$(printf "\r    <\/div> <!-- End BootLogTitleBar -->\r")
 
     # Insert bootlog Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting bootlog Band Title HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_BOOTLOG_BAND_TITLE_HERE-->/${bootlogBandTitleHtml}/g" "${PUBLIC_DIR}"/managethemes.html && (( insertCount++ ))
+    #LANG=C sed -ie "s/<!--INSERT_BOOTLOG_BAND_TITLE_HERE-->/${bootlogBandTitleHtml}/g" "${PUBLIC_DIR}"/managethemes.html && (( insertCount++ ))
+    LANG=C sed -ie "s/<!--INSERT_BOOTLOG_BAND_TITLE_HERE-->/${bootlogBandTitleHtml}/g" "${TEMPDIR}"/managethemes.html && (( insertCount++ ))
+    
+    # Clean up
+    if [ -f "${TEMPDIR}"/managethemes.htmle ]; then
+        rm "${TEMPDIR}"/managethemes.htmle
+    fi
 }
 
 # ---------------------------------------------------------------------------------------
@@ -695,7 +731,8 @@ PopulateBootLog()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateBootLog()"
     
     # Create bootlog container HTML
-    bootlogHtml="    <div id=\"BootLogContainer\" class=\"nvramFillNone\">"
+    bootlogHtml=$(printf "    <div id=\"BootLogContainer\" class=\"nvramFillNone\">\r")
+    bootlogHtml="$bootlogHtml"$(printf "\r")
 
     # Add HTML for Boot Device Info / Boot Device Sections
     # If boot device was not found then present rescan button.
@@ -743,11 +780,15 @@ PopulateBootLog()
 
     # Insert bootlog Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting bootlog HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_BOOTLOG_INFO_HERE-->/${bootlogHtml}/g" "${PUBLIC_DIR}"/managethemes.html && (( insertCount++ ))
+    #LANG=C sed -ie "s/<!--INSERT_BOOTLOG_INFO_HERE-->/${bootlogHtml}/g" "${PUBLIC_DIR}"/managethemes.html && (( insertCount++ ))
+    LANG=C sed -ie "s/<!--INSERT_BOOTLOG_INFO_HERE-->/${bootlogHtml}/g" "${TEMPDIR}"/managethemes.html && (( insertCount++ ))
 
     # Clean up
-    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-        rm "${PUBLIC_DIR}"/managethemes.htmle
+    #if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
+    #    rm "${PUBLIC_DIR}"/managethemes.htmle
+    #fi
+    if [ -f "${TEMPDIR}"/managethemes.htmle ]; then
+        rm "${TEMPDIR}"/managethemes.htmle
     fi
 }
 

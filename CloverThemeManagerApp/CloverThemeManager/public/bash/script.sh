@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.7"
+VERS="0.76.8"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -33,20 +33,41 @@ VERS="0.76.7"
 # ---------------------------------------------------------------------------------------
 CreateSymbolicLinks()
 {
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateSymbolicLinks()"
     
     local checkCount=0
     
     # Create symbolic link to local images
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$ASSETS_DIR" && ((checkCount++))
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$TEMPDIR" && ((checkCount++))
     
     # Create symbolic link to local help page
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$PUBLIC_DIR" && ((checkCount++))
+    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$TEMPDIR" && ((checkCount++))
+    
+    # Create symbolic links for scripts dir files, except cloverthememanager.js which is copied to tmp earlier on    
+    local filecount=0
+    for f in "$JSSCRIPTS_DIR"/*
+    do
+        if [ "${f##*/}" != "cloverthememanager.js" ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to $f"
+            ln -s "$f" "$TEMPDIR"/scripts && ((checkCount++))
+            ((filecount++))
+        fi
+    done
+
+    # Create symbolic links for styles dir
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/styles"
+    ln -s "${PUBLIC_DIR}/styles" "$TEMPDIR" && ((checkCount++))
+    
+    # Create symbolic links for assets dir
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/assets"
+    ln -s "${PUBLIC_DIR}/assets" "$TEMPDIR" && ((checkCount++))
     
     # Add messages in to log for initialise.js to detect.
-    if [ $checkCount -eq 2 ]; then
+    local countToMatch=$(( 4 + filecount ))
+    if [ $checkCount -eq $countToMatch ]; then
         WriteToLog "CTM_SymbolicLinksOK"
     else
         WriteToLog "CTM_SymbolicLinksFail"
@@ -378,7 +399,7 @@ RunThemeAction()
     local isPathWriteable=$? # 1 = not writeable / 0 = writeable
 
     case "$passedAction" in
-                "Install")  [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}"
+                "Install")  WriteToLog "Installing theme $themeTitleToActOn to ${TARGET_THEME_DIR}"
                             local successFlag=1
     
                             # Only clone the theme from the Clover repo if not already installed
@@ -424,8 +445,8 @@ RunThemeAction()
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Writing hash to ${UNPACKDIR}/themes/${themeTitleToActOn}/.hash"
                                 echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
                                 if [ $addFile -eq 1 ]; then
-                                    WriteToLog "${debugIndentTwo}Added hash successfully"
-                                    chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Added hash successfully"
+                                    chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set hash file permissions"
                                     # Enable glob to match dot files.
                                     shopt -s dotglob
                                 fi
@@ -447,7 +468,7 @@ RunThemeAction()
                                         # Move unpacked files to target theme path.
                                         cd "$UNPACKDIR"/themes
                                         if [ -d "$themeTitleToActOn" ]; then
-                                            mv "$themeTitleToActOn"/* "$targetThemeDir" && successFlag=0
+                                            mv "$themeTitleToActOn"/* "$targetThemeDir" && WriteToLog "Installation was successful." && successFlag=0
                                         fi
                                     fi
                                 fi
@@ -462,7 +483,7 @@ RunThemeAction()
                             fi
                             ;;
                             
-               "UnInstall") [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
+               "UnInstall") WriteToLog "Deleting ${TARGET_THEME_DIR}/$themeTitleToActOn"
 
                             # Check if theme needs elevated privileges to remove
                             CheckPathIsWriteable "${TARGET_THEME_DIR}/$themeTitleToActOn"
@@ -483,7 +504,7 @@ RunThemeAction()
                             fi
                             ;;
                  
-                "Update")   [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
+                "Update")   WriteToLog "Updating ${TARGET_THEME_DIR}/$themeTitleToActOn"
                 
                             # Save current path
                             local currentPath=$( pwd )
@@ -514,7 +535,6 @@ RunThemeAction()
 
                                     # Read current hash from packed-refs file.
                                     local currentThemeHash=$( cat "${WORKING_PATH}/${APP_DIR_NAME}"/"$themeTitleToActOn".git/packed-refs | grep refs/heads/master )
-                                    #currentThemeHash="${currentThemeHash% refs*}"
                                     currentThemeHash="${currentThemeHash:0:40}"
                                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash=$currentThemeHash"
 
@@ -524,7 +544,7 @@ RunThemeAction()
                                     echo $currentThemeHash > "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && addFile=1
                                     if [ $addFile -eq 1 ]; then
                                         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Added hash successfully"
-                                        chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && WriteToLog "${debugIndent}Set hash file permissions"
+                                        chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set hash file permissions"
                                         # Enable glob to match dot files.
                                         shopt -s dotglob
                                     fi
@@ -548,7 +568,7 @@ RunThemeAction()
                                                 cd "$UNPACKDIR"/themes
                                                 if [ -d "$themeTitleToActOn" ]; then
                                                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Moving updated $themeTitleToActOn theme files to $targetThemeDir"
-                                                    mv "$themeTitleToActOn"/* "$targetThemeDir" && successFlag=0
+                                                    mv "$themeTitleToActOn"/* "$targetThemeDir" && WriteToLog "Updating was successful." && successFlag=0
                                                 fi
                                             fi
                                         fi
@@ -631,18 +651,16 @@ CreateThemeListHtml()
         for ((n=0; n<${#themeTitle[@]}; n++ ));
         do
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating html for ${themeTitle[$n]} theme"
-            themeHtml="${themeHtml}\
-        <div id=\"ThemeBand\" class=\"accordion\">\
-        <div id=\"ThemeItems\">\
-            <div class=\"thumbnail\"><img src=\"assets/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorThumb(this);\"></div>\
-            <div id=\"ThemeText\"><p class=\"themeTitle\">${themeTitle[$n]}<br><span class=\"themeDescription\">${themeDescription[$n]}</span><br><span class=\"themeAuthor\">${themeAuthor[$n]}</span></p></div>\
-            <div class=\"versionControl\" id=\"indicator_${themeTitle[$n]}\"></div>\
-            <div class=\"buttonInstall\" id=\"button_${themeTitle[$n]}\"></div>\
-        </div> <!-- End ThemeItems -->\
-    </div> <!-- End ThemeBand -->\
-    <div class=\"accordionContent\"><img src=\"assets/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorPreview(this);\" width=\"100%\"></div>\
-    \
-    "
+            themeHtml="$themeHtml"$(printf "    <div id=\"ThemeBand\" class=\"accordion\">\r")
+            themeHtml="$themeHtml"$(printf "        <div id=\"ThemeItems\">\r")
+            themeHtml="$themeHtml"$(printf "            <div class=\"thumbnail\"><img src=\"${TEMPDIR}/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorThumb(this);\"></div>\r")
+            themeHtml="$themeHtml"$(printf "            <div id=\"ThemeText\"><p class=\"themeTitle\">${themeTitle[$n]}<br><span class=\"themeDescription\">${themeDescription[$n]}</span><br><span class=\"themeAuthor\">${themeAuthor[$n]}</span></p></div>\r")
+            themeHtml="$themeHtml"$(printf "            <div class=\"versionControl\" id=\"indicator_${themeTitle[$n]}\"></div>\r")
+            themeHtml="$themeHtml"$(printf "            <div class=\"buttonInstall\" id=\"button_${themeTitle[$n]}\"></div>\r")
+            themeHtml="$themeHtml"$(printf "        </div> <!-- End ThemeItems -->\r")
+            themeHtml="$themeHtml"$(printf "    </div> <!-- End ThemeBand -->\r")
+            themeHtml="$themeHtml"$(printf "    <div class=\"accordionContent\"><img src=\"${TEMPDIR}/themes/${themeTitle[$n]}/screenshot.$imageFormat\" onerror=\"imgErrorPreview(this);\" width=\"100%%\"></div>\r")
+            themeHtml="$themeHtml"$(printf "\r")
         done
         WriteToLog "CTM_ThemeListOK"
     else
@@ -679,13 +697,13 @@ InsertThemeListHtmlInToManageThemes()
 
     # Insert Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
+    LANG=C sed -ie "s/<!--INSERT_THEMES_HERE-->/${themeHtml}/g" "${TEMPDIR}"/managethemes.html && check=0
 
     # Clean up
-    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-        rm "${PUBLIC_DIR}"/managethemes.htmle
+    if [ -f "${TEMPDIR}"/managethemes.htmle ]; then
+        rm "${TEMPDIR}"/managethemes.htmle
     fi
-    
+        
     # Add messages in to log for initialise.js to detect.
     if [ $check -eq 0 ]; then
         WriteToLog "CTM_InsertHtmlOK"
@@ -722,37 +740,42 @@ SetControlOptionHtmlSections()
     configPlistText=$( echo "$configPlistText" | sed 's/\//\\\//g' )
 
     # Set html sections
-    ctOuterOpen="    <div id=\"changeThemeContainer\">"
-    ctOpen="    <div id=\"changeThemeBand\" class=\"fillDarkerGrey\">"
-    ctBandNvram="        <div class=\"ctOptionTitle\" id=\"ctTitleNvram\">NVRAM<\/div>\
-            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
-            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\
-            <div class=\"ctOptionSetHeader\">Action:<\/div>\
-            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\">\
-                <!--Menu entries will be appended here by cloverthememanager.js -->\
-            <\/select>"
-    ctBandNvramP="        <div class=\"ctOptionTitle\" id=\"ctTitleNvramP\"><span>${nvramPlistText}<\/span><\/div>\
-            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
-            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvramP\"><\/div>\
-            <div class=\"ctOptionSetHeader\">Action:<\/div>\
-            <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\
-                <!--Menu entries will be appended here by cloverthememanager.js -->\
-            <\/select>"
-    ctBandConfig="        <div class=\"ctOptionTitle\" id=\"ctTitleConfig\"><span>${configPlistText}<\/span><\/div>\
-            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\
-            <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\
-            <div class=\"ctOptionSetHeader\">Action:<\/div>\
-            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\
-                <!--Menu entries will be appended here by cloverthememanager.js -->\
-            <\/select>"
-    ctNextBootTheme="        <div id=\"themePredictionTitle\">\
-                <span class=\"predictionText\">Theme determined for next boot from device $TARGET_THEME_DIR_DEVICE<\/span>\
-        <\/div> <!-- End themePredictionTitle -->\
-        <div id=\"themePredictionTheme\">\
-                <span class=\"predictionText\" id=\"predictionTheme\"><\/span>\
-        <\/div> <!-- End themePredictionTheme -->"        
-    ctClose="    <\/div> <!-- End changeThemeBand -->"
-    ctOuterClose="    <\/div> <!-- End changeThemeContainer -->"       
+    ctOuterOpen=$(printf "    <div id=\"changeThemeContainer\">\r")
+    ctOpen=$(printf "        <div id=\"changeThemeBand\" class=\"fillDarkerGrey\">\r")
+    
+    ctBandNvram=$(printf "            <div class=\"ctOptionTitle\" id=\"ctTitleNvram\">NVRAM<\/div>\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\">\r")
+    ctBandNvram="$ctBandNvram"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <\/select>\r")
+  
+    ctBandNvramP=$(printf "            <div class=\"ctOptionTitle\" id=\"ctTitleNvramP\"><span>${nvramPlistText}<\/span><\/div>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvramP\"><\/div>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <\/select>\r")
+  
+    ctBandConfig=$(printf "            <div class=\"ctOptionTitle\" id=\"ctTitleConfig\"><span>${configPlistText}<\/span><\/div>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\r")
+    ctBandConfig="$ctBandConfig"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <\/select>\r")
+    
+    ctNextBootTheme=$(printf "            <div id=\"themePredictionTitle\">\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "                    <span class=\"predictionText\">Theme determined for next boot from device $TARGET_THEME_DIR_DEVICE<\/span>\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "            <\/div> <!-- End themePredictionTitle -->\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "            <div id=\"themePredictionTheme\">\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "                    <span class=\"predictionText\" id=\"predictionTheme\"><\/span>\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "            <\/div> <!-- End themePredictionTheme -->\r")
+    
+    ctClose=$(printf "        <\/div> <!-- End changeThemeBand -->\r")
+    ctOuterClose=$(printf "    <\/div> <!-- End changeThemeContainer -->")     
 }
 
 # ---------------------------------------------------------------------------------------
@@ -791,11 +814,11 @@ CreateControlOptionsHtmlAndInsert()
 
     # Insert control options band Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting control options band HTML in to managethemes.html"
-    LANG=C sed -ie "s/<!--INSERT_CONTROL_OPTIONS_BAND_HERE-->/${controlOptionsHtml}/g" "${PUBLIC_DIR}"/managethemes.html && check=0
+    LANG=C sed -ie "s/<!--INSERT_CONTROL_OPTIONS_BAND_HERE-->/${controlOptionsHtml}/g" "${TEMPDIR}"/managethemes.html && check=0
     
     # Clean up
-    if [ -f "${PUBLIC_DIR}"/managethemes.htmle ]; then
-        rm "${PUBLIC_DIR}"/managethemes.htmle
+    if [ -f "${TEMPDIR}"/managethemes.htmle ]; then
+        rm "${TEMPDIR}"/managethemes.htmle
     fi
     
     # Add messages in to log for initialise.js to detect.
@@ -818,7 +841,12 @@ InsertNotificationCodeInToJS()
     
     # Insert Html in to placeholder
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Inserting JS notification code in to cloverthememanager.js"
-    LANG=C sed -ie "s/\/\/ INSERT_NOTIFICATION_CODE_HERE/${codeToInsert}/g" "${PUBLIC_DIR}"/scripts/cloverthememanager.js && check=0
+    LANG=C sed -ie "s/\/\/ INSERT_NOTIFICATION_CODE_HERE/${codeToInsert}/g" "${TEMPDIR}"/scripts/cloverthememanager.js && check=0
+    
+    # Clean Up
+    if [ -f "${TEMPDIR}"/scripts/cloverthememanager.jse ]; then
+        rm "${TEMPDIR}"/scripts/cloverthememanager.jse
+    fi
     
     # Add messages in to log for initialise.js to detect.
     if [ $check -eq 0 ]; then
@@ -953,13 +981,15 @@ RefreshHtmlTemplates()
         if [ -f "${PUBLIC_DIR}"/$passedTemplate.template ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting $passedTemplate to default."
             rm "${PUBLIC_DIR}"/$passedTemplate
-            cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
+            #cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
+            cp "${PUBLIC_DIR}"/$passedTemplate.template "${TEMPDIR}"/$passedTemplate && check=0
         else
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error: missing ${PUBLIC_DIR}/$passedTemplate.template"
         fi
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating: $passedTemplate"
-        cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
+        #cp "${PUBLIC_DIR}"/$passedTemplate.template "${PUBLIC_DIR}"/$passedTemplate && check=0
+        cp "${PUBLIC_DIR}"/$passedTemplate.template "${TEMPDIR}"/$passedTemplate && check=0
     fi
     
     # Add message in to log for initialise.js to detect.
@@ -1094,6 +1124,8 @@ CheckForAppUpdate()
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForAppUpdate()"
     
+    WriteToLog "Checking to see if there's an application update available."
+    
     # Remove app files from a previous run
     if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous CloverThemeManagerApp/CloverThemeManager directory"
@@ -1120,15 +1152,16 @@ CheckForAppUpdate()
     if [ $serverAppVersion != $mainAppVersion ]; then
         # If this differs then prompt user to download a new version of the app.
         # This is because I can't replace the currently running binary.
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Main app update available. Current=$mainAppVersion | Server=$serverAppVersion"
+        WriteToLog "Application update is available. Current=$mainAppVersion | Server=$serverAppVersion"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverAppVersion}@"
         SendToUI "UpdateAvailApp@${serverAppVersion}@"
         return 0
     else
         # The main app version is the same.
         # Continue to check if the public dir has changed as that can be updated still.
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Main app is at latest version: $serverAppVersion"
-   
+        WriteToLog "Application is at latest version: $serverAppVersion"
+        WriteToLog "Checking to see if there are any script updates available."
+        
         # ======================================
         # Get current app update version for the public DIR
         if [ -f "${PUBLIC_DIR}"/.updateID ]; then
@@ -1150,12 +1183,32 @@ CheckForAppUpdate()
         fi
     
         if [ $serverVersion -gt $currentVersion ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}App update available. Current=$currentVersion | Server=$serverVersion"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverVersion}@"
-            SendToUI "UpdateAvailApp@${serverVersion}@"
+            WriteToLog "Scripts update(s) are available. Current=$currentVersion | Server=$serverVersion"
+            
+            # Is app on read-only volume?
+            if [ "${SELF_PATH:0:9}" == "/Volumes/" ]; then
+                volumeName="${SELF_PATH##*/Volumes/}"
+                volumeName="${volumeName%%/*}"
+                deviceIdentifier=$( df -lah | grep "/Volumes/${volumeName}" | awk '{print $1}' )
+                readOnlyVolume=$( diskutil info $deviceIdentifier | grep "Read-Only Volume" )
+                if [ "$readOnlyVolume" != "" ]; then
+                    readOnlyVolume="${readOnlyVolume##*:}"
+                    readOnlyVolume=$( echo "$readOnlyVolume" | tr -d ' ' )
+                    WriteToLog "Readonly volume: $readOnlyVolume"
+                fi
+            fi
+            
+            if [ "$readOnlyVolume" != "Yes" ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverVersion}@"
+                SendToUI "UpdateAvailApp@${serverVersion}@"
+            else
+                WriteToLog "Application is running on read-only volume so scripts update cannot be done."
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@ReadOnly@"
+                SendToUI "UpdateAvailApp@ReadOnly@"
+            fi
             return 0
         else
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No app update available. Current=$currentVersion | Server=$serverVersion"
+            WriteToLog "No script updates available. Current=$currentVersion | Server=$serverVersion"
             return 1
         fi
     fi
@@ -1480,7 +1533,7 @@ GetLatestIndexAndEnsureThemeHtml()
             
                 # Use previously saved theme.html
                 if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}CTM_ThemeListOK"
+                    WriteToLog "CTM_ThemeListOK"
                     InsertThemeListHtmlInToManageThemes "file"
                 else
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
@@ -1524,12 +1577,13 @@ GetFreeSpaceOfTargetDeviceAndSendToUI()
 
     if [ $found -lt 99 ]; then
         local freeSpace=$(df -laH | grep "$TARGET_THEME_DIR_DEVICE" | awk '{print $4}' | head -n$(( found + 1 )) | tail -n1)
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
     else
         local freeSpace="0M"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}*Couldn't get free space."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
     fi
+    
+    WriteToLog "Freespace on target: $freeSpace"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
     SendToUI "FreeSpace@${freeSpace}@"
 }
 
@@ -1562,7 +1616,7 @@ ReadThemeDirList()
         local total=${#duIdentifier[@]}
         if [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || \
            [ ${#duContent[@]} -ne $total ] || [ ${#duPartitionGuid[@]} -ne $total ] || [ ${#themeDirPaths[@]} -ne $total ]; then
-            WriteToLog "CTM_ThemeDirsFail"
+            [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_ThemeDirsFail" 
         
             # Print results
             for (( s=0; s<${#duIdentifier[@]}; s++ ))
@@ -1571,10 +1625,10 @@ ReadThemeDirList()
             done   
             exit 1 
         else
-            WriteToLog "CTM_ThemeDirsOK" 
+            [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_ThemeDirsOK" 
         fi
     else
-        WriteToLog "Error. Missing $themeDirInfo file"
+        WriteToLog "Missing $themeDirInfo file. No mounted volumes contain /EFI/Clover/Themes directory."
         WriteToLog "CTM_ThemeDirsOKFail"
     fi
 }
@@ -1818,18 +1872,19 @@ MountESPAndSearchThemesPath()
     fi
 
     if [ $espMountedCount -gt 0 ]; then
+        WriteToLog "Checked and found $espMountedCount ESP with /EFI/Clover/Themes dir."
         "$findThemeDirs"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
         SendToUI "MessageESP@Mounted@${espMountedCount}"
         echo "$identifier"
     elif [ -z $espMountedCount ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User cancelled password dialog"
+        WriteToLog "User cancelled password dialog"
         # Send UI message so the message box shows close box button.
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Cancelled@0"
         SendToUI "MessageESP@Cancelled@0"
         echo "Failed"
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to find an unmounted ESP with themes dir."
+        WriteToLog "Checked and found no unmounted ESP(s) with /EFI/Clover/Themes dir."
         # Send UI message that no ESP's were mounted. This changes message box content and shows close box button.
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@0"
         SendToUI "MessageESP@Mounted@0"
@@ -1944,7 +1999,7 @@ ReadPrefsFile()
         done
 
         # Add message in to log for initialise.js to detect.
-        [[ $gFirstRun -eq 0 ]] && WriteToLog "CTM_ReadPrefsOK" && gFirstRun=1
+        [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_ReadPrefsOK"
     else
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Preferences file not found."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating initial prefs file: $gUserPrefsFile"
@@ -2131,14 +2186,19 @@ SendUIInitData()
 ReadThemeEntriesAndSendToUI()
 {
     if [ "$TARGET_THEME_DIR" != "-" ] && [ "$TARGET_THEME_DIR_DEVICE" != "-" ] && [ "$TARGET_THEME_PARTITIONGUID" != "-" ]; then
-        # Read current Clover.Theme Nvram variable and send to UI.
-        ReadAndSendCurrentNvramTheme
+    
+        # Check if selected device is boot device
+        if [ "$TARGET_THEME_DIR_DEVICE" == "$gBootDeviceIdentifier" ]; then
+        
+            # Read current Clover.Theme Nvram variable and send to UI.
+            ReadAndSendCurrentNvramTheme
 
-        # Read current nvram.plist theme var and send to UI
-        ReadAndSendCurrentNvramPlistTheme
+            # Read current nvram.plist theme var and send to UI
+            ReadAndSendCurrentNvramPlistTheme
 
-        # Read current config.plist theme entry and send to UI
-        ReadAndSendCurrentConfigPlistTheme
+            # Read current config.plist theme entry and send to UI
+            ReadAndSendCurrentConfigPlistTheme
+        fi
     fi
 }
 
@@ -2164,10 +2224,11 @@ RespondToUserDeviceSelection()
     # Routines are then called to perform the following:
     # 1 - Get a list of theme directories at selected file path.
     # 2 - Get available free space on target volume.
-    # 3 - List any themes without .hash (unmanaged).
-    # 4 - Housekeep locally installed bare git clones.
-    # 5 - Check current NVRAM Clover.Theme variable.
-    # 6 - Check for any theme updates on target volume.
+    # 3 - Housekeep locally installed bare git clones.
+    # 4 - Check for any theme updates on target volume.
+    # 5 - Decide to show or hide control options.
+    # 6 - Send list of installed themes to the UI.
+
     
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserDeviceSelection()"
@@ -2182,7 +2243,8 @@ RespondToUserDeviceSelection()
     # Check user did actually change from default
     if [ ! "$pathOption" == "-" ]; then
 
-        WriteToLog "User selected path: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with GUID ${duPartitionGuid[$pathOption]}" 
+        WriteLinesToLog
+        WriteToLog "Target path changed: ${themeDirPaths[$pathOption]} on device ${duIdentifier[$pathOption]} with GUID ${duPartitionGuid[$pathOption]}" 
 
         local volumePath=$( ResolveVolumePathFromGUID "${duPartitionGuid[$pathOption]}" )
         if [ "$volumePath" != "" ]; then
@@ -2244,12 +2306,12 @@ ShowHideUIControlOptions()
     # Check if this selected device is boot device or not
     if [ "$TARGET_THEME_DIR_DEVICE" != "$gBootDeviceIdentifier" ]; then
         # Hide theme control options
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
+        WriteToLog "$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
         SendToUI "ShowHideControlOptions@Hide@"
     else
         # Show theme control options
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
+        WriteToLog "$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Show@"
         SendToUI "ShowHideControlOptions@Show@"
     fi
@@ -2423,6 +2485,7 @@ GetListOfInstalledThemesAndSendToUI()
         installedThemeStr="${installedThemeStr%?}"
     fi
     
+    WriteToLog "Installed Themes:${installedThemeStr}"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@${installedThemeStr}@"
     SendToUI "InstalledThemes@${installedThemeStr}@"
 }
@@ -2547,7 +2610,7 @@ PredictNextTheme()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PredictNextTheme()"
-    
+       
     local themeToSend=""
     
     if [ "$gBootType" == "UEFI" ]; then
@@ -2600,6 +2663,7 @@ PredictNextTheme()
         [[ checkTheme -eq 0 ]] && themeToSend="newyear"
     fi
 
+    WriteToLog "Prediction: Next boot from this device will load theme: $themeToSend"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: SetPrediction@${themeToSend}@"
     SendToUI "SetPrediction@${themeToSend}@"
 }
@@ -2654,21 +2718,21 @@ ReadAndSendCurrentNvramTheme()
     local themeName="${readNvramVar##*Clover.Theme}"
 
     if [ ! -z "$readNvramVar" ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Clover.Theme NVRAM variable is set to $themeName"
+        WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@${themeName}@"
         SendToUI "Nvram@${themeName}@"
         # Add message in to log for initialise.js to detect.
-        WriteToLog "CTM_NvramFound"
+        [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_NvramFound"
         CURRENT_THEME_ENTRY_NVRAM="$themeName"
         PredictNextTheme
     else
         # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
         # which currently defaults to menu option 'Select Action'
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Clover.Theme NVRAM variable is not set"
+        WriteToLog "Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
         # Add message in to log for initialise.js to detect.
-        WriteToLog "CTM_NvramNotFound"
+        [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_NvramNotFound"
         PredictNextTheme
     fi
 }
@@ -2685,7 +2749,7 @@ ReadAndSendCurrentNvramPlistTheme()
         local themeName=$( /usr/libexec/PlistBuddy -c "Print:Clover.Theme" "$gNvramPlistFullPath" 2>/dev/null )
         
         if [ "$themeName" != "" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath contains theme entry $themeName"
+            WriteToLog "$gNvramPlistFullPath contains theme entry $themeName"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@${themeName}@"
             SendToUI "NvramP@${themeName}@"
             CURRENT_THEME_ENTRY_NVRAM_PLIST="$themeName"
@@ -2693,7 +2757,7 @@ ReadAndSendCurrentNvramPlistTheme()
         else
             # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
             # which currently defaults to menu option 'Select Action'
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gNvramPlistFullPath does not contain a theme entry"
+            WriteToLog "$gNvramPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@-@"
             SendToUI "NvramP@-@"
             PredictNextTheme
@@ -2716,7 +2780,7 @@ ReadAndSendCurrentConfigPlistTheme()
         local themeName=$( /usr/libexec/PlistBuddy -c "Print:GUI:Theme" "$gConfigPlistFullPath" 2>/dev/null )
         
         if [ "$themeName" != "" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath contains theme entry $themeName"
+            WriteToLog "$gConfigPlistFullPath contains theme entry $themeName"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@${themeName}@"
             SendToUI "ConfigP@${themeName}@"
             CURRENT_THEME_ENTRY_CONFIG_PLIST="$themeName"
@@ -2724,7 +2788,7 @@ ReadAndSendCurrentConfigPlistTheme()
         else
             # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
             # which currently defaults to menu option 'Select Action'
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$gConfigPlistFullPath does not contain a theme entry"
+            WriteToLog "$gConfigPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@-@"
             SendToUI "ConfigP@-@"
             PredictNextTheme
@@ -2753,9 +2817,9 @@ SetNvramTheme()
     
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable was successful."
+        WriteToLog "Setting NVRAM Variable was successful."
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable failed."
+        WriteToLog "Setting NVRAM Variable failed."
     fi
     
     # Read current Clover.Theme Nvram variable and send to UI.
@@ -2780,10 +2844,10 @@ DeleteNvramThemeVar()
     
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting NVRAM Variable was successful."
+        WriteToLog "Deleting NVRAM Variable was successful."
         CURRENT_THEME_ENTRY_NVRAM=""
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting NVRAM Variable failed."
+        WriteToLog "Deleting NVRAM Variable failed."
     fi
     
     # Read current Clover.Theme Nvram variable and send to UI.
@@ -2811,9 +2875,9 @@ SetNvramFile()
         
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable in $gNvramPlistFullPath was successful."
+        WriteToLog "Setting NVRAM Variable in $gNvramPlistFullPath was successful."
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting NVRAM Variable in $gNvramPlistFullPath failed."
+        WriteToLog "Setting NVRAM Variable in $gNvramPlistFullPath failed."
     fi
     
     # Read current nvram.plist theme var and send to UI
@@ -2840,10 +2904,10 @@ DeleteNvramPlistThemeEntry()
         
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gNvramPlistFullPath was successful."
+        WriteToLog "Deleting theme entry from $gNvramPlistFullPath was successful."
         CURRENT_THEME_ENTRY_NVRAM_PLIST=""
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gNvramPlistFullPath failed."
+        WriteToLog "Deleting theme entry from $gNvramPlistFullPath failed."
     fi
     
     # Read current nvram.plist theme var and send to UI
@@ -2871,9 +2935,9 @@ SetConfigFile()
         
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting theme in $gConfigPlistFullPath was successful."
+        WriteToLog "Setting theme in $gConfigPlistFullPath was successful."
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Setting theme in $gConfigPlistFullPath failed."
+        [WriteToLog "Setting theme in $gConfigPlistFullPath failed."
     fi
     
     # Read current config.plist theme entry and send to UI
@@ -2900,10 +2964,10 @@ DeleteConfigPlistThemeEntry()
         
     # Was operation a success?
     if [ $successFlag -eq 0 ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gConfigPlistFullPath was successful."
+        WriteToLog "Deleting theme entry from $gConfigPlistFullPath was successful."
         CURRENT_THEME_ENTRY_CONFIG_PLIST=""
     else
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Deleting theme entry from $gConfigPlistFullPath failed."
+        WriteToLog "Deleting theme entry from $gConfigPlistFullPath failed."
     fi
     
     # Read current nvram.plist theme var and send to UI
@@ -2948,7 +3012,7 @@ CheckForThemeUpdates()
 
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForThemeUpdates()"
-
+    
     local updateAvailThemeStr=""
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     local themeHashLocal=""
@@ -2956,7 +3020,7 @@ CheckForThemeUpdates()
 
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking $TARGET_THEME_DIR for any theme updates."
+        WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
     
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
@@ -2973,7 +3037,7 @@ CheckForThemeUpdates()
                 if [ "$themeHashRepo" != "" ]; then
                     if [ "$themeHashLocal" != "$themeHashRepo" ]; then
                         # Theme has been updated.
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}${installedThemesOnCurrentVolume[$t]} has an update available."
+                        WriteToLog "${installedThemesOnCurrentVolume[$t]} has an update available."
                         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}hash diff: $themeHashLocal | $themeHashRepo"
                         updateAvailThemeStr="${updateAvailThemeStr},${installedThemesOnCurrentVolume[$t]}" 
                     else
@@ -2984,21 +3048,21 @@ CheckForThemeUpdates()
                 fi
             fi
         done
-        
-        # Sort comma separated list. 
-        # This is necessary only for applying different fills (shadows/without shadows) in JS ChangeButtonAndBandToUpdate()
-        updateAvailThemeStr=$( LC_ALL=C; echo "$updateAvailThemeStr" | tr , "\n" | sort -f | tr "\n" , )
-        
+                
         if [ "$updateAvailThemeStr" != "" ] && [ "${updateAvailThemeStr:0:1}" == "," ]; then
+            # Sort comma separated list. 
+            # This is necessary only for applying different fills (shadows/without shadows) in JS ChangeButtonAndBandToUpdate()
+            updateAvailThemeStr=$( LC_ALL=C; echo "$updateAvailThemeStr" | tr , "\n" | sort -f | tr "\n" , )
+            
             # Remove leading comma from string
             updateAvailThemeStr="${updateAvailThemeStr#?}"
+        else
+            WriteToLog "No theme updates found."
         fi
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
         SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
     fi
-    
-    WriteToLog "Checking for updates complete."
 }
 
 # ---------------------------------------------------------------------------------------
@@ -3216,19 +3280,49 @@ CleanUp()
     RemoveFile "$bootLogFile"
     RemoveFile "$bootlogScriptOutfile"
     RemoveFile "$bootDeviceInfo"
+    RemoveFile "${TEMPDIR}/add_theme.html"
+    RemoveFile "${TEMPDIR}/managethemes.html"
     
-    if [ -d "$tmp_dir" ]; then
-        rm -rf "$tmp_dir"
+    # Remove symbolic link for the themes dir
+    if [ -h "${TEMPDIR}"/themes ]; then
+        rm "${TEMPDIR}"/themes
     fi
-    if [ -d "/tmp/CloverThemeManager" ]; then
-        rmdir "/tmp/CloverThemeManager"
+    
+    # Remove symbolic link for the scripts files
+    if [ -h "${TEMPDIR}"/scripts/initialise.js ]; then
+        rm "${TEMPDIR}"/scripts/initialise.js
     fi
-    if [ -f "${PUBLIC_DIR}"/managethemes.html ]; then
-        rm "${PUBLIC_DIR}"/managethemes.html
+    if [ -h "${TEMPDIR}"/scripts/jquery-2.1.3.min.js ]; then
+        rm "${TEMPDIR}"/scripts/jquery-2.1.3.min.js
     fi
-    if [ -f "${PUBLIC_DIR}"/scripts/cloverthememanager.jse ]; then
-        rm "${PUBLIC_DIR}"/scripts/cloverthememanager.js
-        mv "${PUBLIC_DIR}"/scripts/cloverthememanager.jse "${PUBLIC_DIR}"/scripts/cloverthememanager.js
+
+    # Remove symbolic link for the styles dir
+    if [ -h "${TEMPDIR}"/styles ]; then
+        rm "${TEMPDIR}"/styles
+    fi
+    
+    # Remove symbolic link for the assets dir
+    if [ -h "${TEMPDIR}"/assets ]; then
+        rm "${TEMPDIR}"/assets
+    fi
+    
+    #if [ -d "$tmp_dir" ]; then
+    #    rm -rf "$tmp_dir"
+    #fi
+    
+    # Remove the copy of cloverthememanager.js
+    if [ -f "${TEMPDIR}"/scripts/cloverthememanager.js ]; then
+        rm "${TEMPDIR}"/scripts/cloverthememanager.js
+    fi
+
+    # Remove the temporary scripts dir
+    if [ -d "${TEMPDIR}"/scripts ]; then
+        rmdir "${TEMPDIR}"/scripts
+    fi
+    
+    # Remove the temporary dir
+    if [ -d "${TEMPDIR}" ]; then
+        rmdir "${TEMPDIR}"
     fi
 }
 
@@ -3256,7 +3350,7 @@ gThumbSizeY=0
 gUISettingViewUnInstalled="Show"
 gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
-gFirstRun=0                                                        # Show to initialise.js that prefs have been read the first time
+gInitialising=0                                                        # Send init messages to log file for to initialise.js to read.
 gitCmd=""                                                          # Will be set to path to installed git binary to use
 gSnow="Off"                                                        # Default state for Snow effect. ** Should really remove this! **
 gBootlogState="Open"                                               # Default state for bootlog in UI. This is overridden by user prefs
@@ -3283,24 +3377,24 @@ mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString"
 
 # Begin log file
 RemoveFile "$logFile"
-[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
-[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Started Clover Theme Manager script"
+WriteToLog "CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
+WriteToLog "Started Clover Theme Manager script"
 WriteLinesToLog
-[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}scriptPid=$scriptPid | appPid=$appPid"
+WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
 WriteLinesToLog
 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PATH=$PATH"
 
 # Ensure permissions of findThemeDirs script
 if [ -f "$findThemeDirs" ]; then
-    chmod 755 "$findThemeDirs"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of findThemeDirs script"
+    chmod 755 "$findThemeDirs" && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of findThemeDirs script"
 fi
 
 # Ensure permissions of findThemeDirs script
 if [ -f "$bootlogScript" ]; then
-    chmod 755 "$bootlogScript"
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of bootlog script"
+    chmod 755 "$bootlogScript" && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Set permissions of bootlog script"
 fi
+
+WriteToLog "==== Initialisation Start ===="
 
 IsGitInstalled
 
@@ -3404,6 +3498,10 @@ if [ "$gitCmd" != "" ]; then
             rm "${WORKING_PATH}/${APP_DIR_NAME}"/theme_html
         fi
 
+        # Copy cloverthememanager.js to temp dir
+        mkdir "$TEMPDIR"/scripts
+        cp "$JSSCRIPTS_DIR"/cloverthememanager.js "$TEMPDIR"/scripts
+
         EnsureSymlinks
         GetLatestIndexAndEnsureThemeHtml
         WriteToLog "CTM_ThemeDirsScan"
@@ -3411,7 +3509,7 @@ if [ "$gitCmd" != "" ]; then
 
         ReadPrefsFile
         CleanInstalledThemesPrefEntries
-        
+
         # Search ioreg for bootlog and write to file.
         GetBootlog
 
@@ -3448,6 +3546,8 @@ if [ "$gitCmd" != "" ]; then
         # paths can be updated in cloverthememanager.js
         CreateControlOptionsHtmlAndInsert
 
+        WriteToLog "Using target $TARGET_THEME_DIR on device $TARGET_THEME_DIR_DEVICE with GUID $TARGET_THEME_PARTITIONGUID" 
+
         # Send UI target theme entry to display, and other data to set default / restore state of main UI page
         SendUIInitData
 
@@ -3462,18 +3562,24 @@ if [ "$gitCmd" != "" ]; then
             InsertNotificationCodeInToJS
         fi
     
-        # Write string to mark the end of init file.
+        # Write string to mark the end of init.
         # initialise.js looks for this to signify initialisation is complete.
         # At which point it then redirects to the main UI page.
         WriteToLog "Complete!"
 
+        WriteToLog "==== Initialisation End ===="
+
         # Feedback for command line
         echo "Initialisation complete. Entering loop."
+        
+        # Set initialising var to 1 to disable some init messages no longer needed in the log file.
+        gInitialising=1
 
         # Remember parent process id
         parentId=$appPid
 
         CheckAndRemoveBareClonesNoLongerNeeded
+
         CheckForAppUpdate
         retVal=$? # returns 1 if no update / 0 if valid is available
         # If update available then user will be notified so do not check for theme updates.
@@ -3546,7 +3652,7 @@ if [ "$gitCmd" != "" ]; then
             # Has the user clicked the MountESP button?
             elif [[ "$logLine" == *MountESP* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
-                WriteToLog "User selected to Mount ESP and find EFI/Clover/Themes"
+                WriteToLog "User selected to Mount ESP. Looking for EFI/Clover/Themes directory."
                 checkAction=$(MountESPAndSearchThemesPath "$gBootDeviceIdentifier")
                 if [ "$checkAction" != "Failed" ]; then
                     ReadThemeDirList
@@ -3566,10 +3672,7 @@ if [ "$gitCmd" != "" ]; then
                     GetListOfInstalledThemesAndSendToUI
                     GetFreeSpaceOfTargetDeviceAndSendToUI
                     CheckAndRecordUnManagedThemesAndSendToUI
-                    #CheckForThemeUpdates &
-                    ReadAndSendCurrentNvramTheme
-                    ReadAndSendCurrentNvramPlistTheme
-                    ReadAndSendCurrentConfigPlistTheme
+                    ReadThemeEntriesAndSendToUI
                 fi 
 
             # Has user selected a theme control option?

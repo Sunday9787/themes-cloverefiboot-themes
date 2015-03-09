@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.2
+//Version=0.75.3
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -27,7 +27,7 @@ var eof=0;
 // On initial load
 $(document).ready(function() {    
     macgap.app.launch("started")
-    printLogtoScreen();
+    readLogFileForMessages();
 });
 
 //-------------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ function GetFileContents(filename)
 //-------------------------------------------------------------------------------------
 function redirectToMainPage()
 {
-    var redirect="managethemes.html"
+    var redirect=(gTmpDir + "managethemes.html" );
     window.location = (redirect);
 }
 
@@ -149,21 +149,20 @@ function ChangeMessageBoxHeaderColour(colour)
 // Read /tmp/CloverThemeManager/CloverThemeManagerLog.txt looking for embedded 
 // messages for showing the initialisation process.
 //-------------------------------------------------------------------------------------
-function printLogtoScreen()
+function readLogFileForMessages()
 {
     eof=0;
     var splitContent="";
     fileContent=GetFileContents("CloverThemeManagerLog.txt");
-    
+
     if (fileContent != 0) {
-    
-        // Print line by line
+
         splitContent = fileContent.split("\n");
         lastLine = splitContent[splitContent.length-2];
-          
+
         if (lastLine != prevLastLine) {
             for (i = prevLastLineCount; i <= splitContent.length; i++) {
- 
+
                 // Does this line contain CTM_AppVersion?
                 if (/CTM_Version/i.test(splitContent[i])) {
                     // remove anything before the 'CTM_Version' text.
@@ -312,17 +311,16 @@ function printLogtoScreen()
             //Redirect after 1 second
             timerReadMessageFile = setTimeout(redirectToMainPage, 1000);
 
-
         } else {
             // recursively call function providing we haven't completed.
             if(eof==0)
-                timerCheckEof = setTimeout(printLogtoScreen, 50);
+                timerCheckEof = setTimeout(readLogFileForMessages, 50);
         }
     }
     else
     {
         // recursively call function providing we haven't completed.
         if(eof==0)
-            timerCheckEof = setTimeout(printLogtoScreen, 250);
+            timerCheckEof = setTimeout(readLogFileForMessages, 250);
     }
 }

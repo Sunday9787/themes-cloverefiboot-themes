@@ -24,77 +24,76 @@
 </head>
 <body>
 
-    <!-- overlay is used with the message box. -->
-    <div class="overlay" id="overlay" style="display:none;"></div>
+<!-- overlay is used with the message box. -->
+<div class="overlay" id="overlay" style="display:none;"></div>
+
+<!-- overlayTwo is used standalone to prevent the user from interacting -->
+<!-- with the UI when checking for installed theme list and updates. -->
+<div class="overlayTwo" id="overlayTwo" style="display:none;"></div>
     
-    <!-- overlayTwo is used standalone to prevent the user from interacting -->
-    <!-- with the UI when checking for installed theme list and updates. -->
-    <div class="overlayTwo" id="overlayTwo" style="display:none;"></div>
-    
-    <!-- Message box which starts positioned off the page by css. -->
-    <!-- It's then animated in to view when required. -->
-    <div class="box" id="box">
-         <a class="boxclose" id="boxclose"></a>
-         <h1>Title</h1>
-         <p>Replace message here</p>
-         <div id="FeedbackButtons"></div>
-         <!-- Display a constantly animated progress bar. -->
-         <!-- Javascript will show or hide this when necessary. -->
-         <div id="AnimatedBar" class="meter"><span style="width: 100%"></span></div>
-    </div>
+<!-- Message box which starts positioned off the page by css. -->
+<!-- It's then animated in to view when required. -->
+<div class="box" id="box">
+     <a class="boxclose" id="boxclose"></a>
+     <h1>Title</h1>
+     <p>Replace message here</p>
+     <div id="FeedbackButtons"></div>
+     <!-- Display a constantly animated progress bar. -->
+     <!-- Javascript will show or hide this when necessary. -->
+     <div id="AnimatedBar" class="meter"><span style="width: 100%"></span></div>
+</div>
     
 <div id="header">
-        <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
+    <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
         
-        <!--INSERT_BOOTLOG_BAND_TITLE_HERE-->
-  
-        <!--INSERT_BOOTLOG_INFO_HERE-->
+<!--INSERT_BOOTLOG_BAND_TITLE_HERE-->
+<!--INSERT_BOOTLOG_INFO_HERE-->
         
-        <div id="PathSelector">
-            <select name="dropdown" id="partitionSelect" class="custom-dropdown">
-                <!--INSERT_MENU_OPTIONS_HERE-->
-            </select>
-        </div> <!-- End PathSelector -->
-        <div id="OpenButton">
-            <button type="button" id="OpenPathButton" class="openButton">OPEN</button>
-        </div> <!-- End OpenButton -->
-        <div id="EspButton">
-            <button type="button" id="MountEspButton" class="espButton">MOUNT ESP</button>
-        </div> <!-- End OpenButton -->
-        
-        <div id="ThemeCount">
-            <span class="textHeaderSmall">Installed Themes:</span>&nbsp;<span class="textThemeCount" id="NumInstalledThemes">-</span><span class="textThemeCountQuery" id="NumInstalledThemesQuery">?</span>
-        </div> <!-- End ThemeCount -->
-        
-        <div id="FreeSpace">
-            <span class="textHeaderSmall">Free Space:</span>&nbsp;<span class="textFreeSpace">-</span>
-        </div> <!-- End FreeSpace -->        
-        
-        <div id="HeaderBar" class="blackFill">
-            <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
-            <div class="spacerButton"">&nbsp;</div>
-            <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
-            <div class="spacerButton"">&nbsp;</div>
-            <div class="toggleButtonSml" id="thumbSizeLarger">+</div>
-            <div class="toggleButtonSml" id="thumbSizeSmaller">-</div>
-            <div class="spacerButtonSml"">&nbsp;</div>
-            <div class="spacerButtonSml"">&nbsp;</div>
-            <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
-        </div>
+    <div id="PathSelector">
+        <select name="dropdown" id="partitionSelect" class="custom-dropdown">
+            <!--INSERT_MENU_OPTIONS_HERE-->
+        </select>
+    </div> <!-- End PathSelector -->
+    
+    <div id="OpenButton">
+        <button type="button" id="OpenPathButton" class="openButton">OPEN</button>
+    </div> <!-- End OpenButton -->
+    
+    <div id="EspButton">
+        <button type="button" id="MountEspButton" class="espButton">MOUNT ESP</button>
+    </div> <!-- End OpenButton -->
+    
+    <div id="ThemeCount">
+        <span class="textHeaderSmall">Installed Themes:</span>&nbsp;<span class="textThemeCount" id="NumInstalledThemes">-</span><span class="textThemeCountQuery" id="NumInstalledThemesQuery">?</span>
+    </div> <!-- End ThemeCount -->
+    
+    <div id="FreeSpace">
+        <span class="textHeaderSmall">Free Space:</span>&nbsp;<span class="textFreeSpace">-</span>
+    </div> <!-- End FreeSpace -->        
+    
+    <div id="HeaderBar" class="blackFill">
+        <div class="toggleButton" id="ShowHideToggleButton">Hide UnInstalled</div>
+        <div class="spacerButton"">&nbsp;</div>
+        <div class="toggleButton" id="preview_Toggle_Button">Expand Previews</div>
+        <div class="spacerButton"">&nbsp;</div>
+        <div class="toggleButtonSml" id="thumbSizeLarger">+</div>
+        <div class="toggleButtonSml" id="thumbSizeSmaller">-</div>
+        <div class="spacerButtonSml"">&nbsp;</div>
+        <div class="spacerButtonSml"">&nbsp;</div>
+        <div class="toggleButton" id="BandsHeightToggleButton">Hide Thumbnails</div>   
+    </div> <!-- End HeaderBar --> 
 </div> <!-- End header -->  
 
 <div id="content">
-        
-    <!--INSERT_THEMES_HERE-->
-    
+
+<!--INSERT_THEMES_HERE-->
 </div> <!-- End content -->    
-     
+
      
 <div id="footer">
     
-    <!--INSERT_NVRAM_MESSAGE_BAND_HERE-->
-    
-    <!--INSERT_CONTROL_OPTIONS_BAND_HERE-->
+<!--INSERT_NVRAM_MESSAGE_BAND_HERE-->
+<!--INSERT_CONTROL_OPTIONS_BAND_HERE-->
 
     <div id="FooterLinks">
         <p class="textFooter"><a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>

@@ -1,6 +1,6 @@
 /* CSS file for Clover Theme Manager */
 /* Blackosx 2014-2015                */
-/* v0.76.2                           */
+/* v0.76.3                           */
 
 html, body {
     padding: 0;
@@ -26,6 +26,7 @@ p {
 
 #StatusArea {
     margin: 40px 0px 0px 248px;
+    -webkit-user-select: none;
 }
 
 #homePageProgressBar {
@@ -51,6 +52,7 @@ p {
 #WelcomeMessage {
     margin: 100px 0px 0px 0px;
     line-height: 2px;
+    -webkit-user-select: none;
 }
 
 .textHeading {
@@ -84,6 +86,7 @@ p {
     left: 0;
     right: 0;
     background-color: #000;
+    -webkit-user-select: none;
 }
 
 /* ===================================================================== */
@@ -98,6 +101,7 @@ p {
     height: 66px;
     background-color: #000;
     box-shadow: 0px 2px 6px #000;
+    -webkit-user-select: none;
     z-index: 1 /* Raise up one layer to allow shadow to be seen */
                /* Note: js script toggles this from 1 to 0 when changing height for bootlog.*/
 }
@@ -718,6 +722,7 @@ select.custom-dropdown:hover {
     left: 0;
     right: 0;
     background-color: #000;
+    -webkit-user-select: none;
 }
 
 a:link, a:visited {
@@ -1146,7 +1151,7 @@ a.boxclose:hover {
     font-size: 12px;
     color: #FFF;
     padding: 8px 0px 0px 20px;
-    content: "Checking updates for the installed themes on this volume & maintaining prefs file...";
+    content: "Listing the installed themes on this volume...";
     
     position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;

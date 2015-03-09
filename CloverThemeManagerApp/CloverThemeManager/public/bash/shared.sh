@@ -12,7 +12,7 @@ JSSCRIPTS_DIR="$PUBLIC_DIR"/scripts
 TOOLS_DIR="$PUBLIC_DIR"/tools
 WORKING_PATH="${HOME}/Library/Application Support"
 APP_DIR_NAME="CloverThemeManager"
-TEMPDIR="/tmp/CloverThemeManager"
+TEMPDIR="/tmp/${APP_DIR_NAME}"
 UNPACKDIR="${WORKING_PATH}/${APP_DIR_NAME}/UnPack"
 
 # Scripts
@@ -40,7 +40,7 @@ gESPMountPrefix="ctmTempMp"
 debugIndent="    "
 debugIndentTwo="${debugIndent}${debugIndent}"
 COMMANDLINE=0
-DEBUG=1
+DEBUG=0
 
 # Common Functions
 # ---------------------------------------------------------------------------------------
@@ -55,7 +55,11 @@ WriteToLog() {
 # ---------------------------------------------------------------------------------------
 WriteLinesToLog() {
     if [ $COMMANDLINE -eq 0 ]; then
-        printf "${debugIndent}===================================\n" >> "$logFile"
+        if [ $DEBUG -eq 1 ]; then
+            printf "${debugIndent}===================================\n" >> "$logFile"
+        else
+            printf "===================================\n" >> "$logFile"
+        fi
     else
         printf "===================================\n"
     fi
