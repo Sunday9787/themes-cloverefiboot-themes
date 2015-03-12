@@ -21,6 +21,9 @@ findThemeDirs="${SCRIPTS_DIR}/findThemeDirs.sh"
 bootlogScript="${SCRIPTS_DIR}/bootlog.sh"
 updateScript="${TEMPDIR}/updateScript.sh"
 
+# Double escape spaces for osascript
+uiSudoChanges=$( echo "$uiSudoChanges" | sed  's/ /\\\\ /g' )
+
 # Set out file paths
 logFile="${TEMPDIR}/CloverThemeManagerLog.txt"
 themeDirInfo="${TEMPDIR}/themeDirInfo.txt"
