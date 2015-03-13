@@ -40,6 +40,7 @@ source "${SELF_PATH%/*}"/shared.sh
 declare -a dfMounts
 declare -a dfMountpoints
 declare -a gpt
+declare -a mbr
 declare -a espFound
 
 # Send message to UI via log
@@ -51,8 +52,8 @@ declare -a espFound
 oIFS="$IFS"; IFS=$'\r\n'
 dfMounts+=( $( df -laH | awk '{print $1}' | tail -n +2 | cut -d '/' -f 3  ))
 dfMountpoints+=( /$( df -laH | cut -d'/' -f 4- | tail -n +2 ))
-gpt+=( $( diskutil list | grep "GUID_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
-mbr+=( $( diskutil list | grep "FDisk_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
+gpt=( $( diskutil list | grep "GUID_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
+mbr=( $( diskutil list | grep "FDisk_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
 IFS="$oIFS"
 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Check: dfMounts=${#dfMounts[@]}" 
 

@@ -285,48 +285,50 @@ FindMbrDevice()
     fileToRead="${TEMPDIR}/bootDeviceInfo.txt"
     bootdeviceLine=$( cat "$fileToRead" )
     declare -a bootDeviceInfo
-    IFS=$'@'
+    oIFS="$IFS"; IFS=$'@'
     bootDeviceInfo=($bootdeviceLine)
-    IFS="$oIFS"
-
-    declare -a mbrDisks
-    mbrDisks=( $( diskutil list | grep "FDisk_partition_scheme" | cut -d 'B' -f 2 | tr -d ' ' ))
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}mbrDisks=${#mbrDisks[@]}"
     
-    for ((d=0; d<${#mbrDisks[@]}; d++))
+    IFS=$'\r\n'
+    while read -r line
     do
-        readFdisk=$( fdisk /dev/"${mbrDisks[$d]}" | grep "${bootDeviceInfo[4]}" )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}readFdisk=$readFdisk"
+        if [[ "$line" != "" ]]; then
+
+            [[ DEBUG -eq 1 ]] && WriteToLog "/usr/sbin/fdisk /dev/$line | grep ${bootDeviceInfo[4]}"
+            readFdisk=$( /usr/sbin/fdisk /dev/"$line" | grep "${bootDeviceInfo[4]}" )
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}readFdisk=$readFdisk"
         
-        if [ $readFdisk ]; then # We have a match on total sectors
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found block size match: ${bootDeviceInfo[4]}"
+            if [ $readFdisk ]; then # We have a match on total sectors
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found block size match: ${bootDeviceInfo[4]}"
         
-            # Check if partition number is the same
-            partNum=$( echo "${readFdisk%:*}" | tr -d '* ' )
-            if [ "$partNum" == "${bootDeviceInfo[0]}" ]; then # We have a match on partition number
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found partition number match: $partNum"
+                # Check if partition number is the same
+                partNum=$( echo "${readFdisk%:*}" | tr -d '* ' )
+                if [ "$partNum" == "${bootDeviceInfo[0]}" ]; then # We have a match on partition number
+                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found partition number match: $partNum"
         
-                # Check if start block is the same
-                startBlock=$( echo "${readFdisk#*[}" | tr -d ' ' )
-                startBlock=$( echo "${startBlock%%-*}" )
-                if [ "$startBlock" == "${bootDeviceInfo[3]}" ]; then # We have a match on start block
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found start block match: $startBlock"
+                    # Check if start block is the same
+                    startBlock=$( echo "${readFdisk#*[}" | tr -d ' ' )
+                    startBlock=$( echo "${startBlock%%-*}" )
+                    if [ "$startBlock" == "${bootDeviceInfo[3]}" ]; then # We have a match on start block
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found start block match: $startBlock"
             
-                    # Check Signature matches by comparing bytes 01B8->01BE
-                    signature=$( dd 2>/dev/null if="/dev/${mbrDisks[$d]}" bs=4 count=1 skip=110 | perl -ne '@a=split"";for(@a){printf"%02x",ord}' )
-                    signatureLE="${bootDeviceInfo[2]:8:2}${bootDeviceInfo[2]:6:2}${bootDeviceInfo[2]:4:2}${bootDeviceInfo[2]:2:2}"
-                    signature=$( echo $signature | tr '[:upper:]' '[:lower:]' )
-                    signatureLE=$( echo $signatureLE | tr '[:upper:]' '[:lower:]' )
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Comparing signatures: $signature vs $signatureLE"
-                    if [ "$signature" == "$signatureLE" ]; then # We have a match on signature
-                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found signature match: $signature"
-                        foundDisk="${mbrDisks[$d]}s${partNum}"
-                        break
+                        # Check Signature matches by comparing bytes 01B8->01BE
+                        signature=$( dd 2>/dev/null if="/dev/$line" bs=4 count=1 skip=110 | perl -ne '@a=split"";for(@a){printf"%02x",ord}' )
+                        signatureLE="${bootDeviceInfo[2]:8:2}${bootDeviceInfo[2]:6:2}${bootDeviceInfo[2]:4:2}${bootDeviceInfo[2]:2:2}"
+                        signature=$( echo $signature | tr '[:upper:]' '[:lower:]' )
+                        signatureLE=$( echo $signatureLE | tr '[:upper:]' '[:lower:]' )
+                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Comparing signatures: $signature vs $signatureLE"
+                        if [ "$signature" == "$signatureLE" ]; then # We have a match on signature
+                            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found signature match: $signature"
+                            foundDisk="${line}s${partNum}"
+                            break
+                        fi
                     fi
                 fi
             fi
         fi
-    done
+    done < "$mbrList" # Previously populated list of MBR disks. Done in findThemeDirs.sh
+    IFS="$oIFS"
+
     
     echo "$foundDisk"
 }
