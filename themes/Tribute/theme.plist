@@ -23,16 +23,13 @@
 			<true/>
 			<key>Swap</key>
 			<true/>
-                        <key>Scale</key>
-                        <integer>5</integer>
+			<key>Scale</key>
+			<integer>5</integer>
 		</dict>
 		<key>Banner</key>
 		<string>logo.png</string>
 		<key>Font</key>
-		<dict>
-                       <key>Type</key>
-		       <string>alfa</string>
-                </dict>
+		<dict/>
 		<key>Anime</key>
 		<array>
 			<dict>
@@ -44,15 +41,17 @@
 				<integer>10</integer>
 				<key>FrameTime</key>
 				<integer>200</integer>
-                        </dict>
+			</dict>
+			<integer>10</integer>
+			<string>font.png</string>
+			<string>Load</string>
 		</array>
-                <dict>
 		<key>Selection</key>
 		<dict>
-                      	<key>Big</key>
+			<key>Big</key>
 			<string>selection_big.png</string>
 			<key>Color</key>
-			<string>0xF3F3F380</string>
+			<string>0x79F8F8</string>
 			<key>Small</key>
 			<string>selection_small.png</string>
 		</dict>
@@ -61,5 +60,3 @@
 	<string>2015</string>
 </dict>
 </plist>
-              	
-			
