@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.8"
+VERS="0.76.9"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -1007,18 +1007,21 @@ IsRepositoryLive()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}IsRepositoryLive()"
     
     local noConnection=1
-    
+
     # First check if there is a network connection. Check IPv4
-    if [ $(CheckOsVersion) -gt 11 ]; then
-        # Newer than Lion
+    # Check for discoveryd or mDNSResponder
+    local checkService=$( ps -ax | grep discoveryd | grep ?? | head -n1 )
+    if [ "$checkService" != "" ] && [[ "$checkService" != *"grep discoveryd"* ]] ; then
         local defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
     else
-        local defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
-        if [ "$defaultGateway" != "" ]; then
-            defaultGateway="${defaultGateway##*:}"
+        local checkService=$( ps -ax | grep mDNSResponder | grep ?? | head -n1 )
+        if [ "$checkService" != "" ] && [[ "$checkService" != *"grep mDNSResponder"* ]]; then
+           local defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
+            if [ "$defaultGateway" != "" ]; then
+                defaultGateway="${defaultGateway##*:}"
+            fi
         fi
     fi
-    
     if [ "$defaultGateway" != "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default Gateway $defaultGateway"
             
@@ -1035,7 +1038,7 @@ IsRepositoryLive()
     else
         noConnection=0
     fi
-    
+
     if [ $noConnection -eq 0 ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Cannot contact the Repository ${gitRepositoryUrl}/themes"
         WriteToLog "CTM_RepositoryError" # initialise.js should pick this up, notify the user, then quit.
@@ -1139,7 +1142,7 @@ CheckForAppUpdate()
     local pathToWorkingInfoPlist="${WORKING_PATH}/${APP_DIR_NAME}"/"${themeManagerInfoPlistPath}"
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     cd "${WORKING_PATH}/${APP_DIR_NAME}"
-    git archive --remote="${gitRepositoryUrl}themes" HEAD "${themeManagerInfoPlistPath}"/"${themeManagerInfoPlistFile}" | tar -x
+    "$gitCmd" archive --remote="${gitRepositoryUrl}themes" HEAD "${themeManagerInfoPlistPath}"/"${themeManagerInfoPlistFile}" | tar -x
     if [ -f "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" ]; then
         serverAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" )
         rm "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}"
@@ -1175,7 +1178,7 @@ CheckForAppUpdate()
         local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
         local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
         cd "${WORKING_PATH}/${APP_DIR_NAME}"
-        git archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
+        "$gitCmd" archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
         if [ -f "${pathToWorkingPublicDir}"/.updateID ]; then
             local serverVersion=$( cat "${pathToWorkingPublicDir}"/.updateID )
         else
@@ -3417,7 +3420,7 @@ if [ "$gitCmd" != "" ]; then
 	        echo "Error - wrong number of arguments passed."
 	        echo "Expects 1st as full target path. 2nd Theme name"
 	        exit 1
-        fi
+       fi
 
         # Redirect all log file output to stdout
         COMMANDLINE=1
