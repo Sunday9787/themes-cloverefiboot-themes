@@ -1009,6 +1009,7 @@ IsRepositoryLive()
     local noConnection=1
 
     # First check if there is a network connection. Check IPv4
+    WriteToLog "CTM_RepositoryCheckNetwork"
     # Check for discoveryd or mDNSResponder
     local checkService=$( ps -ax | grep discoveryd | grep ?? | head -n1 )
     if [ "$checkService" != "" ] && [[ "$checkService" != *"grep discoveryd"* ]] ; then

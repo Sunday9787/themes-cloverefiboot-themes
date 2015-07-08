@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.75.3
+//Version=0.75.4
 
 var gTmpDir = "/tmp/CloverThemeManager/";
 var gLogBashToJs = "CloverThemeManager_BashToJs.log";
@@ -187,7 +187,10 @@ function readLogFileForMessages()
                            $("#status_HtmlTemplate").css("color","#FFF"); 
                 } else if (/CTM_HTMLTemplateFail/i.test(splitContent[i])) {
                            $("#status_HtmlTemplate").css("color","#DD171B");
-                           
+                
+                } else if (/CTM_RepositoryCheckNetwork/i.test(splitContent[i])) {
+                           $("#status_Repository").text( 'Checking network gateway...' ).append( '<span class="checkMark" id="check_Repository"></span>' );
+                           $("#status_Repository").css("color","#FFAE40"); 
                 } else if (/CTM_RepositoryChecking/i.test(splitContent[i])) {
                            $("#status_Repository").text( 'Connecting to repository...' ).append( '<span class="checkMark" id="check_Repository"></span>' );
                            $("#status_Repository").css("color","#FFAE40"); 
@@ -279,8 +282,8 @@ function readLogFileForMessages()
                            $("#check_ReadBootlog").append( "  \u2713" );
                            $("#status_ReadBootlog").css("color","#FFF"); 
                 } else if (/CTM_BootlogMissing/i.test(splitContent[i])) {
-                           $("#status_ThemeDirs").text( 'Theme directories' ).append( '<span class="checkMark" id="check_ReadBootlog">  \u2713</span>' );
-                           $("#status_ThemeDirs").css("color","#BBB"); // Change to lighter grey, not red.
+                           $("#status_ReadBootlog").text( 'Bootlog not found' ).append( '<span class="checkMark" id="check_ReadBootlog">  \u2713</span>' );
+                           $("#status_ReadBootlog").css("color","#BBB"); // Change to lighter grey, not red.
                 } else if (/CTM_BootlogFail/i.test(splitContent[i])) {
                            $("#status_ReadBootlog").css("color","#DD171B");
                            
