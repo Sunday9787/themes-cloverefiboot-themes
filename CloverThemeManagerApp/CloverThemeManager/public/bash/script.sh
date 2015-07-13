@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.76.9"
+VERS="0.77.0"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -3327,6 +3327,11 @@ CleanUp()
     # Remove the temporary dir
     if [ -d "${TEMPDIR}" ]; then
         rmdir "${TEMPDIR}"
+    fi
+    
+    # Check again and force if not removed
+    if [ -d "${TEMPDIR}" ]; then
+        rm -rf "${TEMPDIR}"
     fi
 }
 
