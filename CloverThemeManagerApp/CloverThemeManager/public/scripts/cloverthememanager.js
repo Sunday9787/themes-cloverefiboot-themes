@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.76.0
+//Version=0.76.1
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -626,15 +626,17 @@ function AppUpdateFeedback(state)
 function themeActionSuccess(action,themeName)
 {
     if (action != "" & themeName != "") {
-    
+
         // Present dialog to the user
         ChangeMessageBoxHeaderColour("green");
 
         // Correct language - Install, UnInstall, Update to Installed, UnInstalled, Updated
         if (action == "Update") {
             printText="Updated";
-            
-            // while here, remove theme name from global update string
+            // theme was updated, remove theme name from global update string
+            gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
+        } else if (action == "UnInstall") {
+            // theme was uninstalled - remove theme name from global update string (if there)
             gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
         } else {
             printText=(action + "ed");
@@ -828,21 +830,28 @@ $(function()
     });
     
     //-----------------------------------------------------
-    // On clicking a thumbnail image
-    $('.thumbnail').click(function() {
-        var hidden = $(this).closest("#ThemeBand").nextAll('[class="accordionContent"]').first().is(":hidden");
-        if (!hidden) {
-            $(this)                                  // Start with current
-            .closest("#ThemeBand")                   // Traverse up the DOM to the ThemeBand div
-            .nextAll('[class="accordionContent"]')   // find the next siblings with class .accordionContent
-            .first()                                 // just use first one
-            .slideUp('normal');                      // Slide up
+    // On clicking an accordion entry
+    $('.accordion').click(function(checkWhat) {
+        // Reveal large screenshot image only if the install/uninstall/update
+        // were not clicked.
+        if (checkWhat.target.id.substring(0,6) != "button") {
+        
+            var hidden = $(this).closest("#ThemeBand").nextAll('[class="accordionContent"]').first().is(":hidden");
+            if (!hidden) {
+                $(this)                                  // Start with current
+                .closest("#ThemeBand")                   // Traverse up the DOM to the ThemeBand div
+                .nextAll('[class="accordionContent"]')   // find the next siblings with class .accordionContent
+                .first()                                 // just use first one
+                .slideUp('normal');                      // Slide up
+            } else {
+                $(this)
+                .closest("#ThemeBand")
+                .nextAll('[class="accordionContent"]')
+                .first()
+                .slideToggle('normal');
+            }
         } else {
-            $(this)
-            .closest("#ThemeBand")
-            .nextAll('[class="accordionContent"]')
-            .first()
-            .slideToggle('normal');
+            return;
         }
     });
     
@@ -1882,7 +1891,7 @@ function ShowHideUnInstalledThemes(showHide,expandCollapse)
         // Set all installed theme bands
         updateBandsWithInstalledThemes(gInstalledThemeListStr);
     }
-    
+
     // Set all update theme bands
     if(gUpdateThemeListStr != "" )
         ShowUpdateThemesInUI(gUpdateThemeListStr);

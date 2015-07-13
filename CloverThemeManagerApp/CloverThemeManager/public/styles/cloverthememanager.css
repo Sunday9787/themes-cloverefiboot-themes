@@ -1,6 +1,6 @@
 /* CSS file for Clover Theme Manager */
 /* Blackosx 2014-2015                */
-/* v0.76.3                           */
+/* v0.76.4                           */
 
 html, body {
     padding: 0;
@@ -509,6 +509,30 @@ select.custom-dropdown:hover {
 	background: #FFF;
 	display: none;
 	line-height: 0;
+}
+
+.accordion:hover {
+    background-image: -webkit-linear-gradient(top, #747474, #606060);
+}
+
+.accordionInstalled:hover {
+    background-image: -webkit-linear-gradient(top, #232f43 0%,#4e709e 7%,#4e709e 100%);
+    border-top: 1px solid #000 !important;
+}
+
+.accordionInstalledNoShadow:hover {
+    background-color: #4e709e;
+    border-top: 1px solid #4e709e !important;
+}
+
+.accordionUpdate:hover {
+    background-image: -webkit-linear-gradient(top, #16304f 0%,#6fc9ed 7%,#6fc9ed 100%);
+    border-top: 1px solid #000 !important;
+}
+
+.accordionUpdateNoShadow:hover {
+    background-color: #6fc9ed;
+    border-top: 1px solid #6fc9ed !important;
 }
 
 #ThemeBand {
