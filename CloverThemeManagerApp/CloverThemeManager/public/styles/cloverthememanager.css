@@ -1,6 +1,6 @@
 /* CSS file for Clover Theme Manager */
 /* Blackosx 2014-2015                */
-/* v0.76.4                           */
+/* v0.76.5                           */
 
 html, body {
     padding: 0;
@@ -262,6 +262,16 @@ p {
 /* =========================== */
 /* Main header (Under bootlog) */
 /* =========================== */
+
+#ListingThemesMessage {
+    position: absolute;
+    float: left;
+    margin: 0;
+    background-color: #333;
+    width: 100%;
+    height:32px;
+    display:none;
+}
 
 #CheckingUpdatesMessage {
     position: absolute;
@@ -1068,9 +1078,19 @@ http://tympanus.net/codrops/2009/12/03/css-and-jquery-tutorial-overlay-with-slid
     z-index:100;
 }
 
+.overlayThree {
+    background:transparent url(../assets/overlay.png) repeat top left;
+    position:fixed;
+    top:0px;   /* same height as .meterThree */
+    bottom:0px;
+    left:0px;
+    right:0px;
+    z-index:100;
+}
+
 .box {
     position:fixed;
-    top:-300px;   /* Starting position = should match click function animate({'top':'300px'} in js */
+    top:-300px;   /* Starting position = should match click function animate({'top':'300px'} in js CloseMessageBox() */
     left:20%;
     right:20%;
     background-color:#fff;
@@ -1175,7 +1195,47 @@ a.boxclose:hover {
     font-size: 12px;
     color: #FFF;
     padding: 8px 0px 0px 20px;
-    content: "Listing the installed themes on this volume...";
+    content: "";
+    
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background-image: 
+        -webkit-gradient(linear, 0 0, 100% 100%, 
+            color-stop(.25, rgba(255, 255, 255, .4)), 
+            color-stop(.25, transparent), color-stop(.5, transparent), 
+            color-stop(.5, rgba(255, 255, 255, .4)), 
+            color-stop(.75, rgba(255, 255, 255, .4)), 
+            color-stop(.75, transparent), to(transparent)
+        );
+    z-index: 1;
+    -webkit-background-size: 50px 50px;
+    -webkit-animation: move 2s linear infinite;
+    overflow: hidden;
+}
+
+.meterThree { 
+    height: 32px; /* Same height as .overlayThree */
+    position: relative;
+}
+
+.meterThree > span {
+    display: block;
+    height: 100%;
+    background-color: #cbd1d6;
+    /* Use http://www.colorzilla.com/gradient-editor/ for gradient */
+    background-image: -webkit-linear-gradient(top, #4c4c4c 0%,#595959 12%,#666666 25%,#474747 39%,#2c2c2c 50%,#000000 51%,#111111 60%,#2b2b2b 76%,#1c1c1c 91%,#131313 100%);
+    position: relative;
+    overflow: hidden;
+}
+		
+.meterThree > span:after, .animate > span > span {
+
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    color: #FFF;
+    padding: 8px 0px 0px 20px;
+    content: "Checking for any updates for the installed themes...";
     
     position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;

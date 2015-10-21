@@ -44,7 +44,8 @@
 </div>
     
 <div id="header">
-    <div id="CheckingUpdatesMessage" class="meterTwo"><span style="width: 100%"></span></div>
+    <div id="ListingThemesMessage" class="meterTwo"><span style="width: 100%"></span></div>
+    <div id="CheckingUpdatesMessage" class="meterThree"><span style="width: 100%"></span></div>
         
 <!--INSERT_BOOTLOG_BAND_TITLE_HERE-->
 <!--INSERT_BOOTLOG_INFO_HERE-->

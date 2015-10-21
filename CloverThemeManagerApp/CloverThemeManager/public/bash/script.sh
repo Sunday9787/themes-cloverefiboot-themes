@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.0"
+VERS="0.77.1"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -451,6 +451,12 @@ RunThemeAction()
                                     shopt -s dotglob
                                 fi
                                 
+                                # Delete theme.git dir from theme
+                                if [ -d "$UNPACKDIR"/themes/"$themeTitleToActOn"/theme.git ]; then
+                                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing theme.git directory from ${UNPACKDIR}/themes/${themeTitleToActOn}"
+                                    rm -rf "$UNPACKDIR"/themes/"$themeTitleToActOn"/theme.git
+                                fi
+                                
                                 # Create theme dir on target and move unpacked theme files to the target dir.
                                 targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
 
@@ -547,6 +553,12 @@ RunThemeAction()
                                         chmod 755 "$UNPACKDIR"/themes/"$themeTitleToActOn"/.hash && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Set hash file permissions"
                                         # Enable glob to match dot files.
                                         shopt -s dotglob
+                                    fi
+                                    
+                                    # Delete theme.git dir from theme
+                                    if [ -d "$UNPACKDIR"/themes/"$themeTitleToActOn"/theme.git ]; then
+                                        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing theme.git directory from ${UNPACKDIR}/themes/${themeTitleToActOn}"
+                                        rm -rf "$UNPACKDIR"/themes/"$themeTitleToActOn"/theme.git
                                     fi
                                                                 
                                     targetThemeDir="${TARGET_THEME_DIR}"/"$themeTitleToActOn"
@@ -2274,6 +2286,7 @@ RespondToUserDeviceSelection()
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI
             CheckAndRecordUnManagedThemesAndSendToUI
+            CheckForAndRemoveThemeGitDirs
             CheckAndRemoveBareClonesNoLongerNeeded
             CheckForThemeUpdates &
             ShowHideUIControlOptions
@@ -2591,6 +2604,29 @@ CheckAndRecordUnManagedThemesAndSendToUI()
     
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
         SendToUI "UnversionedThemes@${unversionedThemeStr}@"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
+CheckForAndRemoveThemeGitDirs()
+{
+    # Note: installedThemesOnCurrentVolume[] contains list of themes installed on the current theme path.
+    # Plan: loop through this array and check for existence of theme.git directories.
+    #       Remove any, if found
+    
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForAndRemoveThemeGitDirs()"
+    
+    if [ ! "$TARGET_THEME_DIR" == "-" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking $TARGET_THEME_DIR for any theme.git dirs."
+
+        local dirToCheck=""
+        for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
+        do
+            # Check for theme.git dir inside installed theme dir
+            dirToCheck="$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/theme.git        
+            [[ -d "$dirToCheck" ]] && rm -rf "$dirToCheck" && [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found and deleted $dirToCheck."               
+        done
     fi
 }
 
@@ -3025,6 +3061,9 @@ CheckForThemeUpdates()
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
         WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
+        
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: CheckingThemeUpdates@@"
+        SendToUI "CheckingThemeUpdates@@"
     
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
@@ -3035,6 +3074,7 @@ CheckForThemeUpdates()
 
                 # get hash of theme in the repo
                 themeHashRepo=$( "$gitCmd" ls-remote ${gitRepositoryUrl}themes.git/themes/"${installedThemesOnCurrentVolume[$t]}"/theme | grep refs/heads/master)
+                WriteToLog "$themeHashRepo"
                 themeHashRepo="${themeHashRepo:0:40}"
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashRepo=$themeHashRepo"
 
@@ -3588,6 +3628,7 @@ if [ "$gitCmd" != "" ]; then
         parentId=$appPid
 
         CheckAndRemoveBareClonesNoLongerNeeded
+        CheckForAndRemoveThemeGitDirs
 
         CheckForAppUpdate
         retVal=$? # returns 1 if no update / 0 if valid is available

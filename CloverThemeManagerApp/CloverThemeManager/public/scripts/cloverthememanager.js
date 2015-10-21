@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.76.1
+//Version=0.76.2
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -24,7 +24,7 @@ var gUpdateThemeListStr="";       // This is used for drawing upper shadow on up
 //-------------------------------------------------------------------------------------
 // On initial load
 $(document).ready(function() {
-    SetCheckUpdateMessageAndProgressBarPosition();
+    SetListingThemesMessageAndProgressBarPosition();
     disableInterface();
     hideButtons();
     HideProgressBar();
@@ -133,6 +133,7 @@ function readBashToJsMessageFile()
                 // Bash sends: "UpdateAvailThemes@${updateAvailThemeStr}@"
                 // where $updateAvailThemeStr is a comma separated string.
                 macgap.app.removeMessage(firstLine);
+                hideCheckingThemeUpdateProgressBar();
                 ShowThemeUpdatesAvailableMessage(firstLineSplit[1]);
                 ShowUpdateThemesInUI(firstLineSplit[1]);
                 // remember installed theme list
@@ -251,6 +252,11 @@ function readBashToJsMessageFile()
                 // Bash sends: "EnableInterface@@"
                 macgap.app.removeMessage(firstLine);
                 enableInterface(); 
+                break;
+            case "CheckingThemeUpdates":
+                // Bash sends: "EnableInterface@@"
+                macgap.app.removeMessage(firstLine);
+                showCheckingThemeUpdateProgressBar();
                 break;
             default:
                 alert("Found else:" + firstLine + " | This is a problem and the app may not function correctly. Please report this error");
@@ -693,7 +699,7 @@ function disableInterface()
     $("#OpenPathButton").prop("disabled", true);
             
     // Display message to notify checking for updates
-    $("#CheckingUpdatesMessage").css("display","block");
+    $("#ListingThemesMessage").css("display","block");
             
     // Show Overlay Box to stop user interacting with buttons
     DisplayOverlayTwoBox();
@@ -710,11 +716,36 @@ function enableInterface()
     $("#OpenPathButton").prop("disabled", false);
             
     // Hide message to notify checking for updates
-    $("#CheckingUpdatesMessage").css("display","none");
+    $("#ListingThemesMessage").css("display","none");
             
     // Hide Overlay Box to allow user to interact with buttons
     HideOverlayTwoBox();    
 }        
+
+//-------------------------------------------------------------------------------------
+function showCheckingThemeUpdateProgressBar()
+{
+    // Disable path drop down menu and open button until updates have been checked.
+    // Will re-enable in CheckForUpdatesThemeList();
+    $("#partitionSelect").prop("disabled", true);
+    $("#OpenPathButton").prop("disabled", true);
+            
+    // Display message to notify checking for updates
+    $("#CheckingUpdatesMessage").css("display","block");
+}
+
+//-------------------------------------------------------------------------------------
+function hideCheckingThemeUpdateProgressBar()
+{
+    // Disable path drop down menu and open button until updates have been checked.
+    // Will re-enable in CheckForUpdatesThemeList();
+    $("#partitionSelect").prop("disabled", false);
+    $("#OpenPathButton").prop("disabled", false);
+            
+    // Display message to notify checking for updates
+    $("#CheckingUpdatesMessage").css("display","none");
+}  
+
 
 //-------------------------------------------------------------------------------------
 function SetThumbnailSize(width,height)
@@ -1018,14 +1049,14 @@ function SetBootLogState(state)
         var newHeaderHeight = (currentHeaderHeight + bootlogTotalHeight);
         $('#header').height(newHeaderHeight);
         $('#content').css("top","+="+bootlogTotalHeight);
-        SetCheckUpdateMessageAndProgressBarPosition();
+        SetListingThemesMessageAndProgressBarPosition();
     } else if (state == "ShowClosed" ) {
         // bash script has sent a command to show the bootlog but collapsed
         $('#BootLogContainer').hide(function() {
             var newHeaderHeight = (currentHeaderHeight + bootLogTitleBarHeight);
             $('#header').height(newHeaderHeight);
             $('#content').css("top","+="+bootLogTitleBarHeight);
-            SetCheckUpdateMessageAndProgressBarPosition();
+            SetListingThemesMessageAndProgressBarPosition();
         });
     } else {
         // Open and Close are passed as a result of the user clicking the #BootLogTitleBar
@@ -1042,7 +1073,7 @@ function SetBootLogState(state)
                 $('#BootLogContainer').show(500);
                 $('#content').animate({ left: '0', top: '+=' + (bootLogContainerHeight)}, 500, function () {
                         // Action after animation has completed
-                        SetCheckUpdateMessageAndProgressBarPosition();
+                        SetListingThemesMessageAndProgressBarPosition();
                         
                         // set header div z-index to 1 so header sits over #content and shadows shows.
                         $('#header').css("z-index",1);
@@ -1063,7 +1094,7 @@ function SetBootLogState(state)
                 $('#content').animate({ left: '0', top: '-=' + (bootLogContainerHeight)}, 500, function () {
                         // Action after animation has completed
                         $('#header').height(newHeaderHeight);
-                        SetCheckUpdateMessageAndProgressBarPosition();
+                        SetListingThemesMessageAndProgressBarPosition();
                         
                         // set header div z-index to 1 so header sits over #content and shadows shows.
                         $('#header').css("z-index",1);
@@ -1118,10 +1149,10 @@ function SetFooterHeight(UseControlOption)
 
 
 //-------------------------------------------------------------------------------------
-function SetCheckUpdateMessageAndProgressBarPosition()
+function SetListingThemesMessageAndProgressBarPosition()
 {
     var pathSelectorTop = $('#PathSelector').offset().top;
-    $("#CheckingUpdatesMessage").css({ top: (pathSelectorTop-5) });
+    $("#ListingThemesMessage").css({ top: (pathSelectorTop-5) });
 }
 
 //-------------------------------------------------------------------------------------
@@ -1133,11 +1164,13 @@ function SetShowHidePreviews(state)
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionUpdateNoShadow").next('[class="accordionContent"]').slideDown('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideDown('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideDown('normal');
+            $(".accordionUpdateNoShadow").next('[class="accordionContent"]').slideDown('normal');
         }
         $("#preview_Toggle_Button").text("Collapse Previews");
         $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(82,82,82,1) 100%)");
@@ -1148,11 +1181,13 @@ function SetShowHidePreviews(state)
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionUpdateNoShadow").next('[class="accordionContent"]').slideUp('normal');
         } else {
             $(".accordion").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionInstalled").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionInstalledNoShadow").next('[class="accordionContent"]').slideUp('normal');
             $(".accordionUpdate").next('[class="accordionContent"]').slideUp('normal');
+            $(".accordionUpdateNoShadow").next('[class="accordionContent"]').slideUp('normal');
         }
         $("#preview_Toggle_Button").text("Expand Previews");
         $("#preview_Toggle_Button").css("background-image","-webkit-linear-gradient(top, rgba(110,110,110,1) 0%,rgba(0,0,0,1) 100%)");
@@ -1570,7 +1605,13 @@ function CloseMessageBox()
     // Read position of box and only fade out if at calculated top position is 150px which is set in ShowMessageBox()
     var position = $('#box').position();
     if (position.top = 150) {
-        $('#box').animate({'top':'-300px'},500,function(){  // starting position = should match .box top in css
+    
+        var messageBoxHeight = $("#box").outerHeight();
+        var distanceToMove = 300; // matches top of .box in css
+        if (messageBoxHeight > distanceToMove) {
+            distanceToMove = messageBoxHeight;
+        }
+        $('#box').animate({'top':'-'+distanceToMove+'px'},500,function(){  // starting position = should match .box top in css
             $('#overlay').fadeOut('fast');
         });
     }
