@@ -308,7 +308,10 @@ function readLogFileForMessages()
         // Is the string 'Complete!' found in fileContent?
         if (/Complete!/i.test(fileContent)) {
             // stop this timer and set to not re-iterate this function
-            clearTimeout(timerCheckEof);
+
+            if(typeof timerCheckEof !== "undefined"){
+              clearTimeout(timerCheckEof);
+            }
             eof=1;
             
             //Redirect after 1 second

@@ -17,7 +17,6 @@
 - (CGFloat) getX;
 - (CGFloat) getY;
 - (void) maximize;
-- (void) restore;
 - (void) toggleFullscreen;
 
 @end

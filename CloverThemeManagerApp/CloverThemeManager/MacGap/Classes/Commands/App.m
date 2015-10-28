@@ -7,7 +7,7 @@
 FILE *newMesageFile;
 #define BASH_TO_JS_LOG "/tmp/CloverThemeManager/bashToJs"
 
-
+void WriteStringtoFile(const char *str, FILE *outfile);
 @implementation App
 
 @synthesize webView;
@@ -31,7 +31,7 @@ FILE *newMesageFile;
     return self;
 }
 
-- (void) terminate {
+- (void) terminate {   
     [NSApp terminate:nil];
 }
 
@@ -63,7 +63,8 @@ FILE *newMesageFile;
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
 }
 
-- (void) launch:(NSString *)name {
+- (void) launch:(NSString *)name
+{
     //[[NSWorkspace sharedWorkspace] launchApplication:name];
     // blackosx - change this to send message to log file
     NSLog(@"%@",name);

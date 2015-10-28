@@ -20,6 +20,7 @@
 		88C0646014BDE10A00E4BCE2 /* Window.m in Sources */ = {isa = PBXBuildFile; fileRef = 88C0645F14BDE10A00E4BCE2 /* Window.m */; };
 		88C0646614BDEC5800E4BCE2 /* Window.xib in Resources */ = {isa = PBXBuildFile; fileRef = 88C0646414BDEC5800E4BCE2 /* Window.xib */; };
 		88C0646D14BDF6A600E4BCE2 /* WindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 88C0646C14BDF6A600E4BCE2 /* WindowController.m */; };
+		CE0387281BE02DAB00B9F97F /* relaunch.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE0387251BE02D4500B9F97F /* relaunch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F2B80016179E0FC100B069A8 /* Clipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = F2B80015179E0FC100B069A8 /* Clipboard.m */; };
 		FA32509D14BA813600BF0781 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA32509C14BA813600BF0781 /* WebKit.framework */; };
 		FA3250C314BA85E700BF0781 /* ContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3250BC14BA85E700BF0781 /* ContentView.m */; };
@@ -38,13 +39,31 @@
 		FAE451D514BA79C600190544 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FAE451D314BA79C600190544 /* MainMenu.xib */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		CE0387241BE02D4500B9F97F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = CE03870C1BE02A6800B9F97F;
+			remoteInfo = relaunch;
+		};
+		CE0387261BE02D9E00B9F97F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = CE03870B1BE02A6800B9F97F;
+			remoteInfo = relaunch;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		FA3250DD14BA876F00BF0781 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 10;
+			dstSubfolderSpec = 13;
 			files = (
+				CE0387281BE02DAB00B9F97F /* relaunch.app in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +93,7 @@
 		88C0646514BDEC5800E4BCE2 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Window.xib; sourceTree = "<group>"; };
 		88C0646B14BDF6A600E4BCE2 /* WindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WindowController.h; sourceTree = "<group>"; };
 		88C0646C14BDF6A600E4BCE2 /* WindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WindowController.m; sourceTree = "<group>"; };
+		CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = relaunch.xcodeproj; path = relaunch/relaunch.xcodeproj; sourceTree = "<group>"; };
 		F2B80014179E0FC100B069A8 /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Clipboard.h; sourceTree = "<group>"; };
 		F2B80015179E0FC100B069A8 /* Clipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Clipboard.m; sourceTree = "<group>"; };
 		FA32509C14BA813600BF0781 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
@@ -122,6 +142,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CE0387211BE02D4400B9F97F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CE0387251BE02D4500B9F97F /* relaunch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CE0387291BE047D900B9F97F /* Relaunch app */ = {
+			isa = PBXGroup;
+			children = (
+				CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */,
+			);
+			name = "Relaunch app";
+			sourceTree = "<group>";
+		};
 		FA3250E014BA87B800BF0781 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
@@ -180,6 +216,7 @@
 				FA3250E414BA883A00BF0781 /* public */,
 				FAE451C414BA79C600190544 /* MacGap */,
 				FAE451BD14BA79C600190544 /* Frameworks */,
+				CE0387291BE047D900B9F97F /* Relaunch app */,
 				FAE451BB14BA79C600190544 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -254,6 +291,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				CE0387271BE02D9E00B9F97F /* PBXTargetDependency */,
 			);
 			name = CloverThemeManager;
 			productName = MacGap;
@@ -266,7 +304,7 @@
 		FAE451B114BA79C600190544 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = Twitter;
 			};
 			buildConfigurationList = FAE451B414BA79C600190544 /* Build configuration list for PBXProject "CloverThemeManager" */;
@@ -279,12 +317,28 @@
 			mainGroup = FAE451AF14BA79C600190544;
 			productRefGroup = FAE451BB14BA79C600190544 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = CE0387211BE02D4400B9F97F /* Products */;
+					ProjectRef = CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				FAE451B914BA79C600190544 /* CloverThemeManager */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		CE0387251BE02D4500B9F97F /* relaunch.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = relaunch.app;
+			remoteRef = CE0387241BE02D4500B9F97F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		FAE451B814BA79C600190544 /* Resources */ = {
@@ -332,6 +386,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CE0387271BE02D9E00B9F97F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = relaunch;
+			targetProxy = CE0387261BE02D9E00B9F97F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		88C0646414BDEC5800E4BCE2 /* Window.xib */ = {
 			isa = PBXVariantGroup;
@@ -372,9 +434,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -399,7 +461,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -430,6 +491,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;
@@ -451,6 +513,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = app;

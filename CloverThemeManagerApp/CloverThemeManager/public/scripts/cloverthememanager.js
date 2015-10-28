@@ -1153,6 +1153,8 @@ function SetListingThemesMessageAndProgressBarPosition()
 {
     var pathSelectorTop = $('#PathSelector').offset().top;
     $("#ListingThemesMessage").css({ top: (pathSelectorTop-5) });
+    // Also adjust position of the CheckingUpdatesMessage progress meter
+    $("#CheckingUpdatesMessage").css({ top: (pathSelectorTop-5) });
 }
 
 //-------------------------------------------------------------------------------------

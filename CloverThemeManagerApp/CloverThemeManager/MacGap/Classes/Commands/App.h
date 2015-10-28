@@ -20,8 +20,7 @@
 - (NSNumber*) systemIdleTime;
 
 // blackosx add these lines - are these required? may delete them...
-- (void) open;
-- (void) launch;
-- (void) WriteStringtoFile;
+- (void) open:(NSString*)url;
+- (void) launch:(NSString *)name;
 - (void) removeMessage:(NSString *)messageToRemove;
 @end

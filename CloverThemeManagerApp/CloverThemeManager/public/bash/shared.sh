@@ -43,15 +43,17 @@ gESPMountPrefix="ctmTempMp"
 debugIndent="    "
 debugIndentTwo="${debugIndent}${debugIndent}"
 COMMANDLINE=0
-DEBUG=0
+DEBUG=1
 
 # Common Functions
 # ---------------------------------------------------------------------------------------
 WriteToLog() {
     if [ $COMMANDLINE -eq 0 ]; then
-        printf "${1}\n" >> "$logFile"
+        # printf "${1}\n" >> "$logFile"
+        printf "%s\n" "${1}" >> "$logFile"
     else
-        printf "${1}\n"
+        # printf "${1}\n"
+        printf "%s\n" "${1}"
     fi
 }
 

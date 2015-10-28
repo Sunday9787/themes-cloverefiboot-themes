@@ -20,5 +20,4 @@
 @property (assign) IBOutlet NSWindow *window;
 @property (strong) IBOutlet NSMenuItem *openLog;
 
-
 @end

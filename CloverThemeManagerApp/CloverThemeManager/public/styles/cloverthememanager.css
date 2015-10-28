@@ -79,6 +79,23 @@ p {
     margin-bottom: 28px;
 }
 
+#MessageArea {
+    position: fixed;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    -webkit-user-select: none;
+}
+
+.message {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #BBB;
+    text-align:center;
+    margin-bottom: 28px;
+}
+
 #footerInitPage {
     position: fixed;
     height: 36px;

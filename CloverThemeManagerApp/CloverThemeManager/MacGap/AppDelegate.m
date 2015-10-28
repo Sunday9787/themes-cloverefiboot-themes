@@ -78,8 +78,36 @@
 
 // blackosx added to quit application on window close.
 // http://stackoverflow.com/questions/14449986/quitting-an-app-using-the-red-x-button
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication {
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
+{
+    [self cleanTmpDir];
     return YES;
+}
+
+// blackosx added to quit application on command-q.
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication
+{
+    [self cleanTmpDir];
+    return YES;
+}
+
+- (void)cleanTmpDir
+{
+    // Moved Micky1979's code from Relaunch.m to here.
+    // Delete temporary files from the previous execution:
+    NSError *error;
+    NSLog(@"Deleting /private/tmp/CloverThemeManager directory.\n");
+    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/CloverThemeManager"])
+    {
+        [[NSFileManager defaultManager] removeItemAtPath:@"/private/tmp/CloverThemeManager" error:&error];
+        
+        if (error) NSLog(@"Problem encountered deleting /private/tmp/CloverThemeManager directory.\n");
+    } else
+    {
+        NSLog(@"/private/tmp/CloverThemeManager directory not found.\n");
+    }
+    
+    usleep(500000); // 1/2 second
 }
 
 - (NSString *)pathForTemporaryFileWithPrefix:(NSString *)prefix
@@ -105,11 +133,65 @@
 
 // Blackosx added to respond to menu item action to open log file in Finder
 // ref: http://stackoverflow.com/questions/15842226/how-to-enable-main-menu-item-copy
-- (IBAction)openLog:(id)sender; {
+- (IBAction)openLog:(id)sender;
+{
     NSString * path    = @"/tmp/CloverThemeManager/CloverThemeManagerLog.txt";
-    NSURL    * fileURL = [NSURL fileURLWithPath: path];
-    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-    [ws openURL: fileURL];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path])
+    {
+        NSURL    * fileURL = [NSURL fileURLWithPath: path];
+        NSWorkspace * ws = [NSWorkspace sharedWorkspace];
+        [ws openURL: fileURL];
+    }
+    else
+    {
+#if __has_feature(objc_arc)
+        // working in ARC
+        NSAlert* alert = [[NSAlert alloc] init];
+#else
+        // non ARC
+        NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+#endif
+        [alert setMessageText: @"CloverThemeManagerLog.txt does not exist!"];
+        [alert addButtonWithTitle: @"OK"];
+        [alert runModal];
+    }
+}
+
+// Micky1979 added the reset option and relaunch function
+- (IBAction)reset:(id)sender
+{
+    
+#if __has_feature(objc_arc)
+    // working in ARC
+    NSAlert* alert = [[NSAlert alloc] init];
+#else
+    // non ARC
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+#endif
+    
+    [alert setMessageText: @"Please confirm you wish to Clean and Relaunch Clover Theme Manager"];
+    [alert addButtonWithTitle: @"Clean and Relaunch"];
+    [alert addButtonWithTitle: @"Cancel"];
+    if ([alert runModal] == NSAlertFirstButtonReturn)
+    {
+        NSLog (@"Clean and Relaunch chosen");
+        [self relaunch];
+    }
+    else
+    {
+        NSLog (@"Clean and Relaunch cancelled");
+    }
+}
+
+- (void)relaunch
+{
+    
+    NSString *relaunchApp = [[[NSBundle mainBundle] builtInPlugInsPath]
+                             stringByAppendingPathComponent:@"relaunch.app"];
+    
+    [[NSWorkspace sharedWorkspace] launchApplication:relaunchApp];
+    [NSApp terminate:self];
 }
 
 @end

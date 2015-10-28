@@ -37,33 +37,62 @@ CreateSymbolicLinks()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateSymbolicLinks()"
     
     local checkCount=0
-    
+
     # Create symbolic link to local images
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$TEMPDIR" && ((checkCount++))
+    if [ ! -L "${WORKING_PATH}/${APP_DIR_NAME}/themes" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes"
+        ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/themes "$TEMPDIR"
+        ((checkCount++))
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/themes exists"
+        ((checkCount++))
+    fi
     
     # Create symbolic link to local help page
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
-    ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$TEMPDIR" && ((checkCount++))
+    if [ ! -L "${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html"
+        ln -s "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/help/add_theme.html "$TEMPDIR"
+        ((checkCount++))
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Symbolic link to ${WORKING_PATH}/${APP_DIR_NAME}/CloverThemeManagerApp/help/add_theme.html exists"
+        ((checkCount++))
+    fi
     
     # Create symbolic links for scripts dir files, except cloverthememanager.js which is copied to tmp earlier on    
     local filecount=0
     for f in "$JSSCRIPTS_DIR"/*
     do
         if [ "${f##*/}" != "cloverthememanager.js" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to $f"
-            ln -s "$f" "$TEMPDIR"/scripts && ((checkCount++))
+            if [ ! -L "$f" ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to $f"
+                ln -s "$f" "$TEMPDIR"/scripts
+                ((checkCount++))
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Symbolic link to $f exists"
+            fi
             ((filecount++))
         fi
     done
 
     # Create symbolic links for styles dir
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/styles"
-    ln -s "${PUBLIC_DIR}/styles" "$TEMPDIR" && ((checkCount++))
+    if [ ! -L "${PUBLIC_DIR}/styles" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/styles"
+        ln -s "${PUBLIC_DIR}/styles" "$TEMPDIR"
+        ((checkCount++))
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Symbolic link to ${PUBLIC_DIR}/styles exists"
+        ((checkCount++))
+    fi
     
     # Create symbolic links for assets dir
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/assets"
-    ln -s "${PUBLIC_DIR}/assets" "$TEMPDIR" && ((checkCount++))
+    if [ ! -L "${PUBLIC_DIR}/assets" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Creating symbolic link to ${PUBLIC_DIR}/assets"
+        ln -s "${PUBLIC_DIR}/assets" "$TEMPDIR"
+        ((checkCount++))
+    else
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Symbolic link to ${PUBLIC_DIR}/assets exists"
+        ((checkCount++))
+    fi
     
     # Add messages in to log for initialise.js to detect.
     local countToMatch=$(( 4 + filecount ))
@@ -1163,19 +1192,27 @@ CheckForAppUpdate()
         local serverAppVersion=$mainAppVersion
     fi
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}serverAppVersion=$serverAppVersion"
-    
-    # Compare local vs server main app versions
-    if [ $serverAppVersion != $mainAppVersion ]; then
-        # If this differs then prompt user to download a new version of the app.
+
+    # Remove full stops.
+    local serverAppVersionNum=$( echo "$serverAppVersion" | tr -d '.' )
+    local mainAppVersionNum=$( echo "$mainAppVersion" | tr -d '.' )
+
+    # Compare server vs main app versions
+    if [ $serverAppVersionNum -gt $mainAppVersionNum ]; then
+        # Prompt user to download a new version of the app.
         # This is because I can't replace the currently running binary.
         WriteToLog "Application update is available. Current=$mainAppVersion | Server=$serverAppVersion"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverAppVersion}@"
         SendToUI "UpdateAvailApp@${serverAppVersion}@"
         return 0
     else
-        # The main app version is the same.
+        if [ $serverAppVersionNum -eq $mainAppVersionNum ]; then
+            WriteToLog "Application is at latest version: $serverAppVersion"
+        elif [ $serverAppVersionNum -lt $mainAppVersionNum ]; then
+            WriteToLog "Application version $mainAppVersion is at newer than server version."
+        fi
+
         # Continue to check if the public dir has changed as that can be updated still.
-        WriteToLog "Application is at latest version: $serverAppVersion"
         WriteToLog "Checking to see if there are any script updates available."
         
         # ======================================
@@ -2061,7 +2098,7 @@ MapLastSelectedPathToGUID()
         for (( u=0; u<${#themeDirPaths[@]}; u++ ))
         do
             # Note: Two MBR partitioned, FAT32 formatted USB sticks will both have zero UUID.
-            if [ $gLastSelectedPartitionGUID == $zeroUUID ]; then
+            if [ "${gLastSelectedPartitionGUID}" == "${zeroUUID}" ]; then
                 if [ "${duPartitionGuid[$u]}" == "$zeroUUID" ]; then
                     # Attempt to match theme path
                     if [ "${themeDirPaths[$u]}" == "$TARGET_THEME_DIR" ]; then
@@ -3428,6 +3465,7 @@ mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString"
 RemoveFile "$logFile"
 WriteToLog "CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
 WriteToLog "Started Clover Theme Manager script"
+getDate=$(date); WriteToLog "$getDate"
 WriteLinesToLog
 WriteToLog "scriptPid=$scriptPid | appPid=$appPid"
 WriteLinesToLog
@@ -3794,12 +3832,20 @@ if [ "$gitCmd" != "" ]; then
                 # remove everything up until, and including, the first @
                 gBootlogState="${logLine#*@}"
                 UpdatePrefsKey "ShowHideBootlog" "$gBootlogState"
+
+            # Clear and Relaunch messages?
+            elif [[ "$logLine" == *Relaunch* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+
+            # Look out for App Transport Security message and clear
+            elif [[ "$logLine" == *Transport* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
             fi
 
             # Get process ID of parent
             appPid=$( ps -p ${pid:-$$} -o ppid= )
         done
-        CleanUp    
+        # CleanUp  # /tmp/CloverThemeManager Dir is now deleted by main app on exit.
         exit 0
     fi
 else
