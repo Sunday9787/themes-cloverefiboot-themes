@@ -11,16 +11,6 @@
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
 	<script src="scripts/jquery-2.1.3.min.js"></script>
 	<script src="scripts/cloverthememanager.js"></script>
-	<script src="http://www.schillmania.com/projects/snowstorm/snowstorm.js"></script>
-	<script>
-	    snowStorm.autoStart = false;
-	    snowStorm.animationInterval = 256;
-	    snowStorm.followMouse = false;
-	    this.freezeOnBlur = false;
-	    this.vMaxX = 0;
-	    this.vMaxY = 2;
-	    this.zIndex = 5;
-	</script>
 </head>
 <body>
 
@@ -97,7 +87,7 @@
 <!--INSERT_CONTROL_OPTIONS_BAND_HERE-->
 
     <div id="FooterLinks">
-        <p class="textFooter"><a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a>&nbsp;&nbsp;|&nbsp;&nbsp;<button type="button" id="SnowToggleButton" class="openButton">Snow Off</button></p>
+        <p class="textFooter"><a href="http://www.insanelymac.com/forum/topic/302674-clover-theme-manager/" target="_blank">Development Topic and check for updates</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/CloverThemeManager/" target="_blank">Source Code</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="add_theme.html" target="_blank">How to add my theme</a></p>
     </div> <!-- End FooterLinks -->
     
 </div> <!-- End footer --> 

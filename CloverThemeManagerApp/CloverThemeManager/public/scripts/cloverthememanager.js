@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.76.2
+//Version=0.76.3
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -220,11 +220,6 @@ function readBashToJsMessageFile()
                 //${newThemeList} is a comma separated list
                 macgap.app.removeMessage(firstLine);
                 UpdateAndRefreshPartitionSelectMenu(firstLineSplit[1]);
-                break;
-            case "Snow":
-                // Bash sends: "Snow@${gSnow}@"
-                macgap.app.removeMessage(firstLine);
-                ToggleSnow(firstLineSplit[1]);
                 break;
             case "BootlogView":
                 // Bash sends: "BootlogView@${gBootlogState}@"
@@ -1012,19 +1007,6 @@ $(function()
         if(chosenOption != "-") {
             // Send message to bash script to notify change.
             macgap.app.launch("CTM_changeThemeC@" + chosenOption);
-        }
-    });
-    
-    //-----------------------------------------------------
-    // On clicking the Snow button
-    $("#SnowToggleButton").on('click', function() {
-        var textState = $(this).text();
-        if (textState.indexOf("Snow Off") >= 0) {
-            ToggleSnow("Off");
-            macgap.app.launch("CTM_Snow@Off");
-        } else {  
-            ToggleSnow("On");
-            macgap.app.launch("CTM_Snow@On");
         }
     });
 });
@@ -1945,18 +1927,6 @@ function ClosePreviewsForUninstalledThemes()
 {
     // Close all preview images for UnInstalled themes
     $('.buttonInstall').closest("#ThemeBand").next('[class="accordionContent"]').slideUp('normal');
-}
-
-//-------------------------------------------------------------------------------------
-function ToggleSnow(action)
-{
-    if (action == "Off") {
-        snowStorm.stop();
-        $("#SnowToggleButton").text("Snow On");
-    } else if (action == "On") {  
-        snowStorm.resume();
-        $("#SnowToggleButton").text("Snow Off");
-    }
 }
 
 //-------------------------------------------------------------------------------------

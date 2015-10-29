@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.1"
+VERS="0.77.2"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -1994,10 +1994,7 @@ ReadPrefsFile()
      
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Resetting internal theme arrays"
         ResetInternalThemeArrays
-        
-        gSnow=$( defaults read "$gUserPrefsFile" Snow )
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gSnow=$gSnow"
-        
+
         gBootlogState=$( defaults read "$gUserPrefsFile" ShowHideBootlog )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}gBootlogState=${gBootlogState}"
         
@@ -2065,10 +2062,6 @@ ReadPrefsFile()
 
         # Add message in to log for initialise.js to detect.
         WriteToLog "CTM_ReadPrefsCreate"
-    fi
-
-    if [ "$gSnow" == "" ]; then
-        gSnow="On"
     fi
 
     if [ "$gBootlogState" == "" ]; then
@@ -2208,10 +2201,6 @@ SendUIInitData()
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
         SendToUI "InstalledThemes@-@"
     fi
-      
-    # Send UI setting for Snow
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Snow@${gSnow}@"
-    SendToUI "Snow@${gSnow}@"
 
     # Send thumbnail size
     if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
@@ -2400,31 +2389,6 @@ RespondToUserThemeAction()
             return $?
         else
             return 1
-        fi
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-RespondToUserSnowToggle()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserSnowToggle()"
-    
-    local messageFromUi="$1"
-
-    # remove everything up until, and including, the first @
-    messageFromUi="${messageFromUi#*@}"
-    chosenOption="${messageFromUi##*:}"
-
-    if [ ! "$chosenOption" == "" ]; then
-        if [ "$chosenOption" == "On" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to set enable Snow."
-            gSnow="On"
-            UpdatePrefsKey "Snow" "On"
-        elif [ "$chosenOption" == "Off" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to set disable Snow."
-            gSnow="Off"
-            UpdatePrefsKey "Snow" "Off"
         fi
     fi
 }
@@ -3438,7 +3402,6 @@ gUISettingViewThumbnails="Show"
 gUISettingViewPreviews="Hide"
 gInitialising=0                                                        # Send init messages to log file for to initialise.js to read.
 gitCmd=""                                                          # Will be set to path to installed git binary to use
-gSnow="Off"                                                        # Default state for Snow effect. ** Should really remove this! **
 gBootlogState="Open"                                               # Default state for bootlog in UI. This is overridden by user prefs
 gNvramPlistFullPath=""                                             # Will become full path if theme entry exists in nvram.plist
 gConfigPlistFullPath=""                                            # Will become full path if theme entry exists in config.plist
@@ -3817,12 +3780,7 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_updateApp* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 RespondToUserUpdateApp "$logLine"
-                
-            # Has user chosen to toggle snow?
-            elif [[ "$logLine" == *CTM_Snow* ]]; then
-                ClearTopOfMessageLog "$logJsToBash"
-                RespondToUserSnowToggle "$logLine"
-                
+
             elif [[ "$logLine" == *started* ]]; then
                 ClearTopOfMessageLog "$logJsToBash" 
                 
