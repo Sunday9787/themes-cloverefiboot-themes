@@ -188,22 +188,6 @@ DeletePlistEntry()
 }
 
 # ---------------------------------------------------------------------------------------
-UpdateApp()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}UpdateApp()"
-    
-    local successFlag=1
-    
-    # Remove existing theme dir on target.
-    if [ -f "$scriptToRun" ]; then
-        "$scriptToRun" && successFlag=0
-    fi
-        
-    echo $successFlag
-}
-
-# ---------------------------------------------------------------------------------------
 MountESP()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
@@ -385,9 +369,6 @@ case "$whichFunction" in
                                     ;;
      "DeleteThemePlistEntry"      ) fileToChange="${arguments[3]}"
                                     DeletePlistEntry
-                                    ;;
-     "UpdateApp"                  ) scriptToRun="${arguments[3]}"
-                                    UpdateApp
                                     ;;
      "FindMBrBootDevice"          ) FindMbrDevice
                                     ;;   

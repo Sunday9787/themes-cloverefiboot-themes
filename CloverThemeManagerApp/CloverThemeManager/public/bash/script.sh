@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.2"
+VERS="0.77.3"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -1135,141 +1135,6 @@ EnsureSymlinks()
 }
 
 # ---------------------------------------------------------------------------------------
-RespondToUserUpdateApp()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUserUpdateApp()"
-    
-    local messageFromUi="$1"
-
-    # remove everything up until, and including, the first @
-    messageFromUi="${messageFromUi#*@}"
-    chosenOption="${messageFromUi##*:}"
-
-    if [ ! "$chosenOption" == "" ]; then
-        if [ "$chosenOption" == "Yes" ]; then
-            WriteToLog "User chose to update app."
-            DownloadPublicDirFromServer
-            if [ $? -eq 0 ]; then
-                CreateUpdateScript
-                PerformUpdates
-                SendToUI "UpdateAppFeedback@Success@"
-            fi
-        else
-            WriteToLog "User chose not to update app."
-            # As the user decided to not update right now then now check for theme updates
-            CheckForThemeUpdates &
-        fi
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-CheckForAppUpdate()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForAppUpdate()"
-    
-    WriteToLog "Checking to see if there's an application update available."
-    
-    # Remove app files from a previous run
-    if [ -d "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager ]; then
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Removing previous CloverThemeManagerApp/CloverThemeManager directory"
-        rm -rf "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager
-    fi
-
-    # ======================================
-    # Get the version of main app on server.
-    local themeManagerInfoPlistPath="CloverThemeManagerApp/CloverThemeManager/MacGap"
-    local themeManagerInfoPlistFile="CloverThemeManager-Info.plist"
-    local pathToWorkingInfoPlist="${WORKING_PATH}/${APP_DIR_NAME}"/"${themeManagerInfoPlistPath}"
-    local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
-    cd "${WORKING_PATH}/${APP_DIR_NAME}"
-    "$gitCmd" archive --remote="${gitRepositoryUrl}themes" HEAD "${themeManagerInfoPlistPath}"/"${themeManagerInfoPlistFile}" | tar -x
-    if [ -f "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" ]; then
-        serverAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}" )
-        rm "${pathToWorkingInfoPlist}"/"${themeManagerInfoPlistFile}"
-    else
-        local serverAppVersion=$mainAppVersion
-    fi
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}serverAppVersion=$serverAppVersion"
-
-    # Remove full stops.
-    local serverAppVersionNum=$( echo "$serverAppVersion" | tr -d '.' )
-    local mainAppVersionNum=$( echo "$mainAppVersion" | tr -d '.' )
-
-    # Compare server vs main app versions
-    if [ $serverAppVersionNum -gt $mainAppVersionNum ]; then
-        # Prompt user to download a new version of the app.
-        # This is because I can't replace the currently running binary.
-        WriteToLog "Application update is available. Current=$mainAppVersion | Server=$serverAppVersion"
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverAppVersion}@"
-        SendToUI "UpdateAvailApp@${serverAppVersion}@"
-        return 0
-    else
-        if [ $serverAppVersionNum -eq $mainAppVersionNum ]; then
-            WriteToLog "Application is at latest version: $serverAppVersion"
-        elif [ $serverAppVersionNum -lt $mainAppVersionNum ]; then
-            WriteToLog "Application version $mainAppVersion is at newer than server version."
-        fi
-
-        # Continue to check if the public dir has changed as that can be updated still.
-        WriteToLog "Checking to see if there are any script updates available."
-        
-        # ======================================
-        # Get current app update version for the public DIR
-        if [ -f "${PUBLIC_DIR}"/.updateID ]; then
-            local currentVersion=$( cat "${PUBLIC_DIR}"/.updateID )
-        else
-            local currentVersion=0
-        fi
-    
-        # Get server version  
-        local updateIDFilePath="CloverThemeManagerApp/CloverThemeManager/public/.updateID"
-        local pathToWorkingPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
-        local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"
-        "$gitCmd" archive --remote="${gitRepositoryUrl}themes" HEAD "$updateIDFilePath" | tar -x
-        if [ -f "${pathToWorkingPublicDir}"/.updateID ]; then
-            local serverVersion=$( cat "${pathToWorkingPublicDir}"/.updateID )
-        else
-            local serverVersion=0
-        fi
-    
-        if [ $serverVersion -gt $currentVersion ]; then
-            WriteToLog "Scripts update(s) are available. Current=$currentVersion | Server=$serverVersion"
-            
-            # Is app on read-only volume?
-            if [ "${SELF_PATH:0:9}" == "/Volumes/" ]; then
-                volumeName="${SELF_PATH##*/Volumes/}"
-                volumeName="${volumeName%%/*}"
-                deviceIdentifier=$( df -lah | grep "/Volumes/${volumeName}" | awk '{print $1}' )
-                readOnlyVolume=$( diskutil info $deviceIdentifier | grep "Read-Only Volume" )
-                if [ "$readOnlyVolume" != "" ]; then
-                    readOnlyVolume="${readOnlyVolume##*:}"
-                    readOnlyVolume=$( echo "$readOnlyVolume" | tr -d ' ' )
-                    WriteToLog "Readonly volume: $readOnlyVolume"
-                fi
-            fi
-            
-            if [ "$readOnlyVolume" != "Yes" ]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@${serverVersion}@"
-                SendToUI "UpdateAvailApp@${serverVersion}@"
-            else
-                WriteToLog "Application is running on read-only volume so scripts update cannot be done."
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailApp@ReadOnly@"
-                SendToUI "UpdateAvailApp@ReadOnly@"
-            fi
-            return 0
-        else
-            WriteToLog "No script updates available. Current=$currentVersion | Server=$serverVersion"
-            return 1
-        fi
-    fi
-    
-    cd "${WORKING_PATH}"
-}
-
-# ---------------------------------------------------------------------------------------
 DownloadPublicDirFromServer()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
@@ -1294,191 +1159,6 @@ DownloadPublicDirFromServer()
     else
         WriteToLog "Error. Downloading app files from the repo failed."
         return 1
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-CreateUpdateScript()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateUpdateScript()"
-
-    AddCopyCommandToFile()
-    {
-        if [ "$1" == "" ]; then
-            local destination="$PUBLIC_DIR"
-        else
-            local destination="${PUBLIC_DIR}/${1}"
-        fi
-        # Escape any spaces
-        tmpA=$( echo "$2" | sed 's/ /\\ /g' )
-        tmpB=$( echo "$destination" | sed 's/ /\\ /g' )
-
-        # Note: cloverthememanager.js gets changed during runtime with sed.
-        #       If this file requires updating then we must replace cloverthememanager.jse.
-        #       When the app quits, cloverthememanager.js is deleted and cloverthememanager.jse is
-        #       renamed back to cloverthememanager.js ready for next run.
-        if [[ "$tmpA" == *cloverthememanager.js* ]]; then
-            if [ -f "$tmpB"/cloverthememanager.jse ]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Update for cloverthememanager.js. cloverthememanager.jse exists"
-                tmpB="$tmpB"/cloverthememanager.jse
-            fi
-        fi
-        printf "cp ${tmpA} ${tmpB}\n" >> "$updateScript"
-    }
-    
-    AddOrUpdateIfNewer()
-    {
-        local dirName="$1"
-        local fileName="${2##*/}"
-        
-        if [ "$dirName" == "" ]; then
-            local pathAndName="$fileName"
-        else
-            local pathAndName="${dirName}/${fileName}"
-        fi
-
-        if [ ! -f "${PUBLIC_DIR}/${pathAndName}" ]; then
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}File $pathAndName is new. Adding"
-            AddCopyCommandToFile "$dirName" "$2"
-            echo 0
-        else
-            # file already exists. Is it different?
-            if [[ $(CalculateMd5 "${PUBLIC_DIR}/${pathAndName}") != $(CalculateMd5 "$2") ]]; then
-                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}File $fileName has been updated."
-                AddCopyCommandToFile "$dirName" "$2"
-                echo 0
-            else
-                echo 2
-            fi
-        fi
-    }
-
-    local needUpdating=1
-    local updateAvailAppStr=""
-    
-    # Delete any previous update script
-    RemoveFile "$updateScript"
-    
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Checking App updates" 
-    local pathToDownloadedPublicDir="${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp/CloverThemeManager/public
-    if [ -d "$pathToDownloadedPublicDir" ]; then
-        # Check each item against current ones in app
-        
-        for item in "$pathToDownloadedPublicDir"/*
-        do
-            needUpdating=1
-            # Is this item a directory?
-            if [[ -d "$item" ]]; then
-                # if directory does not currently exist in app then add it.
-                local dirName="${item##*/}"
-                #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Found Directory: $dirName" 
-                if [ ! -d "${PUBLIC_DIR}/${dirName}" ]; then
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Directory $dirName is new. Adding" 
-                    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}cp $item $PUBLIC_DIR"
-                    tmpA=$( echo "$item" | sed 's/ /\\ /g' )
-                    tmpB=$( echo "$PUBLIC_DIR" | sed 's/ /\\ /g' )
-                    printf "cp -R ${tmpA} ${tmpB}\n" >> "$updateScript"
-                    updateAvailAppStr="${updateAvailAppStr},$dirName (New Directory)"
-                else
-                    # Directory already exists. Check each file for update.
-                    # Note: No plans here for sub directories
-                    for items in "$item"/*
-                    do
-                        if [[ -f "$items" ]]; then  
-                            needUpdating=$( AddOrUpdateIfNewer "$dirName" "$items" )
-                            if [ $needUpdating -eq 0 ]; then
-                                updateAvailAppStr="${updateAvailAppStr},${dirName}/${items##*/}"
-                            fi
-                        fi
-                    done
-                fi
-            
-            # Is this item a file?
-            elif [[ -f "$item" ]]; then
-                needUpdating=$( AddOrUpdateIfNewer "" "$item" )
-                if [ $needUpdating -eq 0 ]; then
-                    updateAvailAppStr="${updateAvailAppStr},${item##*/}"
-                fi
-            fi
-
-        done
-    fi
-    
-    # Add copying .updateID to app public dir
-    if [ -f "${pathToDownloadedPublicDir}"/.updateID ]; then
-        AddCopyCommandToFile "" "${pathToDownloadedPublicDir}/.updateID"
-    fi    
-    
-    if [ "$updateAvailAppStr" != "" ] && [ "${updateAvailAppStr:0:1}" == "," ]; then
-        # Remove leading comma from string
-        updateAvailAppStr="${updateAvailAppStr#?}"
-        # Make note of scripts md5
-        updateScriptChecksum=$(CalculateMd5 "$updateScript")
-    else
-        # No app update in the downloaded files. Can remove
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No app updates. Deleting $pathToDownloadedPublicDir" 
-        rm -rf "$pathToDownloadedPublicDir"
-    fi
-}
-
-# ---------------------------------------------------------------------------------------
-PerformUpdates()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PerformUpdates()"
-
-    local successFlag=1
-    if [ -f "$updateScript" ]; then
-
-        # Check update script md5
-        if [ $(CalculateMd5 "$updateScript") == $updateScriptChecksum ]; then
-
-            WriteToLog "md5 matches."
-            chmod 755 "$updateScript"
-        
-            # Check public directory is writeable
-            CheckPathIsWriteable "${PUBLIC_DIR}"
-            local isPathWriteable=$? # 1 = not writeable / 0 = writeable
-
-            WriteToLog "Performing Updates"
-            if [ $isPathWriteable -eq 1 ]; then # Not Writeable
-               if [ $(CheckOsVersion) -ge 13 ]; then
-                    successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                                   /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
-                else
-                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UpdateApp\" & \"@$updateScript\" with administrator privileges" )
-                fi
-           else
-                WriteToLog "Public DIR is writeable"
-                "$updateScript" && successFlag=0
-            fi
-        else
-            WriteToLog "Error. $updateScript has invalid md5. Update not done."
-        fi
-    else
-        WriteToLog "$updateScript not found."
-    fi
-    
-    if [ $successFlag -eq 0 ]; then
-        WriteToLog "Updates were successful."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAppFeedback@Success@"
-        SendToUI "UpdateAppFeedback@Success@"
-        
-        # Remove update files
-        cd "${WORKING_PATH}/${APP_DIR_NAME}"/CloverThemeManagerApp
-        if [ -d "CloverThemeManager/public" ]; then
-            rm -rf "CloverThemeManager/public"
-        fi
-        
-        # Remove update script
-        if [ -f "$updateScript" ]; then
-            rm "$updateScript"
-        fi
-    else
-        WriteToLog "Updates failed."
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAppFeedback@Fail@"
-        SendToUI "UpdateAppFeedback@Fail@"
     fi
 }
 
@@ -3418,15 +3098,13 @@ TARGET_THEME_DIR=""
 TARGET_THEME_DIR_DEVICE=""
 TARGET_THEME_PARTITIONGUID=""
 
-updateIdVersion=$( cat "${PUBLIC_DIR}"/.updateID )
-
 # Find version of main app.
 mainAppInfoFilePath="${SELF_PATH%Resources*}"
 mainAppVersion=$( /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$mainAppInfoFilePath"/Info.plist  )
 
 # Begin log file
 RemoveFile "$logFile"
-WriteToLog "CTM_VersionApp ${mainAppVersion} (updateID ${updateIdVersion})"
+WriteToLog "CTM_Version ${mainAppVersion}"
 WriteToLog "Started Clover Theme Manager script"
 getDate=$(date); WriteToLog "$getDate"
 WriteLinesToLog
@@ -3631,13 +3309,8 @@ if [ "$gitCmd" != "" ]; then
         CheckAndRemoveBareClonesNoLongerNeeded
         CheckForAndRemoveThemeGitDirs
 
-        CheckForAppUpdate
-        retVal=$? # returns 1 if no update / 0 if valid is available
-        # If update available then user will be notified so do not check for theme updates.
-        if [ $retVal -eq 1 ]; then
-            CheckForThemeUpdates &
-        fi
-        
+        CheckForThemeUpdates &
+
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
         SendToUI "EnableInterface@@"
 
@@ -3775,11 +3448,6 @@ if [ "$gitCmd" != "" ]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "ShowPreviewsButton" "Show"
                 WriteToLog "User chose to show previews"
-            
-            # Has user chosen to show preview?
-            elif [[ "$logLine" == *CTM_updateApp* ]]; then
-                ClearTopOfMessageLog "$logJsToBash"
-                RespondToUserUpdateApp "$logLine"
 
             elif [[ "$logLine" == *started* ]]; then
                 ClearTopOfMessageLog "$logJsToBash" 
