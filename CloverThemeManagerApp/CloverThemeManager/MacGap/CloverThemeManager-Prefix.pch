@@ -22,6 +22,6 @@
 
 #define kDefaultCheckInterval   604800 // seconds (one week)
 
-// the RSS xml stored somewere (must be accessible w/o credentials)
-#define kCTM_SUFeedURL @"http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CTM_AppCast.xml"
+// the RSS xml stored somewhere (must be accessible w/o credentials)
+#define kCTM_SUFeedURL @"http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CTM_AppCast.xml?format=raw"
 #endif
