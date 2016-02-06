@@ -15,10 +15,15 @@
 
 @synthesize windowController;
 
+
+#pragma mark app initialization
 - (void) applicationWillFinishLaunching:(NSNotification *)aNotification
 {
-    
-    
+    [self loadSparkleSettings];
+    if (floor(kCFCoreFoundationVersionNumber) >= kCFCoreFoundationVersionNumber10_9)
+    {
+#define MAVERICKS_ONWARDS 1
+    }
 }
 
 -(BOOL)applicationShouldHandleReopen:(NSApplication*)application
@@ -73,43 +78,9 @@
     // test writing to file
     //NSString *str = @"1@Test\n2@Arse\n3@Box\n4@Car\n5@Raver\n6@Chicken\n7@Random\n8@Key\n9@Otter\n";
     //[str writeToFile:@BASH_TO_JS_LOG atomically:YES encoding:NSUTF8StringEncoding error:nil];
-    
 }
 
-// blackosx added to quit application on window close.
-// http://stackoverflow.com/questions/14449986/quitting-an-app-using-the-red-x-button
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
-{
-    [self cleanTmpDir];
-    return YES;
-}
-
-// blackosx added to quit application on command-q.
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication
-{
-    [self cleanTmpDir];
-    return YES;
-}
-
-- (void)cleanTmpDir
-{
-    // Moved Micky1979's code from Relaunch.m to here.
-    // Delete temporary files from the previous execution:
-    NSError *error;
-    NSLog(@"Deleting /private/tmp/CloverThemeManager directory.\n");
-    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/CloverThemeManager"])
-    {
-        [[NSFileManager defaultManager] removeItemAtPath:@"/private/tmp/CloverThemeManager" error:&error];
-        
-        if (error) NSLog(@"Problem encountered deleting /private/tmp/CloverThemeManager directory.\n");
-    } else
-    {
-        NSLog(@"/private/tmp/CloverThemeManager directory not found.\n");
-    }
-    
-    usleep(500000); // 1/2 second
-}
-
+#pragma mark helper functions
 - (NSString *)pathForTemporaryFileWithPrefix:(NSString *)prefix
 {
     NSString *  result;
@@ -158,6 +129,7 @@
     }
 }
 
+#pragma mark self relaunch + clean
 // Micky1979 added the reset option and relaunch function
 - (IBAction)reset:(id)sender
 {
@@ -184,6 +156,25 @@
     }
 }
 
+- (void)cleanTmpDir
+{
+    // Moved Micky1979's code from Relaunch.m to here.
+    // Delete temporary files from the previous execution:
+    NSError *error;
+    NSLog(@"Deleting /private/tmp/CloverThemeManager directory.\n");
+    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/CloverThemeManager"])
+    {
+        [[NSFileManager defaultManager] removeItemAtPath:@"/private/tmp/CloverThemeManager" error:&error];
+        
+        if (error) NSLog(@"Problem encountered deleting /private/tmp/CloverThemeManager directory.\n");
+    } else
+    {
+        NSLog(@"/private/tmp/CloverThemeManager directory not found.\n");
+    }
+    
+    usleep(500000); // 1/2 second
+}
+
 - (void)relaunch
 {
     
@@ -192,6 +183,98 @@
     
     [[NSWorkspace sharedWorkspace] launchApplication:relaunchApp];
     [NSApp terminate:self];
+}
+
+#pragma mark Sparkle updater
+- (IBAction)openSparklePref:(id)sender
+{
+#ifdef MAVERICKS_ONWARDS
+    // 10.9 onwards, untill now (10.11.x)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSApp mainWindow] beginSheet:self.SparkleWindow completionHandler:^(NSModalResponse returnCode) {
+            
+        }];
+    });
+#else
+    // deprecated in 10.9 but used by older OSes
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSApp beginSheet:self.SparkleWindow  modalForWindow:(NSWindow *)_window modalDelegate:self didEndSelector:nil contextInfo:nil];
+    });
+#endif
+}
+
+- (IBAction)endSparklePref:(id)sender
+{
+#ifdef MAVERICKS_ONWARDS
+    // 10.9 onwards, until now (10.11.x)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[[NSApp mainWindow] sheetParent] endSheet:self.SparkleWindow returnCode:NSModalResponseOK];
+        [self.SparkleWindow  orderOut:self];
+    });
+#else
+    // deprecated in 10.9 but used by older OSes
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSApp endSheet:self.SparkleWindow];
+        [self.SparkleWindow orderOut:sender];
+    });
+#endif
+}
+
+- (void)loadSparkleSettings
+{
+    SUUpdater*sharedUpdater = [SUUpdater sharedUpdater];
+    
+    if ([ud objectForKey:kSULastCheckTime])
+    {
+        self.SparkleLastUpdateField.stringValue = [ud objectForKey:kSULastCheckTime];
+    }
+    else
+    {
+        self.SparkleLastUpdateField.stringValue = @"Never!";
+    }
+    
+    self.SparkleAutoCheck.state = [ud integerForKey:kSUEnableAutomaticChecks] == 0 ? NSOffState : NSOnState;
+    self.SparkleAutoDownload.state = [ud integerForKey:kSUAutomaticallyUpdate] == 0 ? NSOffState : NSOnState;
+    
+    [self.SparkleTimingPopup selectItemWithTag:
+     ([ud integerForKey:kSUScheduledCheckInterval] != 0) ? [ud integerForKey:kSUScheduledCheckInterval] : kDefaultCheckInterval];
+    
+    [sharedUpdater setAutomaticallyChecksForUpdates:([ud integerForKey:kSUEnableAutomaticChecks] == 0 ) ? NO : YES];
+    [sharedUpdater setAutomaticallyDownloadsUpdates:([ud integerForKey:kSUAutomaticallyUpdate] == 1 ) ? YES : NO];
+    [sharedUpdater setUpdateCheckInterval:self.SparkleTimingPopup.selectedTag];
+    
+    [self saveSparkleSetting:nil];
+}
+- (IBAction)saveSparkleSetting:(id)sender
+{
+ 
+    self.SparkleTimingPopup.enabled = self.SparkleAutoCheck.state == NSOnState ? NO : YES;
+    
+    [ud setBool:self.SparkleAutoCheck.state forKey:kSUEnableAutomaticChecks];
+    [ud setBool:self.SparkleAutoDownload.state forKey:kSUAutomaticallyUpdate];
+    [ud setInteger:self.SparkleTimingPopup.selectedTag forKey:kSUScheduledCheckInterval];
+    [ud synchronize];
+}
+
+- (IBAction)sparkleCheckForUpdates:(id)sender
+{
+    [[SUUpdater sharedUpdater] checkForUpdates:sender];
+}
+
+#pragma mark tear down
+// blackosx added to quit application on window close.
+// http://stackoverflow.com/questions/14449986/quitting-an-app-using-the-red-x-button
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
+{
+    [self cleanTmpDir];
+    return YES;
+}
+
+// blackosx added to quit application on command-q.
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication
+{
+    [self cleanTmpDir];
+    return YES;
 }
 
 @end

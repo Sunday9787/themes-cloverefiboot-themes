@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		015840871AAE35F100C7A8DC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 015840861AAE35F100C7A8DC /* Cocoa.framework */; };
+		01D1654A1C65DCA400BDCFE8 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01D165491C65DCA400BDCFE8 /* Sparkle.framework */; };
+		01D1654E1C65DDBA00BDCFE8 /* Sparkle.framework in Copy Sparkle */ = {isa = PBXBuildFile; fileRef = 01D165491C65DCA400BDCFE8 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1495814F15C15CCC00E1CFE5 /* Notice.m in Sources */ = {isa = PBXBuildFile; fileRef = 1495814E15C15CCC00E1CFE5 /* Notice.m */; };
 		6F169DA718CC332E005EDDF3 /* Command.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F169DA618CC332E005EDDF3 /* Command.m */; };
 		6F169DAA18CC35FD005EDDF3 /* CallbackDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F169DA918CC35FD005EDDF3 /* CallbackDelegate.m */; };
@@ -20,6 +22,7 @@
 		88C0646014BDE10A00E4BCE2 /* Window.m in Sources */ = {isa = PBXBuildFile; fileRef = 88C0645F14BDE10A00E4BCE2 /* Window.m */; };
 		88C0646614BDEC5800E4BCE2 /* Window.xib in Resources */ = {isa = PBXBuildFile; fileRef = 88C0646414BDEC5800E4BCE2 /* Window.xib */; };
 		88C0646D14BDF6A600E4BCE2 /* WindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 88C0646C14BDF6A600E4BCE2 /* WindowController.m */; };
+		CE00866C1C616CF300A2F7D4 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = CE00866B1C616CF300A2F7D4 /* dsa_pub.pem */; };
 		CE0387281BE02DAB00B9F97F /* relaunch.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE0387251BE02D4500B9F97F /* relaunch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F2B80016179E0FC100B069A8 /* Clipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = F2B80015179E0FC100B069A8 /* Clipboard.m */; };
 		FA32509D14BA813600BF0781 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA32509C14BA813600BF0781 /* WebKit.framework */; };
@@ -57,6 +60,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		CEEDD1451C612277008A730B /* Copy Sparkle */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				01D1654E1C65DDBA00BDCFE8 /* Sparkle.framework in Copy Sparkle */,
+			);
+			name = "Copy Sparkle";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FA3250DD14BA876F00BF0781 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -71,6 +85,7 @@
 
 /* Begin PBXFileReference section */
 		015840861AAE35F100C7A8DC /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		01D165491C65DCA400BDCFE8 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		1495814D15C15CCC00E1CFE5 /* Notice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Notice.h; path = Classes/Commands/Notice.h; sourceTree = "<group>"; };
 		1495814E15C15CCC00E1CFE5 /* Notice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Notice.m; path = Classes/Commands/Notice.m; sourceTree = "<group>"; };
 		6F169DA518CC332E005EDDF3 /* Command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Command.h; path = Classes/Commands/Command.h; sourceTree = "<group>"; };
@@ -93,6 +108,7 @@
 		88C0646514BDEC5800E4BCE2 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Window.xib; sourceTree = "<group>"; };
 		88C0646B14BDF6A600E4BCE2 /* WindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WindowController.h; sourceTree = "<group>"; };
 		88C0646C14BDF6A600E4BCE2 /* WindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WindowController.m; sourceTree = "<group>"; };
+		CE00866B1C616CF300A2F7D4 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dsa_pub.pem; sourceTree = SOURCE_ROOT; };
 		CE0387201BE02D4400B9F97F /* relaunch.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = relaunch.xcodeproj; path = relaunch/relaunch.xcodeproj; sourceTree = "<group>"; };
 		F2B80014179E0FC100B069A8 /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Clipboard.h; sourceTree = "<group>"; };
 		F2B80015179E0FC100B069A8 /* Clipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Clipboard.m; sourceTree = "<group>"; };
@@ -133,6 +149,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01D1654A1C65DCA400BDCFE8 /* Sparkle.framework in Frameworks */,
 				6F169DAC18CD8A4A005EDDF3 /* JavaScriptCore.framework in Frameworks */,
 				FA32509D14BA813600BF0781 /* WebKit.framework in Frameworks */,
 				015840871AAE35F100C7A8DC /* Cocoa.framework in Frameworks */,
@@ -232,6 +249,7 @@
 		FAE451BD14BA79C600190544 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				01D165491C65DCA400BDCFE8 /* Sparkle.framework */,
 				015840861AAE35F100C7A8DC /* Cocoa.framework */,
 				6F169DAB18CD8A4A005EDDF3 /* JavaScriptCore.framework */,
 				FA32509C14BA813600BF0781 /* WebKit.framework */,
@@ -266,6 +284,7 @@
 		FAE451C514BA79C600190544 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				CE00866B1C616CF300A2F7D4 /* dsa_pub.pem */,
 				FA3250E614BA8BCE00BF0781 /* application.icns */,
 				FAE451C614BA79C600190544 /* CloverThemeManager-Info.plist */,
 				FAE451C714BA79C600190544 /* InfoPlist.strings */,
@@ -287,6 +306,8 @@
 				FAE451B614BA79C600190544 /* Sources */,
 				FAE451B714BA79C600190544 /* Frameworks */,
 				FA3250DD14BA876F00BF0781 /* CopyFiles */,
+				CEEDD1451C612277008A730B /* Copy Sparkle */,
+				CE00866D1C616DA000A2F7D4 /* Generate Sparkle update */,
 			);
 			buildRules = (
 			);
@@ -345,6 +366,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE00866C1C616CF300A2F7D4 /* dsa_pub.pem in Resources */,
 				FA3250E514BA883A00BF0781 /* public in Resources */,
 				FAE451C914BA79C600190544 /* InfoPlist.strings in Resources */,
 				FAE451CF14BA79C600190544 /* Credits.rtf in Resources */,
@@ -355,6 +377,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CE00866D1C616DA000A2F7D4 /* Generate Sparkle update */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Sparkle update";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "# created by Micky1979\n\n# dsa_priv.pem must never to be shared (nor in github or sourceforge, users can make its own)\n# so is better to store in the Home folder (or wherever you want, but not in the CloverThemeManager source)\nPRIVATE_KEY=\"/Volumes/Store/Computing/Dev/CloverThemeManager_Update_Resources/DSA_Keys/CTM/dsa_priv.pem\" # place it where you want..\n\nINSTRUCTION=\"${TARGET_BUILD_DIR}/Instruction.txt\"\nBUILD=$( defaults read \"${TARGET_BUILD_DIR}/CloverThemeManager.app/Contents/Info\" CFBundleVersion )\nBUILD_SHORT=$( defaults read \"${TARGET_BUILD_DIR}/CloverThemeManager.app/Contents/Info\" CFBundleShortVersionString )\nZIPPED_BUILD=\"CloverThemeManager.app.zip\"\nSIGN_TOOL=\"${PROJECT_DIR}/sign_update\"\n\nrm -f \"${TARGET_BUILD_DIR}/${ZIPPED_BUILD}\"\nif [ ! -f \"${PRIVATE_KEY}\" ]; then\necho \"no dsa_priv.pem found!\" > \"${INSTRUCTION}\"\nexit 0\nfi\n\ncd \"${TARGET_BUILD_DIR}\" && zip -r \"${ZIPPED_BUILD}\" \"CloverThemeManager.app\"  > /dev/null 2>&1\necho \"${ZIPPED_BUILD} created!\"\necho \"YOU MUST REPLACE THE FOLLOWING IN YOUR EXISTING CTM_AppCast.xml:\" > \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"<pubDate>$( date )</pubDate>\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"sparkle:shortVersionString=\\\"r${BUILD_SHORT}\\\"\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"sparkle:version=\\\"${BUILD}\\\"\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"<enclosure url=\\\"https://full_link_to_the_\\\"$ZIPPED_BUILD\\\"_on_sourceforge\\\" (never change..)\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"sparkle:dsaSignature=\\\"$( \"${SIGN_TOOL}\" \"${ZIPPED_BUILD}\" \"${PRIVATE_KEY}\" )\\\" />\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"length=\\\"$( stat -f'%z' \"${ZIPPED_BUILD}\" )\\\"\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"\" >> \"${INSTRUCTION}\"\necho \"REMEMBER: sparkle:version=\\\"\\\" must be numeric only!\" >> \"${INSTRUCTION}\"\necho \"DON'T forget to update CTM_AppCast.xml and the new $ZIPPED_BUILD on your server..\" >> \"${INSTRUCTION}\"\necho \"NEVER generate a new dsa_priv.pem, otherwise no one will be able to receive updates!\" >> \"${INSTRUCTION}\"\necho \"      ...just store it in a secure place..\" >> \"${INSTRUCTION}\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		FAE451B614BA79C600190544 /* Sources */ = {
@@ -435,6 +474,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -451,7 +491,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = "";
 			};
@@ -462,6 +502,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -471,7 +512,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = "";
 			};
 			name = Release;
@@ -481,16 +522,20 @@
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "compiler-default";
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "~/CTM/Debug";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/MacGap\"",
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = "-Wl,-rpath,@loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;
@@ -503,16 +548,20 @@
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "compiler-default";
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "~/CTM/Release";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/MacGap\"",
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MacGap/CloverThemeManager-Prefix.pch";
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "MacGap/CloverThemeManager-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = "-Wl,-rpath,@loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = CloverThemeManager;
 				SDKROOT = macosx;

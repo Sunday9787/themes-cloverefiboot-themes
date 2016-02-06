@@ -12,4 +12,16 @@
     #import <Cocoa/Cocoa.h>
     #import "Constants.h"
     #import "Utils.h"
+
+#define ud [NSUserDefaults standardUserDefaults]
+
+#define kSUEnableAutomaticChecks    @"SUEnableAutomaticChecks"
+#define kSUAutomaticallyUpdate      @"SUAutomaticallyUpdate"
+#define kSUScheduledCheckInterval   @"SUScheduledCheckInterval"
+#define kSULastCheckTime            @"SULastCheckTime"
+
+#define kDefaultCheckInterval   604800 // seconds (one week)
+
+// the RSS xml stored somewere (must be accessible w/o credentials)
+#define kCTM_SUFeedURL @"http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CTM_AppCast.xml"
 #endif

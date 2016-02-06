@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -12,7 +12,15 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customObject id="546" customClass="AppDelegate"/>
+        <customObject id="546" userLabel="AppDelegate" customClass="AppDelegate">
+            <connections>
+                <outlet property="SparkleAutoCheck" destination="51i-1Q-gOL" id="LMF-QS-TNR"/>
+                <outlet property="SparkleAutoDownload" destination="UZH-GD-S4L" id="E3u-eH-3jU"/>
+                <outlet property="SparkleLastUpdateField" destination="88b-oN-oJr" id="cwP-WI-9hf"/>
+                <outlet property="SparkleTimingPopup" destination="qd1-Qb-ryR" id="m9N-HL-pgO"/>
+                <outlet property="SparkleWindow" destination="9GQ-sE-9Ty" id="Red-IG-0Kd"/>
+            </connections>
+        </customObject>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
                 <menuItem title="CloverThemeManager" id="56">
@@ -27,7 +35,16 @@
                             <menuItem isSeparatorItem="YES" id="236">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Preferences…" keyEquivalent="," id="129"/>
+                            <menuItem title="Check for updates.." keyEquivalent="u" id="LJ7-9m-knw">
+                                <connections>
+                                    <action selector="sparkleCheckForUpdates:" target="-1" id="UaQ-be-7WF"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Sparkle Preferences…" keyEquivalent="," id="129">
+                                <connections>
+                                    <action selector="openSparklePref:" target="-1" id="Bgo-wx-T6m"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -102,10 +119,117 @@
                 <menuItem title="Tool" id="BVK-kr-se4">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
+                <menuItem title="Sparkle" id="p9D-9A-2ME">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
             </items>
             <connections>
                 <outlet property="delegate" destination="-2" id="545"/>
             </connections>
         </menu>
+        <window title="Sparkle Updater" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="9GQ-sE-9Ty">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="152" y="158" width="480" height="270"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1600" height="877"/>
+            <view key="contentView" id="wOt-lM-YhW">
+                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <button id="51i-1Q-gOL">
+                        <rect key="frame" x="18" y="234" width="217" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
+                        <buttonCell key="cell" type="check" title="Automatically check for updates" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="DVc-fK-9gL">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="saveSparkleSetting:" target="546" id="nX0-0s-u0R"/>
+                        </connections>
+                    </button>
+                    <popUpButton focusRingType="none" verticalHuggingPriority="750" id="qd1-Qb-ryR">
+                        <rect key="frame" x="18" y="193" width="237" height="26"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" focusRingType="none" inset="2" id="eR4-IU-cjf">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="5bT-DG-gwe">
+                                <items>
+                                    <menuItem title="Hourly" tag="3600" id="wSX-Pf-vaO">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Daily" tag="86400" id="FTC-gP-Ex8"/>
+                                    <menuItem title="Weekly" tag="604800" id="CeL-We-vaB"/>
+                                    <menuItem title="Monthly" tag="2629800" id="exL-m6-Ofo"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="saveSparkleSetting:" target="546" id="i4Q-aY-BIJ"/>
+                        </connections>
+                    </popUpButton>
+                    <textField verticalHuggingPriority="750" id="88b-oN-oJr">
+                        <rect key="frame" x="18" y="89" width="444" height="14"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <animations/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Last update checked: " id="qoi-TR-sdu">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button id="UZH-GD-S4L">
+                        <rect key="frame" x="18" y="160" width="219" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
+                        <buttonCell key="cell" type="check" title="Automatically download updates" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="iAs-Hj-XtD">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="saveSparkleSetting:" target="546" id="bR2-qc-iqz"/>
+                        </connections>
+                    </button>
+                    <imageView id="WTd-de-Yhv">
+                        <rect key="frame" x="272" y="124" width="199" height="141"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <animations/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="application" id="xpV-Cb-HL2"/>
+                    </imageView>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="7EM-hw-5zZ">
+                        <rect key="frame" x="18" y="108" width="122" height="14"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Last checked Time:" id="BAe-5d-KC9">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="8Vz-R2-zkr">
+                        <rect key="frame" x="395" y="6" width="71" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
+                        <buttonCell key="cell" type="push" title="done" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="gzi-nd-vXS">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="endSparklePref:" target="546" id="No9-TJ-X9h"/>
+                        </connections>
+                    </button>
+                </subviews>
+                <animations/>
+            </view>
+            <point key="canvasLocation" x="325" y="397"/>
+        </window>
     </objects>
+    <resources>
+        <image name="application" width="512" height="512"/>
+    </resources>
 </document>

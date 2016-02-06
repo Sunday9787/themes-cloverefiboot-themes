@@ -10,5 +10,7 @@
 
 int main(int argc, char *argv[])
 {
+    [ud setObject:kCTM_SUFeedURL forKey:@"SUFeedURL"];
+    [ud synchronize];
     return NSApplicationMain(argc, (const char **)argv);
 }
