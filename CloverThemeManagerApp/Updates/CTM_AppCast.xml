@@ -423,7 +423,7 @@ a:hover {
             ]]>
             </description>
             <pubDate>Sat  6 Feb 2016 20:36:41 GMT</pubDate>
-            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip" sparkle:version="763" sparkle:shortVersionString="r0.76.3" length="1758291" type="application/octet-stream" sparkle:dsaSignature="MC0CFQDenMu2cv7ThcZhS+fXeNgx2yL77gIUYgVIoviGsuITFtlGCTkB8dFzks4="/>
+            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw" sparkle:version="763" sparkle:shortVersionString="r0.76.3" length="1758291" type="application/octet-stream" sparkle:dsaSignature="MC0CFQDenMu2cv7ThcZhS+fXeNgx2yL77gIUYgVIoviGsuITFtlGCTkB8dFzks4="/>
         </item>
     </channel>
 </rss>
