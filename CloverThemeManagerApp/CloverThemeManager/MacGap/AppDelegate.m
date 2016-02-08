@@ -198,7 +198,7 @@
 #else
     // deprecated in 10.9 but used by older OSes
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSApp beginSheet:self.SparkleWindow  modalForWindow:(NSWindow *)_window modalDelegate:self didEndSelector:nil contextInfo:nil];
+        [NSApp beginSheet:self.SparkleWindow  modalForWindow:(NSWindow *)[NSApp mainWindow] modalDelegate:self didEndSelector:nil contextInfo:nil];
     });
 #endif
 }

@@ -1406,8 +1406,12 @@ GetBootlog()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}GetBootlog()"
     
     local bootLog=$( ioreg -lw0 -pIODeviceTree | grep boot-log )
-    bootLog=${bootLog#*'<'}
-    bootLog=${bootLog%%'>'*}
+    #bootLog=${bootLog#*'<'}
+    #bootLog=${bootLog%%'>'*}
+    # Use cut instead of above as a large bootlog a couple of minutes removing > from end.
+    bootLog=$(cut -d '<' -f2 <<< "$bootLog")
+    bootLog=$(cut -d '>' -f1 <<< "$bootLog")
+
     if [ "$bootLog" != "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Found a bootlog in ioreg. Writing bootlog to disk"
         echo "$bootLog" > "${TEMPDIR}"/bootLogtmp
