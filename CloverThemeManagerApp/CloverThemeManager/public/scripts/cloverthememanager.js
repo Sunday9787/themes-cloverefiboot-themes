@@ -444,7 +444,7 @@ function ShowUpdateThemesInUI(themeList)
         localThemeUpdates = (themeList).split(',');
         if (localThemeUpdates != "") {
         
-            // Update only installed themes with uninstall buttons
+            // Update only installed themes with update buttons
             for (var t = 0; t < localThemeUpdates.length; t++) {
                 if(localThemeUpdates[t] != "") {
                     ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
@@ -856,14 +856,14 @@ $(function()
         if (textState.indexOf("Hide") >= 0) {
             SetShowHideButton("Hide");
             // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_showUninstalled");
+            macgap.app.launch("CTM_hideUninstalled");
             // Close all preview images for UnInstalled themes
             ClosePreviewsForUninstalledThemes();
         }
         if (textState.indexOf("Show") >= 0) {     
             SetShowHideButton("Show");   
             // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hideUninstalled");
+            macgap.app.launch("CTM_showUninstalled");
         }
     });
     
@@ -1358,6 +1358,12 @@ function RespondToButtonPress(button,status)
     // Note: Could cause issues if a theme has 'Update_' in it's title.
 
     var button = button.replace('Update_', '');
+    
+    // Update buttons for themes with spaces in their names had the
+    // spaces replaced with five Q's. Let's put spaces back
+    if (button.indexOf('QQQQQ') >= 0) {
+        button = button.replace(/QQQQQ/g, ' ');
+    }
 
     // Notify bash script. Send button name and it's current state.
     macgap.app.launch("CTM_ThemeAction@" + button + "@" + status);
@@ -1602,25 +1608,37 @@ function ChangeButtonAndBandToUnInstall(installedThemeName)
 //-------------------------------------------------------------------------------------
 function ChangeButtonAndBandToUpdate(themeName)
 {
-    // Check we have not already added an update button for this theme.
-    var buttonExistCheck=$("#button_Update_"+themeName);
-    if (!jQuery.contains(document, buttonExistCheck[0])) {
+    var themeNameForUpdate = themeName;
+
+    // Check for any spaces in the theme name as I've just found out that
+    // an id with spaces is invalid html. Ooops! This happens for each 
+    // theme with a name containing spaces.
     
+    // For now, replace replace a space with five Q's.
+    // This will only be used internally and the user won't see anything.
+    if (themeName.indexOf(' ') >= 0) {
+        themeNameForUpdate = themeName.replace(/ /g, 'QQQQQ');
+    }
+
+    // Check we have not already added an update button for this theme.
+    var buttonExistCheck=$("#button_Update_"+themeNameForUpdate);
+
+    if (!jQuery.contains(document, buttonExistCheck[0])) {
         // Add a new 'update' button beside the current 'UnInstall' button
         // http://stackoverflow.com/questions/12618214/binding-jquery-events-before-dom-insertion
-        $( '<div class="buttonUpdate" id="button_Update_' + themeName + '"></div>' ).on('click', function(e) {
+        $( '<div class="buttonUpdate" id="button_Update_' + themeNameForUpdate + '"></div>' ).on('click', function(e) {
             e.preventDefault();
             var pressedButton=$(this).attr('id');
             var currentStatus=$(this).attr('class');
             RespondToButtonPress(pressedButton,currentStatus);
         }).insertAfter("[id='button_" + themeName + "']");
-        $("[id='button_Update_" + themeName + "']").html("Update");
+        $("[id='button_Update_" + themeNameForUpdate + "']").html("Update");
 
         // set the vertical position to match the uninstall button
         var uninstallButtonTop=$("[id='button_" + themeName + "']").css("margin-top");
-        $("[id='button_Update_" + themeName + "']").css("margin-top",uninstallButtonTop);
+        $("[id='button_Update_" + themeNameForUpdate + "']").css("margin-top",uninstallButtonTop);
     }
-    
+
     // Change band background for themes with updates available   
     // Note: bash script supplies this theme list in alphabetical order.
     //       If themes are not called in alphabetical order this does not work.

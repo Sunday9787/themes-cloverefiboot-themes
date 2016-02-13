@@ -3417,14 +3417,14 @@ if [ "$gitCmd" != "" ]; then
                 UpdatePrefsKey "Thumbnail" "$thumbSize"
                 WriteToLog "User changed thumbnail size to $thumbSize"
             
-            # Has user chosen to hide uninstalled themes?
-            elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
+            # Has user chosen to show uninstalled themes?
+            elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "UnInstalledButton" "Show"
                 WriteToLog "User chose to show all themes"
             
-            # Has user chosen to show uninstalled themes?
-            elif [[ "$logLine" == *CTM_showUninstalled* ]]; then
+            # Has user chosen to hide uninstalled themes?
+            elif [[ "$logLine" == *CTM_hideUninstalled* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 UpdatePrefsKey "UnInstalledButton" "Hide"
                 WriteToLog "User chose to hide uninstalled themes"

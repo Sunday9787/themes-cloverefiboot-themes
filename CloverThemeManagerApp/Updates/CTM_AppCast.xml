@@ -105,7 +105,8 @@ a:hover {
 - Removed previous update code.<br>
 - updateID no longer used.<br>
 - Message box link colour changed to lighter blue.<br>
-- bootlog trim action changed to better handle large data.</p>
+- bootlog trim action changed to better handle large data.<br>
+- Workaround issue where additional update buttons could appear for themes with spaces in their name when toggling show all view.</p>
 
         <div class="band1">   
           <p class="textTitleSubHeading">v0.76.2</p>
