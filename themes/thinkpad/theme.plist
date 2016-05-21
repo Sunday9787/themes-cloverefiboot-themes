@@ -33,9 +33,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>10</integer>
+			<integer>9</integer>
 			<key>Path</key>
-			<string>GoB_PTMono_10W.png</string>
+			<string>font.png</string>
 			<key>Type</key>
 			<string>Load</string>
 		</dict>
