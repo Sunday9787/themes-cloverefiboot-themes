@@ -48,7 +48,12 @@
 			<key>Small</key>
 			<string>Selection_small.png</string>
 		</dict>
-	</dict>
+		<key>Components</key>
+		<dict>
+			<key>Help</key>
+			<false/>
+			</dict>
+		</dict>
 	<key>Year</key>
 	<string>2014</string>
 </dict>
