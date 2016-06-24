@@ -8,6 +8,11 @@
 	<string>Main metallic looking theme</string>
 	<key>Theme</key>
 	<dict>
+		<key>Layout</key>
+		<dict>
+			<key>Vertical</key>
+			<false/>
+		</dict>
 		<key>Anime</key>
 		<array>
 			<dict>
@@ -48,11 +53,13 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>10</integer>
+			<integer>12</integer>
 			<key>Path</key>
-			<string>BoG_LucidaConsole_10W_NA.png</string>
+			<string>Cambria_20pt_Cell_22x25_l-2_ra.png</string>
 			<key>Type</key>
 			<string>Load</string>
+			<key>Proportional</key>
+			<true/>
 		</dict>
 		<key>Selection</key>
 		<dict>
