@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>blackosx</string>
 	<key>Description</key>
-	<string>A version of BGM with 256px icons v1.1</string>
+	<string>A version of BGM with 256px icons v1.2</string>
 	<key>Year</key>
 	<string>2014</string>
 	<key>Theme</key>
@@ -423,6 +423,30 @@
 				<integer>14</integer>
 				<key>Path</key>
 				<string>Anim_14_Themes</string>
+				<key>Frames</key>
+				<integer>64</integer>
+				<key>FrameTime</key>
+				<integer>25</integer>
+				<key>Once</key>
+				<false/>
+				<key>ScreenEdgeX</key>
+				<string>left</string>
+				<key>DistanceFromScreenEdgeX%</key>
+				<integer>28</integer>
+				<key>ScreenEdgeY</key>
+				<string>bottom</string>
+				<key>DistanceFromScreenEdgeY%</key>
+				<integer>48</integer>
+				<key>NudgeX</key>
+				<integer>0</integer>
+				<key>NudgeY</key>
+				<integer>0</integer>
+			</dict>
+			<dict>
+				<key>ID</key>
+				<integer>15</integer>
+				<key>Path</key>
+				<string>Anim_15_SysVars</string>
 				<key>Frames</key>
 				<integer>64</integer>
 				<key>FrameTime</key>
