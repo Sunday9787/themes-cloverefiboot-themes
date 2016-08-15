@@ -29,7 +29,12 @@
 			<true/>
 		</dict>
 		<key>Banner</key>
-		<string>LogoBlack.png</string>
+		<string>LogoWhite.png</string>
+		<key>Components</key>
+		<dict>
+			<key>Help</key>
+			<false/>
+		</dict>
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
@@ -47,11 +52,6 @@
 			<string>0x07ABF750</string>
 			<key>Small</key>
 			<string>Selection_small.png</string>
-		</dict>
-		<key>Components</key>
-		<dict>
-			<key>Help</key>
-			<false/>
 		</dict>
 	</dict>
 	<key>Year</key>
