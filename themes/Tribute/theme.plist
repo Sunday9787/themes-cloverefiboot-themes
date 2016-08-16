@@ -38,7 +38,7 @@
 				<key>Path</key>
 				<string>Tribute_logo</string>
 				<key>Frames</key>
-				<integer>10</integer>
+				<integer>11</integer>
 				<key>FrameTime</key>
 				<integer>200</integer>
 			</dict>

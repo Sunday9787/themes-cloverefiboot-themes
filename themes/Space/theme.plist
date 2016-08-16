@@ -45,7 +45,7 @@
 			<integer>9</integer>
 			<key>Path</key>
 			<string>WoB_Hellfire_Bold_9W.png</string>
-                        <key>Proportional</key>
+			<key>Proportional</key>
 			<true/>
 			<key>Type</key>
 			<string>Load</string>
