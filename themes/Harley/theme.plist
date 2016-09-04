@@ -51,7 +51,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>WoG_Monaco_ExtraSmooth_10W.png</string>
+			<string>font.png</string>
 			<key>Type</key>
 			<string>Load</string>
 		</dict>
