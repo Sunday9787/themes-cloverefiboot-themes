@@ -43,8 +43,7 @@
 				<integer>200</integer>
 			</dict>
 			<integer>9</integer>
-			<string>WoB_Hellfire_Bold_9W.png</string>
-			<true/>
+			<string>font.png</string>
 			<string>Load</string>
 		</array>
 		<key>Selection</key>
