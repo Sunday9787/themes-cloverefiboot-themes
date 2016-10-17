@@ -971,8 +971,8 @@ function SetBootLogState(state)
                 $('#header').css("z-index",0);
                 
                 var newHeaderHeight = (currentHeaderHeight + bootLogContainerHeight);
-                $('#BootLogContainer').show(500);
-                $('#content').animate({ left: '0', top: '+=' + (bootLogContainerHeight)}, 500, function () {
+                $('#BootLogContainer').show(200);
+                $('#content').animate({ left: '0', top: '+=' + (bootLogContainerHeight)}, 200, function () {
                         // Action after animation has completed
                         SetListingThemesMessageAndProgressBarPosition();
                         
@@ -991,8 +991,8 @@ function SetBootLogState(state)
                 $('#header').css("z-index",0);
                 
                 var newHeaderHeight = (currentHeaderHeight - bootLogContainerHeight);
-                $('#BootLogContainer').hide(500);
-                $('#content').animate({ left: '0', top: '-=' + (bootLogContainerHeight)}, 500, function () {
+                $('#BootLogContainer').hide(200);
+                $('#content').animate({ left: '0', top: '-=' + (bootLogContainerHeight)}, 200, function () {
                         // Action after animation has completed
                         $('#header').height(newHeaderHeight);
                         SetListingThemesMessageAndProgressBarPosition();
