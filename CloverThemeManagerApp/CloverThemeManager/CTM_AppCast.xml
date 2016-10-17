@@ -97,7 +97,8 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
           
-- Nothing yet<br>
+- Amend check for network connection.<br>
+- Update detection for Clover revision.<br>
 
           </p>
         <!--</div>-->
