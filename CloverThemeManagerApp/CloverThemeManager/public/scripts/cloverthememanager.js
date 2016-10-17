@@ -787,13 +787,13 @@ $(function()
                 .closest("#ThemeBand")                   // Traverse up the DOM to the ThemeBand div
                 .nextAll('[class="accordionContent"]')   // find the next siblings with class .accordionContent
                 .first()                                 // just use first one
-                .slideUp('normal');                      // Slide up
+                .slideUp('fast');                        // Slide up
             } else {
                 $(this)
                 .closest("#ThemeBand")
                 .nextAll('[class="accordionContent"]')
                 .first()
-                .slideToggle('normal');
+                .slideToggle('fast');
             }
         } else {
             return;

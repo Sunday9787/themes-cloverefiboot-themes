@@ -96,9 +96,12 @@ a:hover {
         <!--<div class="band1">-->
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
-          
+
 - Amend check for network connection.<br>
 - Update detection for Clover revision.<br>
+- Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
+- Increase speed of showing/hiding bootlog region. 
+- Increase speed of showing/hiding accordion. 
 
           </p>
         <!--</div>-->
