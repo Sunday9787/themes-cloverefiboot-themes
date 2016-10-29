@@ -100,7 +100,7 @@ a:hover {
 - Amend check for network connection.<br>
 - Update detection for Clover revision.<br>
 - Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
-- Increase speed of showing/hiding bootlog region. 
+- Increase speed of showing/hiding bootlog region.<br>
 - Increase speed of showing/hiding accordion. 
 
           </p>
