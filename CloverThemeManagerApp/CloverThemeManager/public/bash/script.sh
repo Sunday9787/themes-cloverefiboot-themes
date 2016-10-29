@@ -1049,28 +1049,42 @@ IsRepositoryLive()
     
     local noConnection=1
     local checkService=""
-
-    # First check if there is a network connection. Check IPv4
+    local defaultGateway=""
+    
     WriteToLog "CTM_RepositoryCheckNetwork"
+
+    # Check if there is a network connection. Check IPv4
 
     # Check for discoveryd or mDNSResponder
     checkService=$( ps -ax | grep discoveryd | grep ?? | head -n1 )
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}checkService discoveryd: $checkService"
     if [ "$checkService" != "" ] && [[ "$checkService" != *"grep discoveryd"* ]] ; then
-        local defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
+        defaultGateway=$( netstat -r | grep default | head -n1 | awk '{print $2}' )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}discoveryd: defaultGateway=$defaultGateway"
     fi
 
     checkService=$( ps -ax | grep mDNSResponder | grep ?? | head -n1 )
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}checkService mDNSResponder: $checkService"
     if [ "$checkService" != "" ] && [[ "$checkService" != *"grep mDNSResponder"* ]]; then
-        local defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
+        defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
         if [ "$defaultGateway" != "" ]; then
             defaultGateway="${defaultGateway##*:}"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}mDNSResponder: defaultGateway=$defaultGateway"
         fi
     fi
 
+    # Add a final check, based on OS version.
+    if [ "$defaultGateway" == "" ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Default gateway not found. Checking directly for Router in SPNetworkDataType"
+        if [ $(CheckOsVersion) -ge 15 ]; then
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}OS version >= 15"
+            defaultGateway=$( /usr/sbin/system_profiler SPNetworkDataType | grep Router: | head -n1 | tr -d ' ' )
+            if [ "$defaultGateway" != "" ]; then
+                defaultGateway="${defaultGateway##*:}"
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}defaultGateway=$defaultGateway"
+            fi
+        fi
+    fi
 
     if [ "$defaultGateway" != "" ]; then
 
