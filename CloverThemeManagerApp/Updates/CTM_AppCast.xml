@@ -6,7 +6,7 @@
         <description>Most recent changes with links to updates.</description>
         <language>en</language>
         <item>
-            <title>Version 0.76.3</title>
+            <title>Version 0.76.4</title>
             <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -94,8 +94,16 @@ a:hover {
         <p class="textTitleHeading">Latest version changelog</p>
         
         <!--<div class="band1">-->
-          <p class="textTitleSubLatestHeading">v0.76.4</p>
-          <p class="textSectionLatestBody">- Nothing yet</p>
+          <p class="textTitleSubLatestHeading">0.76.4</p>
+          <p class="textSectionLatestBody">
+
+- Amend check for network connection.<br>
+- Update detection for Clover revision.<br>
+- Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
+- Increase speed of showing/hiding bootlog region.<br>
+- Increase speed of showing/hiding accordion. 
+
+          </p>
         <!--</div>-->
 
         <p class="textTitleHeadingSml">Changelog history</p>
@@ -429,8 +437,8 @@ a:hover {
 </html>
             ]]>
             </description>
-            <pubDate>Sat Feb 13 19:53:01 GMT 2016</pubDate>
-            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw" sparkle:version="763" sparkle:shortVersionString="r0.76.3" length="1756540" type="application/octet-stream" sparkle:dsaSignature="MC0CFAnzrzD+zEJGw+9B/rYP9MDZTaGXAhUA7LxqTt9tqE1oikdRyARy2LsbVQA="/>
+            <pubDate>Sat Oct 29 07:20:37 BST 2016</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="764"                       sparkle:shortVersionString="r0.76.4"                       length="1756721"                       sparkle:dsaSignature="MC0CFFTvr50QiJ7gmcoGPDw86CYMDzzZAhUAvZDHpknSzhDtLpGpDXcUemwW8rc="                       type="application/octet-stream" />
+
         </item>
     </channel>
 </rss>
