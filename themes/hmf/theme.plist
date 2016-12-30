@@ -23,45 +23,40 @@
 			<true/>
 			<key>Swap</key>
 			<true/>
-                        <key>Scale</key>
-                        <integer>5</integer>
+			<key>Scale</key>
+			<integer>5</integer>
 		</dict>
 		<key>Banner</key>
-		<string>logo.png</string>
+		<string>Logo.png</string>
 		<key>Font</key>
-		<dict>
-                  
-                </dict>
+		<dict/>
 		<key>Anime</key>
 		<array>
 			<dict>
 				<key>ID</key>
 				<integer>1</integer>
 				<key>Path</key>
-				<string>hmf_clover_logo</string>
+				<string>Logo_bar</string>
 				<key>Frames</key>
-				<integer>120</integer>
+				<integer>20</integer>
 				<key>FrameTime</key>
-				<integer>40</integer>
+				<integer>120</integer>
 			</dict>
-			<key>CharWidth</key>
 			<integer>10</integer>
-			<key>Path</key>
 			<string>font.png</string>
-			<key>Type</key>
 			<string>Load</string>
-		</dict>
+		</array>
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
 			<string>selection_big.png</string>
 			<key>Color</key>
-			<string>0xB9A18490</string>
+			<string>0xFFFFFF7F</string>
 			<key>Small</key>
 			<string>selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Year</key>
-	<string>2015</string>
+	<string>2016</string>
 </dict>
 </plist>
