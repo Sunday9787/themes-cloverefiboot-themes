@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>chris1111</string>
 	<key>Description</key>
-	<string>hmf</string>
+	<string>HMF</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -36,7 +36,7 @@
 				<key>ID</key>
 				<integer>1</integer>
 				<key>Path</key>
-				<string>Logo_bar</string>
+				<string>HMF_Logo_bar</string>
 				<key>Frames</key>
 				<integer>20</integer>
 				<key>FrameTime</key>
