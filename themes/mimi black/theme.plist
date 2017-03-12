@@ -5,15 +5,19 @@
 	<key>Author</key>
 	<string>Ukr55</string>
 	<key>Description</key>
-	<string>mimi black theme</string>
+	<string>mini black theme</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
 		<dict>
+			<key>Dark</key>
+			<true/>
 			<key>Path</key>
 			<string>bg.png</string>
+			<key>Sharp</key>
+			<string>0x00</string>
 			<key>Type</key>
-			<string>Tile</string>
+			<string>Scale</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
@@ -22,10 +26,13 @@
 			<key>Show</key>
 			<false/>
 			<key>Swap</key>
-			<true/>
+			<false/>
 		</dict>
 		<key>Banner</key>
-		<string>logo_trans.png</string>
+		<dict>
+			<key>Path</key>
+			<string>logo.png</string>
+		</dict>
 		<key>BootCampStyle</key>
 		<true/>
 		<key>Components</key>
@@ -52,7 +59,9 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>mpr.png</string>
+			<string>mpr1.png</string>
+			<key>Proportional</key>
+			<false/>
 			<key>Type</key>
 			<string>Load</string>
 		</dict>
@@ -88,18 +97,20 @@
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
-			<string>selection_big</string>
+			<string>144.png</string>
 			<key>Color</key>
 			<string>0xFFFFFF7F</string>
 			<key>Indicator</key>
 			<string>arrow-64.png</string>
 			<key>OnTop</key>
 			<false/>
+			<key>SelectionSmallWidth</key>
+			<integer>100</integer>
 			<key>Small</key>
-			<string>selection_small.png</string>
+			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Year</key>
-	<string>2016</string>
+	<string>2017</string>
 </dict>
 </plist>
