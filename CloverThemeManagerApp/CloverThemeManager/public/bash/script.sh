@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # A script for Clover Theme Manager
-# Copyright (C) 2014-2015 Blackosx
+# Copyright (C) 2014-2017 Blackosx
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.4"
+VERS="0.77.5"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -629,15 +629,16 @@ RunThemeAction()
                             ;;
     esac
 
-    # Was install operation a success?
+    # Was operation a success?
     if [ $successFlag -eq 0 ]; then
         if [ $COMMANDLINE -eq 0 ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$themeTitleToActOn : ${passedAction} : Success"
-            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Success@${passedAction}@$themeTitleToActOn"
-            SendToUI "Success@${passedAction}@$themeTitleToActOn"
+            #[[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Success@${passedAction}@$themeTitleToActOn"
+            #SendToUI "Success@${passedAction}@$themeTitleToActOn"
             
             if [ "$passedAction" == "Install" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for newly installed theme."
+                SendToUI "Success@${passedAction}@$themeTitleToActOn"
                 # Save new theme details for adding to prefs file
                 gNewInstalledThemeName="$themeTitleToActOn"
                 gNewInstalledThemePath="$TARGET_THEME_DIR"
@@ -647,6 +648,7 @@ RunThemeAction()
 
             if [ "$passedAction" == "UnInstall" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for UnInstalled theme."
+                SendToUI "Success@${passedAction}@$themeTitleToActOn"
                 # Save new theme details for adding to prefs file
                 gUnInstalledThemeName="$themeTitleToActOn"
                 gUnInstalledThemePath="$TARGET_THEME_DIR"
@@ -788,7 +790,7 @@ SetControlOptionHtmlSections()
     ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
     ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\r")
     ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
-    ctBandNvram="$ctBandNvram"$(printf "            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\">\r")
+    ctBandNvram="$ctBandNvram"$(printf "            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\" tabindex=\"14\">\r")
     ctBandNvram="$ctBandNvram"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
     ctBandNvram="$ctBandNvram"$(printf "            <\/select>\r")
   
@@ -796,7 +798,7 @@ SetControlOptionHtmlSections()
     ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
     ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvramP\"><\/div>\r")
     ctBandNvramP="$ctBandNvramP"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
-    ctBandNvramP="$ctBandNvramP"$(printf "            <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\r")
+    ctBandNvramP="$ctBandNvramP"$(printf "            <select id=\"installedThemeDropDownNvramP\" class=\"changeThemeDropdown\" tabindex=\"14\" ${disabledConfigPlist}>\r")
     ctBandNvramP="$ctBandNvramP"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
     ctBandNvramP="$ctBandNvramP"$(printf "            <\/select>\r")
   
@@ -804,7 +806,7 @@ SetControlOptionHtmlSections()
     ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
     ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\r")
     ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
-    ctBandConfig="$ctBandConfig"$(printf "            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" ${disabledConfigPlist}>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" tabindex=\"15\" ${disabledConfigPlist}>\r")
     ctBandConfig="$ctBandConfig"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
     ctBandConfig="$ctBandConfig"$(printf "            <\/select>\r")
     
@@ -1286,17 +1288,21 @@ GetLatestIndexAndEnsureThemeHtml()
             else
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}No updates to index.git"
                 WriteToLog "CTM_IndexOK"
-            
+
+                # Commented out the below condition for now to force rebuild of file.
+                # This is because we now check themeList array in CheckForThemeUpdates()
+                # to see if a theme still exists on the Repo.
+
                 # Use previously saved theme.html
-                if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
-                    WriteToLog "CTM_ThemeListOK"
-                    InsertThemeListHtmlInToManageThemes "file"
-                else
+                #if [ -f "${WORKING_PATH}/${APP_DIR_NAME}"/theme.html ]; then
+                #    WriteToLog "CTM_ThemeListOK"
+                #    InsertThemeListHtmlInToManageThemes "file"
+                #else
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Error!. ${WORKING_PATH}/${APP_DIR_NAME}/theme.html not found"
                     BuildThemeTextInformation
                     CreateThemeListHtml
                     InsertThemeListHtmlInToManageThemes
-                fi 
+                #fi 
             fi
         fi
         
@@ -2088,12 +2094,18 @@ RespondToUserThemeAction()
     
     if [ ! "$chosenTheme" == "" ] && [ ! "$desiredAction" == "" ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}User chose to $desiredAction theme $chosenTheme"
-        
+
         CheckThemePathIsStillValid
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
             RunThemeAction "$desiredAction" "$chosenTheme"
-            return $?
+            # Add 'Update success' notification to UI here so to not conflict with the 'Update All' functionality
+            local checkSuccess=$?
+            if [ "$desiredAction" == "Update" ] && [ $checkSuccess -eq 0 ]; then
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Success@${desiredAction}@$chosenTheme"
+                SendToUI "Success@${desiredAction}@$chosenTheme"
+            fi
+            return $checkSuccess
         else
             return 1
         fi
@@ -2455,6 +2467,49 @@ RespondToDropDownMenuChange()
 }
 
 # ---------------------------------------------------------------------------------------
+RespondToUpdateAll()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUpdateAll()"
+
+    local messageFromUi="$1"
+    local updateThemeList="${messageFromUi#*@}"
+    local updateFail=0
+
+    WriteToLog "User chose to update all themes"
+
+    oIFS="$IFS"; IFS=$','
+    read -a arr <<< "$updateThemeList"
+    IFS="$oIFS"
+
+    for (( u=0; u<${#arr[@]}; u++ ));
+    do
+        CheckThemePathIsStillValid
+        retVal=$? # returns 1 if invalid / 0 if valid
+        if [ $retVal -eq 0 ]; then
+            WriteToLog "Calling update for theme: ${arr[$u]}"
+            RunThemeAction "Update" "${arr[$u]}"
+            updateFail=$? # returns 1 if process failed / 0 if success
+            if [ $updateFail -eq 0 ]; then
+                SendToUI "UpdateAll@Theme@${arr[$u]}"
+            fi
+        else
+            updateFail=1
+        fi
+    done
+
+    if [ $updateFail -eq 0 ]; then
+        # Operation was successful
+        SendToUI "UpdateAll@Complete@-"
+        GetListOfInstalledThemesAndSendToUI
+        GetFreeSpaceOfTargetDeviceAndSendToUI
+        CheckAndRecordUnManagedThemesAndSendToUI
+        ReadThemeEntriesAndSendToUI
+    fi 
+
+}
+
+# ---------------------------------------------------------------------------------------
 ReadAndSendCurrentNvramTheme()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
@@ -2760,11 +2815,13 @@ CheckForThemeUpdates()
 
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CheckForThemeUpdates()"
+    [[ DEBUG -eq 1 ]] && WriteToLog "Num Themes in themeList=${#themeList[@]}"
     
     local updateAvailThemeStr=""
     local gitRepositoryUrl=$( echo ${remoteRepositoryUrl}/ | sed 's/http:/git:/' )
     local themeHashLocal=""
     local themeHashRepo=""
+    local themeStillExistsInRepo=0
 
     if [ "$TARGET_THEME_DIR" != "-" ]; then
     
@@ -2772,11 +2829,27 @@ CheckForThemeUpdates()
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: CheckingThemeUpdates@@"
         SendToUI "CheckingThemeUpdates@@"
-    
+
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
+
+            themeStillExistsInRepo=0
+
+            # Check theme still exists in the repo
+            for ((e=0; e<${#themeList[@]}; e++))
+            do
+
+                if [ "${installedThemesOnCurrentVolume[$t]}" == "${themeList[$e]##*/}" ]; then
+
+                    themeStillExistsInRepo=1
+                    break
+
+                fi
+
+            done
+
             # read hash from currently installed theme
-            if [ -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ]; then
+            if [ -f "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash ] && [ $themeStillExistsInRepo -eq 1 ]; then
                 themeHashLocal=$( cat "$TARGET_THEME_DIR"/"${installedThemesOnCurrentVolume[$t]}"/.hash )
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}themeHashLocal=$themeHashLocal"
 
@@ -2798,6 +2871,9 @@ CheckForThemeUpdates()
                 else
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Failed to read hash for ${installedThemesOnCurrentVolume[$t]} from repository."
                 fi
+                
+            else
+                [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Theme ${installedThemesOnCurrentVolume[$t]} either has no hash, or theme no longer exists in the repository."
             fi
         done
                 
@@ -3425,6 +3501,11 @@ if [ "$gitCmd" != "" ]; then
                     CheckAndRecordUnManagedThemesAndSendToUI
                     ReadThemeEntriesAndSendToUI
                 fi 
+
+            # Has the user pressed the Update All button?
+            elif [[ "$logLine" == *CTM_UpdateAll* ]]; then
+                ClearTopOfMessageLog "$logJsToBash"
+                RespondToUpdateAll "$logLine"
 
             # Has user selected a theme control option?
             elif [[ "$logLine" == *CTM_changeTheme* ]]; then

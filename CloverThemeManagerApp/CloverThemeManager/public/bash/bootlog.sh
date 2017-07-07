@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # A script for Clover Theme Manager
-# Copyright (C) 2014-2015 Blackosx
+# Copyright (C) 2014-2017 Blackosx
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.3
+# v0.76.4
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -349,6 +349,11 @@ ReadBootLog()
             blUsingEmbedded=0
         fi
 
+        # 2:963  0:000   using embedded theme
+        if [[ "$lineRead" == *"using embedded theme"* ]]; then
+            blUsingEmbedded=0
+        fi
+
     done < "$bootLogFile"
 }
 
@@ -429,7 +434,9 @@ PostProcess()
             fi
         else
             blConfigPlistFilePathPrint="${gBootDeviceMountpoint}${blConfigPlistFilePath}"
-            if [ "$blThemeAskedForPath" != "" ]; then
+            if [ "$blThemeAskedForPath" == "internal" ]; then
+                blThemeAskedForPathPrint="${blThemeAskedForPath}/embedded"
+            else
                 blThemeAskedForPathPrint="${gBootDeviceMountpoint}${blThemeAskedForPath}"
             fi
         fi
@@ -493,10 +500,10 @@ CheckNvramIsWorking()
                                 local checkMd5=$( md5 /private/etc/rc.shutdown.d/80.save_nvram_plist.local )
                                 checkMd5="${checkMd5##*= }"
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.shutdown.d/80.save_nvram_plist.local md5=$checkMd5"
-                                if [ "$checkMd5" != "" ] && [[ "$checkMd5" = "44b326ce35acbbeb223031a941baf1a8" || "$checkMd5" = "0cf4ee82fd2da0aa20621c289e70939c" ]]; then
+                                #if [ "$checkMd5" != "" ] && [[ "$checkMd5" = "44b326ce35acbbeb223031a941baf1a8" || "$checkMd5" = "0cf4ee82fd2da0aa20621c289e70939c" ]]; then
                                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Fake nvram should be working. Setting gNvramWorking to 0"
                                     gNvramWorking=0
-                                fi
+                                #fi
                             else
                                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}/private/etc/rc.shutdown.d/80.save_nvram_plist.local does not exist"
                             fi
@@ -662,7 +669,7 @@ PopulateBootLogTitleBand()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}PopulateBootLogTitleBand()"
     
     # Create bootlog band and title html
-    bootlogBandTitleHtml=$(printf "    <div id=\"BootLogTitleBar\" class=\"bootlogBandFill\">\r")
+    bootlogBandTitleHtml=$(printf "    <div id=\"BootLogTitleBar\" class=\"bootlogBandFill\" tabindex=\"1\">\r")
     bandTitle=$(printf "        <span class=\"titleBarTextTitle\">LAST BOOT\&nbsp;\&nbsp;\&\#x25BE\&nbsp;\&nbsp;\&nbsp;\&nbsp;|<\/span>")
     bandTitleDescStart=$(printf "<span class=\"titleBarTextDescription\">")
     
@@ -691,8 +698,12 @@ PopulateBootLogTitleBand()
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded a random theme <span class=\"themeName\">($blThemeNameChosen)<\/span> as no theme was set<\/span>"
     
     # Embedded theme was used
-    elif [ $blUsingEmbedded -eq 0 ]; then
+    elif [ $blUsingEmbedded -eq 0 ] && [ "$blThemeAskedForTitle" == "embedded" ] && [ "$blUsingTheme" == "" ]; then
         bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded theme embedded as it couldn't find any themes<\/span>"
+    
+    # Embedded theme was used
+    elif [ $blUsingEmbedded -eq 0 ]; then
+        bootlogBandTitleHtml="${bootlogBandTitleHtml}${bandTitle}${bandTitleDescStart}${blBootType} Clover ${blCloverRevision} loaded theme embedded as it was asked for<\/span>"
     
     # User set random
     elif [ "$blConfigPlistThemeEntry" == "random" ] || [ "$blNvramThemeEntry" == "random" ]; then

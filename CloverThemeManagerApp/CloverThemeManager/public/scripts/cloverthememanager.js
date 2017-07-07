@@ -1,5 +1,5 @@
 // A script for Clover Theme Manager
-// Copyright (C) 2014-2015 Blackosx
+// Copyright (C) 2014-2017 Blackosx
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.76.4
+//Version=0.76.5
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -24,12 +24,228 @@ var gUpdateThemeListStr="";       // This is used for drawing upper shadow on up
 //-------------------------------------------------------------------------------------
 // On initial load
 $(document).ready(function() {
+
     SetListingThemesMessageAndProgressBarPosition();
     disableInterface();
     hideButtons();
     HideProgressBar();
     readBashToJsMessageFile();
     ResetButtonsAndBandsToDefault();
+    HideUpdateAllButton();
+
+});
+
+
+//-------------------------------------------------------------------------------------
+// Listen to keyboard and scroll to nearest theme based on key pressed.
+document.addEventListener('keydown', function(event) {
+
+    // Check for key press 0-9 or A-Z
+    if ((event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCode <= 90 )) {
+
+        var keyPressed = event.keyCode;
+        var searchKey = String.fromCharCode(keyPressed);
+
+        // find lowercase key also
+        if (event.keyCode >= 65 && event.keyCode <= 90 ) {
+
+            var searchKeyLowerCase = String.fromCharCode(keyPressed + 32)
+
+        } else {
+
+            var searchKeyLowerCase = searchKey;
+
+        }
+
+        // Loop through each theme name and find first
+		$('.themeTitle').each(function(){
+
+		    // get text before first <br>		
+		    var splitter = $(this).html().split('<br>');
+
+		    // Compare first char of theme name
+		    if ( splitter[0].charAt(0) == searchKey || splitter[0].charAt(0) == searchKeyLowerCase ) {
+
+				var firstThemeEntry = $("#ThemeBand").first();
+				var posfirstThemeEntry = firstThemeEntry.position(); // in relation to bottom of header. 0 = Alienware. 52 = BGM, christmas = 390, mac = 858
+
+				var thisThemeEntry = $(this).closest("#ThemeBand");
+				var offset = thisThemeEntry.offset();
+
+				$('#content').animate({
+					scrollTop: offset.top - 99 - posfirstThemeEntry.top
+				});
+
+		        return false; // stop. don't continue looping through the each
+
+		    }
+
+		})
+
+    }
+
+
+    // Check for left arrow
+
+    if ( event.keyCode == 37 ) {
+    
+        // Check if large expanded previews are shown
+
+        if ($("#preview_Toggle_Button").text().indexOf("Collapse") >= 0) {
+
+            SetShowHidePreviews("Hide");
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_hidePreviews");
+
+        } else {
+
+            ChangeThumbnailSize('smaller');
+        
+            // Check for visible thumbnails
+            var showHideButtonText = $("#BandsHeightToggleButton").text();
+            var currentThumbWidth = $(".thumbnail img").first().width();
+        
+            if (currentThumbWidth == 100 ) {
+                SetThemeBandHeight("Hide");
+                // Send a message to the bash script to record user choice in prefs
+                macgap.app.launch("CTM_showThumbails");
+            }
+
+        }
+
+    }
+
+
+    // Check for right arrow
+
+    if ( event.keyCode == 39 ) {
+
+        // Check for visible thumbnails
+        var showHideButtonText = $("#BandsHeightToggleButton").text();
+        if (showHideButtonText.indexOf("Show") >= 0) {
+
+            SetThemeBandHeight("Show");   
+
+            // Send a message to the bash script to record user choice in prefs
+            macgap.app.launch("CTM_hideThumbails");
+
+        } else {
+
+            // Are thumbnails already at largest size?
+            if ( $(".thumbnail img").first().width() == 175 ) {
+
+                // Show Expanded previews
+                SetShowHidePreviews("Show");
+
+                // Send a message to the bash script to record user choice in prefs
+                macgap.app.launch("CTM_showPreviews");
+
+            } else {
+
+                ChangeThumbnailSize('larger');
+
+            }
+
+        }
+        
+    }
+
+
+    // End Button - Scroll to bottom
+
+    if ( event.keyCode == 35 ) {
+    
+        $("#content").animate({ scrollTop: $('#content').prop("scrollHeight")}, 1000);
+
+    }
+
+
+    // Home Button - Scroll to top
+
+    if ( event.keyCode == 36 ) {
+
+        $('#content').animate({
+           scrollTop: 0
+        }, 'slow');
+
+    }
+
+    // Check for Enter / Return key
+
+    if ( event.keyCode == 13 ) {
+
+        focusedItem=$("*:focus").attr("id");
+
+        if ( focusedItem == "BootLogTitleBar" ) {
+            ActionShowHideBootlog();
+        }
+
+        if ( focusedItem == "OpenButton" ) {
+            macgap.app.launch("OpenPath");
+        }
+
+        if ( focusedItem == "EspButton" ) {
+            ActionMountESP();
+        }
+
+        if ( focusedItem == "BandsHeightToggleButton" ) {
+            ActionShowHideThumbnailsButton();
+        }
+
+        if ( focusedItem == "thumbSizeSmaller" ) {
+            ChangeThumbnailSize('smaller');
+        }   
+
+        if ( focusedItem == "thumbSizeLarger" ) {
+            ChangeThumbnailSize('larger');
+        }   
+
+        if ( focusedItem == "preview_Toggle_Button" ) {
+            ActionShowHideExpandedPreviews();
+        }
+
+        if ( focusedItem == "ShowHideUpdateAllButton" ) {
+            ActionUpdateAll();
+        }
+
+        if ( focusedItem == "ShowHideToggleButton" ) {
+            ActionShowHideInstalledThemes();
+        }
+
+        if ( focusedItem == "content" ) {
+            
+        }
+
+        if ( focusedItem == "installedThemeDropDownNvram" ) {
+            ActionChangedDropDownNvram();
+        }
+
+        if ( focusedItem == "installedThemeDropDownNvramP" ) {
+            ActionChangedDropDownNvramP();
+        }
+
+        if ( focusedItem == "installedThemeDropDownConfigP" ) {
+            ActionChangedDropDownConfigP();
+        }
+
+        
+        //alert($("*:focus").attr("id"));
+
+        // Test setting focus to first element
+        //$("#ThemeBand").first().focus();
+        //$("#ThemeBand").accordion("activate", 1 );
+        
+        //var index = $("#ThemeBand").accordion('option','active');
+        //var index = $("#ThemeBand").accordion('option','active');
+        //var index = $('.accordion').accordion('option','active');
+        //alert("Current active accordion index=" + index);
+
+        //var firstThemeEntry = $("#ThemeBand").first();
+       // var posfirstThemeEntry = firstThemeEntry.position(); // in relation to bottom of header. 0 = Alienware. 52 = BGM, christmas = 390, mac = 858
+
+        //alert(posfirstThemeEntry);
+    }
+
 });
 
 //-------------------------------------------------------------------------------------
@@ -163,6 +379,11 @@ function readBashToJsMessageFile()
                 // Bash sends: "Success@${passedAction}@$themeTitleToActOn"
                 macgap.app.removeMessage(firstLine);
                 themeActionSuccess(firstLineSplit[1],firstLineSplit[2]);
+                break;
+            case "UpdateAll":
+                // Bash sends: "UpdateAll@Theme@${arr[$u]}"
+                macgap.app.removeMessage(firstLine);
+                themeActionUpdateAll(firstLineSplit[1],firstLineSplit[2]);
                 break;
             case "Fail":
                 // Bash sends: "Fail@${passedAction}@$themeTitleToActOn"
@@ -450,6 +671,9 @@ function ShowUpdateThemesInUI(themeList)
                     ChangeButtonAndBandToUpdate(localThemeUpdates[t]);
                 }
             }
+
+            ShowUpdateAllButton();
+
         }
     }
 }
@@ -545,6 +769,7 @@ function SetDropDownConfigP(themeName)
 //-------------------------------------------------------------------------------------
 function themeActionSuccess(action,themeName)
 {
+
     if (action != "" & themeName != "") {
 
         // Present dialog to the user
@@ -555,13 +780,15 @@ function themeActionSuccess(action,themeName)
             printText="Updated";
             // theme was updated, remove theme name from global update string
             gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
+
         } else if (action == "UnInstall") {
             // theme was uninstalled - remove theme name from global update string (if there)
             gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
+
         } else {
             printText=(action + "ed");
         }
-        
+
         // Print message
         HideProgressBar();
         SetMessageBoxText("Success:","The theme " + themeName + " was successfully " + printText + ".");
@@ -569,13 +796,14 @@ function themeActionSuccess(action,themeName)
         
         // Send native notification
         sendNotification("Success: The theme " + themeName + " was successfully " + printText + ".");
-        
+
         // Reset current theme list, bands and buttons
         ResetButtonsAndBandsToDefault();
         hideButtons();
-                
+
         // Show Overlay Box to stop user interacting with buttons
         disableInterface();
+
     }
 }
 
@@ -603,6 +831,51 @@ function themeActionFail(action,themeName)
         sendNotification("Failure: The theme " + themeName + " was not " + printText + ".");
     }
 }
+
+//-------------------------------------------------------------------------------------
+function themeActionUpdateAll(message,themeName)
+{
+    if (message != "" & themeName != "") {
+    
+        // message box should already be showing.. Maybe add check?
+
+        ChangeMessageBoxHeaderColour("green");
+        ShowProgressBar();
+        HideMessageBoxClose();
+
+        if (message == "Theme") {
+
+            // theme was updated, remove theme name from global update string
+            gUpdateThemeListStr = gUpdateThemeListStr.replace(themeName+',','');
+
+            // Change dialog text
+            SetMessageBoxText("Success:","The theme " + themeName + " was successfully Updated.");
+
+            // Send native notification
+            sendNotification("Success: The theme " + themeName + " was successfully Updated.");
+
+        } else if (message == "Complete"){
+
+            HideProgressBar();
+
+            // Change dialog text
+            SetMessageBoxText("Completed:","All updates completed successfully.");
+
+            ShowMessageBoxClose();
+
+            // Reset current theme list, bands and buttons
+            ResetButtonsAndBandsToDefault();
+            hideButtons();
+
+        } else {
+
+            alert ("Not supposed to reach here");
+
+        }
+
+    }
+}
+
 
 //-------------------------------------------------------------------------------------
 function disableInterface()
@@ -712,7 +985,7 @@ $(function()
             
             // Show the Free Space text
             ShowFreeSpace();
-            
+
         } else {
             // Hide open button beside device dropdown
             $("#OpenPathButton").css("display","none");
@@ -723,6 +996,8 @@ $(function()
         
         // Honour users choice of which themes to view (All or just Installed)
         GetShowHideButtonStateAndUpdateUI();
+        
+        HideUpdateAllButton();
         
         // Reset current theme list, bands and buttons
         ResetButtonsAndBandsToDefault();
@@ -740,7 +1015,14 @@ $(function()
     $("#RescanBootDeviceButton").on('click', function() {
         macgap.app.launch("RescanBootDevice");
     });
-    
+
+    //-----------------------------------------------------
+    // On pressing the refresh path button
+    $("#RefreshPathButton").on('click', function() {
+        // select current dropdown selection
+        $('#partitionSelect').change();
+    });
+
     //-----------------------------------------------------
     // On pressing the open path button
     $("#OpenPathButton").on('click', function() {
@@ -750,13 +1032,7 @@ $(function()
     //-----------------------------------------------------
     // On pressing the mount ESP button
     $("#MountEspButton").on('click', function() {
-        macgap.app.launch("MountESP");
-        // Show a message to the user
-        ChangeMessageBoxHeaderColour("blue");                            
-        SetMessageBoxText("EFI System Partition(s)","All currently unmounted EFI System Partitions will now be mounted and checked for a /EFI/Clover/Themes directory. If found, the paths will appear in the volume selector.");
-        HideMessageBoxClose();
-        ShowProgressBar();
-        ShowMessageBox();
+        ActionMountESP();
     });
     
     //-----------------------------------------------------
@@ -803,70 +1079,33 @@ $(function()
     //-----------------------------------------------------
     // On clicking the bootlog band
     $('#BootLogTitleBar').click(function() {
-        var hidden = $('#BootLogContainer').is(":hidden");
-        if (!hidden) {
-            SetBootLogState("Close");
-            macgap.app.launch("CTM_bootlog@Close");
-        } else {
-            SetBootLogState("Open");
-            macgap.app.launch("CTM_bootlog@Open");
-        }
+        ActionShowHideBootlog();
     });
     
     //-----------------------------------------------------
     // On clicking the Hide / Show Thumbnails button
     $("#BandsHeightToggleButton").on('click', function() {
-    
-        var textState = $(this).text();
-        if (textState.indexOf("Hide") >= 0) {
-            SetThemeBandHeight("Hide");
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_showThumbails");
-        }
-        if (textState.indexOf("Show") >= 0) {     
-            SetThemeBandHeight("Show");   
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hideThumbails");
-        }
+        ActionShowHideThumbnailsButton();
     });
-        
+
     //-----------------------------------------------------
     // On clicking the Toggle Preview button - change to Expand/Collapse All
     $("#preview_Toggle_Button").click(function() {
-
-        var buttonText=$(this).text();
-        if (buttonText.indexOf("Expand") >= 0) {
-            SetShowHidePreviews("Show");
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_showPreviews");
-        }
-        if (buttonText.indexOf("Collapse") >= 0) {
-            SetShowHidePreviews("Hide");
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hidePreviews");
-        }
+        ActionShowHideExpandedPreviews();
     });	
-    
+
+    //-----------------------------------------------------
+    // On clicking the Update All button
+    $("#ShowHideUpdateAllButton").on('click', function() {
+        ActionUpdateAll();
+    });
+
     //-----------------------------------------------------
     // On clicking the Show Installed / Show All button
     $("#ShowHideToggleButton").on('click', function() {
-    
-        // Change text of button
-        var textState = $(this).text();
-        if (textState.indexOf("Show Installed") >= 0) {
-            SetShowHideButton("Hide");
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hideUninstalled");
-            // Close all preview images for UnInstalled themes
-            ClosePreviewsForUninstalledThemes();
-        }
-        if (textState.indexOf("Show All") >= 0) {     
-            SetShowHideButton("Show");   
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_showUninstalled");
-        }
+        ActionShowHideInstalledThemes();
     });
-    
+
     //-----------------------------------------------------
     // On clicking the Thumbnail Smaller button
     $("#thumbSizeSmaller").on('click', function() {
@@ -902,33 +1141,170 @@ $(function()
     //-----------------------------------------------------
     // On changing the 'NVRAM' dropdown menu.
     $("#installedThemeDropDownNvram").change(function() {
-        var chosenOption=$("#installedThemeDropDownNvram").val();
-        if(chosenOption != "-") {
-            // Send message to bash script to notify change.
-            macgap.app.launch("CTM_changeThemeN@" + chosenOption);
-        }
+        ActionChangedDropDownNvram();
     });
     
     //-----------------------------------------------------
     // On changing the 'NVRAM.plist' dropdown menu.
     $("#installedThemeDropDownNvramP").change(function() {
-        var chosenOption=$("#installedThemeDropDownNvramP").val();
-        if(chosenOption != "-") {
-            // Send message to bash script to notify change.
-            macgap.app.launch("CTM_changeThemeP@" + chosenOption);
-        }
+        ActionChangedDropDownNvramP();
     });
     
     //-----------------------------------------------------
     // On changing the 'Config.plist' dropdown menu.
     $("#installedThemeDropDownConfigP").change(function() {
-        var chosenOption=$("#installedThemeDropDownConfigP").val();
-        if(chosenOption != "-") {
-            // Send message to bash script to notify change.
-            macgap.app.launch("CTM_changeThemeC@" + chosenOption);
-        }
+        ActionChangedDropDownConfigP();
     });
+
 });
+
+//-------------------------------------------------------------------------------------
+function ActionShowHideBootlog()
+{
+    var hidden = $('#BootLogContainer').is(":hidden");
+    if (!hidden) {
+        SetBootLogState("Close");
+        macgap.app.launch("CTM_bootlog@Close");
+    } else {
+        SetBootLogState("Open");
+        macgap.app.launch("CTM_bootlog@Open");
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function ActionMountESP()
+{
+    macgap.app.launch("MountESP");
+    // Show a message to the user
+    ChangeMessageBoxHeaderColour("blue");                            
+    SetMessageBoxText("EFI System Partition(s)","All currently unmounted EFI System Partitions will now be mounted and checked for a /EFI/Clover/Themes directory. If found, the paths will appear in the volume selector.");
+    HideMessageBoxClose();
+    ShowProgressBar();
+    ShowMessageBox();
+}
+
+//-------------------------------------------------------------------------------------
+function ActionShowHideThumbnailsButton()
+{
+    var textState = $("#BandsHeightToggleButton").text();
+    if (textState.indexOf("Hide") >= 0) {
+        SetThemeBandHeight("Hide");
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_showThumbails");
+    }
+    if (textState.indexOf("Show") >= 0) {     
+        SetThemeBandHeight("Show");   
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_hideThumbails");
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function ActionShowHideExpandedPreviews()
+{
+    var buttonText=$("#preview_Toggle_Button").text();
+    if (buttonText.indexOf("Expand") >= 0) {
+        SetShowHidePreviews("Show");
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_showPreviews");
+    }
+    if (buttonText.indexOf("Collapse") >= 0) {
+        SetShowHidePreviews("Hide");
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_hidePreviews");
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function ActionUpdateAll()
+{
+
+    var themeList = "";
+    var themeListPrint = "";
+
+    $('.buttonUpdate').each(function(){
+
+        updateButtonName = $(this).attr('id');
+
+		// Update buttons for themes with spaces in their names had the
+		// spaces replaced with five Q's. Let's put spaces back
+		if (updateButtonName.indexOf('QQQQQ') >= 0) {
+			updateButtonName = updateButtonName.replace(/QQQQQ/g, ' ');
+		}
+
+        // Get all after 'button_Update_'
+        themeList = themeList + updateButtonName.substring(14) + ","
+        themeListPrint = themeListPrint + updateButtonName.substring(14) + "<br>"
+
+    });
+
+    // remove last char
+    themeList = themeList.slice(0, -1);
+
+    // Send a message to the bash script
+    macgap.app.launch("CTM_UpdateAll@" + themeList);
+
+    // Show a message to the user
+    ChangeMessageBoxHeaderColour("blue");
+
+    SetMessageBoxText("Updating:", themeListPrint);
+    HideMessageBoxClose();
+    ShowProgressBar();
+    ShowMessageBox();
+    HideUpdateAllButton();
+
+}
+
+//-------------------------------------------------------------------------------------
+function ActionShowHideInstalledThemes()
+{
+    // Change text of button
+    var textState = $("#ShowHideToggleButton").text();
+    if (textState.indexOf("Show Installed") >= 0) {
+        SetShowHideButton("Hide");
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_hideUninstalled");
+        // Close all preview images for UnInstalled themes
+        ClosePreviewsForUninstalledThemes();
+    }
+    if (textState.indexOf("Show All") >= 0) {     
+        SetShowHideButton("Show");   
+        // Send a message to the bash script to record user choice in prefs
+        macgap.app.launch("CTM_showUninstalled");
+    }
+}
+
+//-------------------------------------------------------------------------------------
+function ActionChangedDropDownNvram()
+{
+	var chosenOption=$("#installedThemeDropDownNvram").val();
+	if(chosenOption != "-") {
+		// Send message to bash script to notify change.
+		macgap.app.launch("CTM_changeThemeN@" + chosenOption);
+	}
+
+}
+
+//-------------------------------------------------------------------------------------
+function ActionChangedDropDownNvramP()
+{
+	var chosenOption=$("#installedThemeDropDownNvramP").val();
+	if(chosenOption != "-") {
+		// Send message to bash script to notify change.
+		macgap.app.launch("CTM_changeThemeP@" + chosenOption);
+	}
+
+}
+
+//-------------------------------------------------------------------------------------
+function ActionChangedDropDownConfigP()
+{
+	var chosenOption=$("#installedThemeDropDownConfigP").val();
+	if(chosenOption != "-") {
+		// Send message to bash script to notify change.
+		macgap.app.launch("CTM_changeThemeC@" + chosenOption);
+	}
+}
 
 //-------------------------------------------------------------------------------------
 function SetBootLogState(state)
@@ -1128,7 +1504,7 @@ function SetThemeBandHeight(setting)
             // Show spacer sml buttons to retain spacing of other buttons
             $(".spacerButtonSml").css("display","block");
             // Move theme titles up
-            $("[id=ThemeText]").css("top","68%");
+            $("[id=ThemeText]").css("top","80%");
             // Hide all theme descriptions
             $(".themeDescription").css("display","none");
             // Hide all theme authors
@@ -1136,15 +1512,15 @@ function SetThemeBandHeight(setting)
             // Hide thumbnails
             $(".thumbnail").css("display","none");
             // Adjust height of theme bands
-            $(".accordion").css("height","36px");
-            $(".accordionInstalled").css("height","36px");
-            $(".accordionInstalledNoShadow").css("height","36px");
-            $(".accordionUpdate").css("height","36px");
-            $(".accordionUpdateNoShadow").css("height","36px");
+            $(".accordion").css("height","27px");
+            $(".accordionInstalled").css("height","27px");
+            $(".accordionInstalledNoShadow").css("height","27px");
+            $(".accordionUpdate").css("height","27px");
+            $(".accordionUpdateNoShadow").css("height","27px");
             // Reduce margin top of buttons
-            $(".buttonInstall").css("margin-top","6px");
-            $(".buttonUnInstall").css("margin-top","6px");
-            $(".buttonUpdate").css("margin-top","6px");
+            $(".buttonInstall").css("margin-top","3px");
+            $(".buttonUnInstall").css("margin-top","3px");
+            $(".buttonUpdate").css("margin-top","3px");
             // Reduce margin top of Unversioned Themes Indicator
             $(".versionControl").css("margin-top","9px");
             // Add margin left to theme titles
@@ -1395,6 +1771,7 @@ function RespondToButtonPress(button,status)
     HideMessageBoxClose();
     ShowProgressBar();
     ShowMessageBox();
+    HideUpdateAllButton();
 }
 
 //-------------------------------------------------------------------------------------
@@ -1887,4 +2264,24 @@ function UpdateThemePaths(nvramPlistPath,configPlistPath,mountpoint)
             $(this).text(mountpoint+str);
         }
     });
+}
+
+
+//-------------------------------------------------------------------------------------
+function ShowUpdateAllButton()
+{
+
+    $("#ShowHideUpdateAllButton").show();
+    $(".spacerButtonUpdateAll").hide();
+
+}
+
+
+//-------------------------------------------------------------------------------------
+function HideUpdateAllButton()
+{
+
+    $("#ShowHideUpdateAllButton").hide();
+    $(".spacerButtonUpdateAll").show();
+
 }
