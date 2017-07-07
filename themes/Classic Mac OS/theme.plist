@@ -8,6 +8,8 @@
 	<string>Classic Mac OS v1.1</string>
 	<key>Theme</key>
 	<dict>
+		<key>BootCampStyle</key>
+		<false/>
 		<key>Origination</key>
 		<dict>
 			<key>DesignWidth</key>
@@ -31,6 +33,8 @@
 			<integer>20</integer>
 			<key>Vertical</key>
 			<false/>
+			<key>PruneScrollRows</key>
+			<integer>12</integer>
 		</dict>
 		<key>Anime</key>
 		<array>
