@@ -3384,9 +3384,6 @@ if [ "$gitCmd" != "" ]; then
 
         # Search ioreg for bootlog and write to file.
         GetBootlog
-        ################################################################################################################
-        cp "/private/tmp/boot.log" "$bootLogFile" ############## ADDED FOR TESTING - REMOVE AFTER TESTING ##############
-        ################################################################################################################
 
         # Identify boot device from bootlog and try to have it available.
         # If MBR, try to find it among currently mounted devices.
