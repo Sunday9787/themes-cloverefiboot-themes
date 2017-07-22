@@ -37,10 +37,10 @@ $(document).ready(function() {
 
 
 //-------------------------------------------------------------------------------------
-// Listen to keyboard and scroll to nearest theme based on key pressed.
+// Listen to keyboard
 document.addEventListener('keydown', function(event) {
 
-    // Check for key press 0-9 or A-Z
+    // Check for key press 0-9 or A-Z and scroll to nearest theme based on key pressed.
     if ((event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCode <= 90 )) {
 
         var keyPressed = event.keyCode;
@@ -180,6 +180,10 @@ document.addEventListener('keydown', function(event) {
             ActionShowHideBootlog();
         }
 
+        if ( focusedItem == "RefreshButton" ) {
+            $('#partitionSelect').change();
+        }
+
         if ( focusedItem == "OpenButton" ) {
             macgap.app.launch("OpenPath");
         }
@@ -220,9 +224,9 @@ document.addEventListener('keydown', function(event) {
             ActionChangedDropDownNvram();
         }
 
-        if ( focusedItem == "installedThemeDropDownNvramP" ) {
-            ActionChangedDropDownNvramP();
-        }
+        //if ( focusedItem == "installedThemeDropDownNvramP" ) {
+        //    ActionChangedDropDownNvramP();
+        //}
 
         if ( focusedItem == "installedThemeDropDownConfigP" ) {
             ActionChangedDropDownConfigP();
@@ -365,11 +369,11 @@ function readBashToJsMessageFile()
                 macgap.app.removeMessage(firstLine);
                 SetCurrentThemeEntry("Nvram",firstLineSplit[1]);
                 break;
-            case "NvramP":
+            //case "NvramP":
                 // Bash sends: "NvramP@${themeName}@"
-                macgap.app.removeMessage(firstLine);
-                SetCurrentThemeEntry("NvramP",firstLineSplit[1]);
-                break;
+                //macgap.app.removeMessage(firstLine);
+                //SetCurrentThemeEntry("NvramP",firstLineSplit[1]);
+                //break;
             case "ConfigP":
                 // Bash sends: "ConfigP@${themeName}@"
                 macgap.app.removeMessage(firstLine);
@@ -697,9 +701,9 @@ function SetCurrentThemeEntry(textToChange,themeName)
     if (textToChange == "Nvram") {
         $('#ctEntryNvram').text(themeName);
         SetDropDownNvram(themeName);
-    } else if (textToChange == "NvramP") {
-        $('#ctEntryNvramP').text(themeName);
-        SetDropDownNvramP(themeName);
+    //} else if (textToChange == "NvramP") {
+    //    $('#ctEntryNvramP').text(themeName);
+    //    SetDropDownNvramP(themeName);
     } else if (textToChange == "ConfigP") {
         $('#ctEntryConfig').text(themeName);
         SetDropDownConfigP(themeName);
@@ -726,6 +730,7 @@ function SetDropDownNvram(themeName)
     }
 }
 
+/*
 //-------------------------------------------------------------------------------------
 function SetDropDownNvramP(themeName)
 {
@@ -744,7 +749,7 @@ function SetDropDownNvramP(themeName)
             $("#installedThemeDropDownNvramP").val("-");
         }
     }
-}
+}*/
 
 //-------------------------------------------------------------------------------------
 function SetDropDownConfigP(themeName)
@@ -1146,9 +1151,9 @@ $(function()
     
     //-----------------------------------------------------
     // On changing the 'NVRAM.plist' dropdown menu.
-    $("#installedThemeDropDownNvramP").change(function() {
-        ActionChangedDropDownNvramP();
-    });
+    //$("#installedThemeDropDownNvramP").change(function() {
+    //    ActionChangedDropDownNvramP();
+    //});
     
     //-----------------------------------------------------
     // On changing the 'Config.plist' dropdown menu.
@@ -1285,6 +1290,7 @@ function ActionChangedDropDownNvram()
 
 }
 
+/*
 //-------------------------------------------------------------------------------------
 function ActionChangedDropDownNvramP()
 {
@@ -1294,7 +1300,7 @@ function ActionChangedDropDownNvramP()
 		macgap.app.launch("CTM_changeThemeP@" + chosenOption);
 	}
 
-}
+}*/
 
 //-------------------------------------------------------------------------------------
 function ActionChangedDropDownConfigP()
@@ -2093,11 +2099,11 @@ function UpdateAndRefreshInstalledThemeDropDown(themeList)
         populateDropDownMenu(installedThemeDropDownNvram,themeList);
     }
 
-    var test=$("#installedThemeDropDownNvramP");
-    if (jQuery.contains(document, test[0])) {
-        $(installedThemeDropDownNvramP).empty();
-        populateDropDownMenu(installedThemeDropDownNvramP,themeList);
-    }
+    //var test=$("#installedThemeDropDownNvramP");
+    //if (jQuery.contains(document, test[0])) {
+    //    $(installedThemeDropDownNvramP).empty();
+    //    populateDropDownMenu(installedThemeDropDownNvramP,themeList);
+    //}
         
     var test=$("#installedThemeDropDownConfigP");
     if (jQuery.contains(document, test[0])) {
@@ -2250,10 +2256,10 @@ function ShowHideControlOptions(state)
 function UpdateThemePaths(nvramPlistPath,configPlistPath,mountpoint)
 {
     // Replace paths in theme control option area
-    $('#ctTitleNvramP span').text(nvramPlistPath);
+    //$('#ctTitleNvramP span').text(nvramPlistPath);
     $('#ctTitleConfig span').text(configPlistPath);
     // Unset any disabled control option drop down menus
-    $('#installedThemeDropDownNvramP').prop("disabled", false);
+    //$('#installedThemeDropDownNvramP').prop("disabled", false);
     $('#installedThemeDropDownConfigP').prop("disabled", false);
     
     // Update paths in bootlog

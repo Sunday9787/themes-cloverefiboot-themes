@@ -358,7 +358,7 @@ select.custom-dropdown:hover, select.custom-dropdown:focus {
     color:#333;
 }
 
-#RefreshButton:focus > .openButton {
+#RefreshButton:focus > .reloadButton {
     background-image: -webkit-linear-gradient(top, #e5e5e5, #b6b6b6);
     color:#333;
 }
@@ -871,6 +871,12 @@ a:hover {
     opacity: 0.95;
 }
 
+#changeThemeBandTitle {
+    width: 100%;
+    height: 21px;
+    opacity: 0.95;
+}
+
 #changeThemeBand {
     width: 100%;
     height: 24px;
@@ -893,7 +899,7 @@ a:hover {
 }
 
 #themePredictionTitle {
-    width: 52%;
+    width: 40%;
     float: left;
     margin: 2px 0px 0px 24px;
     /*-webkit-user-select: none;*/
@@ -902,7 +908,7 @@ a:hover {
 #themePredictionTheme {
     width: 25%;
     float: left;
-    margin: 2px 0px 0px 0px;
+    margin: 0px 0px 0px 2px;
     /*-webkit-user-select: none;*/
 }
 
@@ -910,19 +916,48 @@ a:hover {
 /* Change theme control options */
 /* ============================ */
 
-.ctOptionTitle {
-    width: 47%;
+.ctOptionDescription {
+    width: 80%;
     float: left;
     margin: 4px 0px 0px 24px;
     font-family: 'Roboto', sans-serif;
     font-size: 11px;
     font-weight: bold;
+    color: #9bc762;    
+}
+
+.ctOptionTitleHeader {
+    float: left;
+    margin: 4px 0px 0px 24px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ababab;    
+}
+
+.ctOptionTitleResult {
+    width: 228px;
+    float: left;
+    margin: 4px 0px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
     color: #FFF;    
+}
+
+.ctOptionTitleResultNotAvailable {
+    width: 228px;
+    float: left;
+    margin: 4px 0px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #FF0000;    
 }
 
 .ctOptionEntryHeader {
     float: left;
-    margin: 5px 2px 0px 2px;
+    margin: 5px 2px 0px 24px;
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: bold;
@@ -930,15 +965,45 @@ a:hover {
 }
 
 .ctOptionEntryResult {
-    width: 22%;
+    width: 230px;
+    float: left;
+    margin: 5px 0px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #FFF;    
+}
+
+.ctPredictionTitleHeader {
+    float: left;
+    margin: 4px 0px 0px 24px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ababab;    
+}
+
+.ctPredictionTitleResult {
+    width: 206px;
+    float: left;
+    margin: 4px 0px 0px 2px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #FFF;    
+}
+
+/*
+.ctOptionEntryResultNotAvailable {
+    width: 38%;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
     font-size: 11px;
     font-weight: bold;
-    color: #FFF;    
+    color: #FF0000;    
 }
-
+*/
 .ctOptionSetHeader {
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
@@ -1133,6 +1198,10 @@ select.changeThemeDropdown:focus {
 
 .fillDarkerGrey {
    background-image: -webkit-linear-gradient(top, #303234, #212121);
+}
+
+.fillVeryDarkGrey {
+   background-image: -webkit-linear-gradient(top, #181818, #121212);
 }
 
 /* ===================================================================== */

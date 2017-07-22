@@ -103,9 +103,14 @@ a:hover {
 - Removed out of date md5 check for determining original 80.save_nvram_plist.local.<br>
 - TAB to select different interface controls.<br>
 - Fix bug showing choice of embedded theme in bootlog section.<br>
-- Added ‘Update all’ button.<br>
+- Added Update All button.<br>
 - Fixed issue where a locally installed theme that had since been deleted from repo would be flagged with an available update.<br>
-- Add tooltips to UI.
+- Add tooltips to UI.<br>
+- Added button to rescan selected partition.<br>
+- Fixed multiple tick issue for ReadPrefs on Init screen.<br>
+- Extend detection of repository.<br>
+- Shorten length of time older index.gits are fetched.<br>
+- Improve layout of set theme section.
 
           </p>
         <!--</div>-->

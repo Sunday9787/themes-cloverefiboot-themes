@@ -871,6 +871,7 @@ if [ -f "$bootLogFile" ]; then
         elif [ $blNvramBootArgs -eq 0 ]; then
             echo "nvram@Native NVRAM" >> "$bootlogScriptOutfile"
         fi
+        [[ "$blNvramThemeEntry" != "" ]] && echo "nvramThemeEntry@$blNvramThemeEntry" >> "$bootlogScriptOutfile"
         [[ "$blConfigPlistFilePath" != "" ]] && echo "config@$blConfigPlistFilePath" >> "$bootlogScriptOutfile"
         [[ "$blBootType" != "" ]] && echo "bootType@$blBootType" >> "$bootlogScriptOutfile"
         echo "nvramSave@$gNvramWorking" >> "$bootlogScriptOutfile"

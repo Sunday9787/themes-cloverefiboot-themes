@@ -46,7 +46,7 @@
         </select>
     </div> <!-- End PathSelector -->
 
-    <div id="RefreshButton">
+    <div id="RefreshButton" tabindex="3">
         <button type="button" id="RefreshPathButton" class="reloadButton">
             <span class="field-tip" style="font-weight:bold;">&#x21bb;
                 <span class="tip-content">Rescan selected partition<br>and check for theme updates</span>
@@ -54,7 +54,7 @@
         </button>
     </div> <!-- End RefreshButton -->
 
-    <div id="OpenButton" tabindex="3">
+    <div id="OpenButton" tabindex="4">
         <button type="button" id="OpenPathButton" class="openButton">
             <span class="field-tip">OPEN
                 <span class="tip-content">Open Finder window for the selected \EFI\CLOVER\Themes directory</span>
@@ -62,7 +62,7 @@
         </button>
     </div> <!-- End OpenButton -->
 
-    <div id="EspButton" tabindex="4">
+    <div id="EspButton" tabindex="5">
         <button type="button" id="MountEspButton" class="espButton">
             <span class="field-tip">MOUNT ESP
                 <span class="tip-content">Check all EFI System Partitions for an \EFI\CLOVER\Themes directory.<br>Mount all that are found</span>
@@ -79,20 +79,20 @@
     </div> <!-- End FreeSpace -->        
 
     <div id="HeaderBar" class="blackFill"">
-        <div class="toggleButton" id="ShowHideToggleButton" tabindex="10">Show Installed</div>
-        <div class="toggleButton" id="ShowHideUpdateAllButton" tabindex="9">Update All</div>
+        <div class="toggleButton" id="ShowHideToggleButton" tabindex="11">Show Installed</div>
+        <div class="toggleButton" id="ShowHideUpdateAllButton" tabindex="10">Update All</div>
         <div class="spacerButtonUpdateAll"">&nbsp;</div>
-        <div class="toggleButton" id="preview_Toggle_Button" tabindex="8">Expand Previews</div>
+        <div class="toggleButton" id="preview_Toggle_Button" tabindex="9">Expand Previews</div>
         <div class="spacerButton"">&nbsp;</div>
-        <div class="toggleButtonSml" id="thumbSizeLarger" tabindex="7">+</div>
-        <div class="toggleButtonSml" id="thumbSizeSmaller" tabindex="6">-</div>
+        <div class="toggleButtonSml" id="thumbSizeLarger" tabindex="8">+</div>
+        <div class="toggleButtonSml" id="thumbSizeSmaller" tabindex="7">-</div>
         <div class="spacerButtonSml"">&nbsp;</div>
         <div class="spacerButtonSml"">&nbsp;</div>
-        <div class="toggleButton" id="BandsHeightToggleButton" tabindex="5">Hide Thumbnails</div>   
+        <div class="toggleButton" id="BandsHeightToggleButton" tabindex="6">Hide Thumbnails</div>   
     </div> <!-- End HeaderBar --> 
 </div> <!-- End header -->  
 
-<div id="content" tabindex="11">
+<div id="content" tabindex="12">
 
 <!--INSERT_THEMES_HERE-->
 </div> <!-- End content -->    
