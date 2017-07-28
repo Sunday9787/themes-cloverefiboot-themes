@@ -97,7 +97,18 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
 
-- Reduced height of bands when no thumbnail is shown.<br>
+- Identify fast boot and textonly boot modes from bootlog.<br>
+- Simplify control options band for changing themes.<br>
+- Extend keyboard support to identify Command key.<br>
+- Return key now closes dialog boxes.<br>
+
+          </p>
+        <!--</div>-->
+
+        <p class="textTitleHeadingSml">Changelog history</p>
+        
+          <p class="textTitleSubHeading">v0.76.5</p>
+          <p class="textSectionBody">- Reduced height of bands when no thumbnail is shown.<br>
 - Left and right arrow now changes view sizes from no thumbnail to expanded previews.<br>
 - AlphaNumeric keypress will scroll UI to first Theme beginning with that character.<br>
 - Removed out of date md5 check for determining original 80.save_nvram_plist.local.<br>
@@ -110,19 +121,16 @@ a:hover {
 - Fixed multiple tick issue for ReadPrefs on Init screen.<br>
 - Extend detection of repository.<br>
 - Shorten length of time older index.gits are fetched.<br>
-- Improve layout of set theme section.
+- Improve layout of set theme section.</p>
 
-          </p>
-        <!--</div>-->
-
-        <p class="textTitleHeadingSml">Changelog history</p>
-        
+        <div class="band1">   
           <p class="textTitleSubHeading">v0.76.4</p>
           <p class="textSectionBody">- Amend check for network connection.<br>
 - Update detection for Clover revision.<br>
 - Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
 - Increase speed of showing/hiding bootlog region.<br>
 - Increase speed of showing/hiding accordion.</p>
+        </div>
 
         <div class="band2">   
           <p class="textTitleSubHeading">v0.76.3</p>

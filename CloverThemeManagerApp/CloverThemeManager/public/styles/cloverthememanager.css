@@ -1,6 +1,6 @@
 /* CSS file for Clover Theme Manager */
 /* Blackosx 2014-2017                */
-/* v0.76.6                           */
+/* v0.76.7                           */
 
 html, body {
     padding: 0;
@@ -906,9 +906,9 @@ a:hover {
 }
 
 #themePredictionTheme {
-    width: 25%;
+    width: 20%;
     float: left;
-    margin: 0px 0px 0px 2px;
+    margin: 0px 0px 0px 4px;
     /*-webkit-user-select: none;*/
 }
 
@@ -936,7 +936,7 @@ a:hover {
 }
 
 .ctOptionTitleResult {
-    width: 228px;
+    width: 500px;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
@@ -946,7 +946,7 @@ a:hover {
 }
 
 .ctOptionTitleResultNotAvailable {
-    width: 228px;
+    width: 500px;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
@@ -984,7 +984,7 @@ a:hover {
 }
 
 .ctPredictionTitleResult {
-    width: 206px;
+    width: 447px;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
@@ -1010,7 +1010,7 @@ a:hover {
     font-weight: bold;
     color: #ababab;    
     position:absolute;
-    margin: 6px 0px 0px 73%;
+    margin: 6px 0px 0px 67%;
 }
 
 #changeThemeSelector {

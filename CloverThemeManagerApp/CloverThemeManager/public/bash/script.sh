@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.5"
+VERS="0.77.6"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -793,11 +793,9 @@ SetControlOptionHtmlSections()
     ctBandNvram=$(printf "            <div class=\"ctOptionTitleHeader\">NVRAM:<\/div>\r")
     ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionTitleResult\" id=\"ctTitleNvram\">${nvramText}<\/div>\r")
 
-    ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
-    ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryNvram\"><\/div>\r")
     # UEFI boot with Native NVRAM   or   Legacy boot AND Launch Daemon & rc scripts working
     if [[ "$gNvramPlistFullPath" == "Native NVRAM" ]] || [[ "$gBootType" == "Legacy" && $gNvramSave -eq 0 ]]; then
-        ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
+        ctBandNvram="$ctBandNvram"$(printf "            <div class=\"ctOptionSetHeader\">Selected Theme:<\/div>\r")
         ctBandNvram="$ctBandNvram"$(printf "            <select id=\"installedThemeDropDownNvram\" class=\"changeThemeDropdown\" tabindex=\"14\">\r")
         ctBandNvram="$ctBandNvram"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
         ctBandNvram="$ctBandNvram"$(printf "            <\/select>\r")
@@ -812,9 +810,7 @@ SetControlOptionHtmlSections()
     else
         ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionTitleResultNotAvailable\" id=\"ctTitleConfig\">${configPlistText}<\/div>\r")
     fi
-    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
-    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionEntryResult\" id=\"ctEntryConfig\"><\/div>\r")
-    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionSetHeader\">Action:<\/div>\r")
+    ctBandConfig="$ctBandConfig"$(printf "            <div class=\"ctOptionSetHeader\">Selected Theme:<\/div>\r")
     ctBandConfig="$ctBandConfig"$(printf "            <select id=\"installedThemeDropDownConfigP\" class=\"changeThemeDropdown\" tabindex=\"15\" ${disabledConfigPlist}>\r")
     ctBandConfig="$ctBandConfig"$(printf "                <!--Menu entries will be appended here by cloverthememanager.js -->\r")
     ctBandConfig="$ctBandConfig"$(printf "            <\/select>\r")
@@ -2554,7 +2550,7 @@ ReadAndSendCurrentNvramTheme()
         PredictNextTheme
     else
         # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
-        # which currently defaults to menu option 'Select Action'
+        # which currently defaults to menu option ' '
         WriteToLog "Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@-@"
         SendToUI "Nvram@-@"
@@ -2584,7 +2580,7 @@ ReadAndSendCurrentNvramPlistTheme()
             PredictNextTheme
         else
             # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
-            # which currently defaults to menu option 'Select Action'
+            # which currently defaults to menu option ' '
             WriteToLog "$gNvramPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@-@"
             #SendToUI "NvramP@-@"
@@ -2625,7 +2621,7 @@ ReadAndSendCurrentConfigPlistTheme()
             PredictNextTheme
         else
             # Sending '-' to the UI here causes the drop down menu to be populated to the value '-'
-            # which currently defaults to menu option 'Select Action'
+            # which currently defaults to menu option ' '
             WriteToLog "$gConfigPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@-@"
             SendToUI "ConfigP@-@"

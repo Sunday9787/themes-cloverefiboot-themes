@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-//Version=0.76.5
+//Version=0.76.6
 
 var gTmpDir = "/tmp/CloverThemeManager";
 var gLogBashToJs = "bashToJs";
@@ -40,214 +40,243 @@ $(document).ready(function() {
 // Listen to keyboard
 document.addEventListener('keydown', function(event) {
 
-    // Check for key press 0-9 or A-Z and scroll to nearest theme based on key pressed.
-    if ((event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCode <= 90 )) {
+    // Only continue if the keystroke was not combined with the Command key
+    if (!event.metaKey) {
 
-        var keyPressed = event.keyCode;
-        var searchKey = String.fromCharCode(keyPressed);
+        // Check for key press 0-9 or A-Z and scroll to nearest theme based on key pressed.
+        if ((event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCode <= 90 )) {
 
-        // find lowercase key also
-        if (event.keyCode >= 65 && event.keyCode <= 90 ) {
+            var keyPressed = event.keyCode;
+            var searchKey = String.fromCharCode(keyPressed);
 
-            var searchKeyLowerCase = String.fromCharCode(keyPressed + 32)
+            // find lowercase key also
+            if (event.keyCode >= 65 && event.keyCode <= 90 ) {
 
-        } else {
-
-            var searchKeyLowerCase = searchKey;
-
-        }
-
-        // Loop through each theme name and find first
-		$('.themeTitle').each(function(){
-
-		    // get text before first <br>		
-		    var splitter = $(this).html().split('<br>');
-
-		    // Compare first char of theme name
-		    if ( splitter[0].charAt(0) == searchKey || splitter[0].charAt(0) == searchKeyLowerCase ) {
-
-				var firstThemeEntry = $("#ThemeBand").first();
-				var posfirstThemeEntry = firstThemeEntry.position(); // in relation to bottom of header. 0 = Alienware. 52 = BGM, christmas = 390, mac = 858
-
-				var thisThemeEntry = $(this).closest("#ThemeBand");
-				var offset = thisThemeEntry.offset();
-
-				$('#content').animate({
-					scrollTop: offset.top - 99 - posfirstThemeEntry.top
-				});
-
-		        return false; // stop. don't continue looping through the each
-
-		    }
-
-		})
-
-    }
-
-
-    // Check for left arrow
-
-    if ( event.keyCode == 37 ) {
-    
-        // Check if large expanded previews are shown
-
-        if ($("#preview_Toggle_Button").text().indexOf("Collapse") >= 0) {
-
-            SetShowHidePreviews("Hide");
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hidePreviews");
-
-        } else {
-
-            ChangeThumbnailSize('smaller');
-        
-            // Check for visible thumbnails
-            var showHideButtonText = $("#BandsHeightToggleButton").text();
-            var currentThumbWidth = $(".thumbnail img").first().width();
-        
-            if (currentThumbWidth == 100 ) {
-                SetThemeBandHeight("Hide");
-                // Send a message to the bash script to record user choice in prefs
-                macgap.app.launch("CTM_showThumbails");
-            }
-
-        }
-
-    }
-
-
-    // Check for right arrow
-
-    if ( event.keyCode == 39 ) {
-
-        // Check for visible thumbnails
-        var showHideButtonText = $("#BandsHeightToggleButton").text();
-        if (showHideButtonText.indexOf("Show") >= 0) {
-
-            SetThemeBandHeight("Show");   
-
-            // Send a message to the bash script to record user choice in prefs
-            macgap.app.launch("CTM_hideThumbails");
-
-        } else {
-
-            // Are thumbnails already at largest size?
-            if ( $(".thumbnail img").first().width() == 175 ) {
-
-                // Show Expanded previews
-                SetShowHidePreviews("Show");
-
-                // Send a message to the bash script to record user choice in prefs
-                macgap.app.launch("CTM_showPreviews");
+                var searchKeyLowerCase = String.fromCharCode(keyPressed + 32)
 
             } else {
 
-                ChangeThumbnailSize('larger');
+                var searchKeyLowerCase = searchKey;
+
+            }
+
+            // Loop through each theme name and find first
+            $('.themeTitle').each(function(){
+
+                // get text before first <br>		
+                var splitter = $(this).html().split('<br>');
+
+                // Compare first char of theme name
+                if ( splitter[0].charAt(0) == searchKey || splitter[0].charAt(0) == searchKeyLowerCase ) {
+
+                    var firstThemeEntry = $("#ThemeBand").first();
+                    var posfirstThemeEntry = firstThemeEntry.position(); // in relation to bottom of header. 0 = Alienware. 52 = BGM, christmas = 390, mac = 858
+
+                    var thisThemeEntry = $(this).closest("#ThemeBand");
+                    var offset = thisThemeEntry.offset();
+
+                    $('#content').animate({
+                        scrollTop: offset.top - 99 - posfirstThemeEntry.top
+                    });
+
+                    return false; // stop. don't continue looping through the each
+
+                }
+
+            })
+
+        }
+
+
+        // Check for left arrow
+
+        if ( event.keyCode == 37 ) {
+    
+            // Check if large expanded previews are shown
+
+            if ($("#preview_Toggle_Button").text().indexOf("Collapse") >= 0) {
+
+                SetShowHidePreviews("Hide");
+                // Send a message to the bash script to record user choice in prefs
+                macgap.app.launch("CTM_hidePreviews");
+
+            } else {
+
+                ChangeThumbnailSize('smaller');
+        
+                // Check for visible thumbnails
+                var showHideButtonText = $("#BandsHeightToggleButton").text();
+                var currentThumbWidth = $(".thumbnail img").first().width();
+        
+                if (currentThumbWidth == 100 ) {
+                    SetThemeBandHeight("Hide");
+                    // Send a message to the bash script to record user choice in prefs
+                    macgap.app.launch("CTM_showThumbails");
+                }
 
             }
 
         }
+
+
+        // Check for right arrow
+
+        if ( event.keyCode == 39 ) {
+
+            // Check for visible thumbnails
+            var showHideButtonText = $("#BandsHeightToggleButton").text();
+            if (showHideButtonText.indexOf("Show") >= 0) {
+
+                SetThemeBandHeight("Show");   
+
+                // Send a message to the bash script to record user choice in prefs
+                macgap.app.launch("CTM_hideThumbails");
+
+            } else {
+
+                // Are thumbnails already at largest size?
+                if ( $(".thumbnail img").first().width() == 175 ) {
+
+                    // Show Expanded previews
+                    SetShowHidePreviews("Show");
+
+                    // Send a message to the bash script to record user choice in prefs
+                    macgap.app.launch("CTM_showPreviews");
+
+                } else {
+
+                    ChangeThumbnailSize('larger');
+
+                }
+
+            }
         
-    }
+        }
 
 
-    // End Button - Scroll to bottom
+        // End Button - Scroll to bottom
 
-    if ( event.keyCode == 35 ) {
+        if ( event.keyCode == 35 ) {
     
-        $("#content").animate({ scrollTop: $('#content').prop("scrollHeight")}, 1000);
+            $("#content").animate({ scrollTop: $('#content').prop("scrollHeight")}, 1000);
 
-    }
-
-
-    // Home Button - Scroll to top
-
-    if ( event.keyCode == 36 ) {
-
-        $('#content').animate({
-           scrollTop: 0
-        }, 'slow');
-
-    }
-
-    // Check for Enter / Return key
-
-    if ( event.keyCode == 13 ) {
-
-        focusedItem=$("*:focus").attr("id");
-
-        if ( focusedItem == "BootLogTitleBar" ) {
-            ActionShowHideBootlog();
         }
 
-        if ( focusedItem == "RefreshButton" ) {
-            $('#partitionSelect').change();
+
+        // Home Button - Scroll to top
+
+        if ( event.keyCode == 36 ) {
+
+            $('#content').animate({
+               scrollTop: 0
+            }, 'slow');
+
         }
 
-        if ( focusedItem == "OpenButton" ) {
-            macgap.app.launch("OpenPath");
-        }
 
-        if ( focusedItem == "EspButton" ) {
-            ActionMountESP();
-        }
+        // Check for Enter / Return key
 
-        if ( focusedItem == "BandsHeightToggleButton" ) {
-            ActionShowHideThumbnailsButton();
-        }
+        if ( event.keyCode == 13 ) {
 
-        if ( focusedItem == "thumbSizeSmaller" ) {
-            ChangeThumbnailSize('smaller');
-        }   
+            focusedItem=$("*:focus").attr("id");
 
-        if ( focusedItem == "thumbSizeLarger" ) {
-            ChangeThumbnailSize('larger');
-        }   
+            switch(focusedItem) {
 
-        if ( focusedItem == "preview_Toggle_Button" ) {
-            ActionShowHideExpandedPreviews();
-        }
+                case "BootLogTitleBar":
+                ActionShowHideBootlog();
+                break;
 
-        if ( focusedItem == "ShowHideUpdateAllButton" ) {
-            ActionUpdateAll();
-        }
+                case "RefreshButton":
+                $('#partitionSelect').change();
+                break;
 
-        if ( focusedItem == "ShowHideToggleButton" ) {
-            ActionShowHideInstalledThemes();
-        }
+                case "OpenButton":
+                macgap.app.launch("OpenPath");
+                break;
 
-        if ( focusedItem == "content" ) {
+                case "EspButton":
+                ActionMountESP();
+                break;
+
+                case "BandsHeightToggleButton":
+                ActionShowHideThumbnailsButton();
+                break;
+
+                case "thumbSizeSmaller":
+                ChangeThumbnailSize('smaller');
+                break;
+
+                case "thumbSizeLarger":
+                ChangeThumbnailSize('larger');
+                break;
+
+                case "preview_Toggle_Button":
+                ActionShowHideExpandedPreviews();
+                break;
+
+                case "ShowHideUpdateAllButton":
+                ActionUpdateAll();
+                break;
+
+                case "ShowHideToggleButton":
+                ActionShowHideInstalledThemes();
+                break;
+
+                case "content":
+                break;
+
+                case "installedThemeDropDownNvram":
+                ActionChangedDropDownNvram();
+                break;
+
+                case "installedThemeDropDownNvram":
+                ActionChangedDropDownConfigP();
+                break;
+
+                default:
+                // code to be executed if n is different from case 1 and 2
+            }
             
+            // Is messagebox showing?
+            // Read position of box to see where it is
+            var position = $('#box').position();
+            if (position.top > 0) {
+                CloseMessageBox();
+                enableInterface();
+            }
+
         }
 
-        if ( focusedItem == "installedThemeDropDownNvram" ) {
-            ActionChangedDropDownNvram();
+    } else {
+    
+        // Command key was also pressed
+
+        // Check for upper case or lower case e
+        if ((event.keyCode == 69) || (event.keyCode >= 101)) {
+
+            ActionShowHideExpandedPreviews();
+
         }
 
-        //if ( focusedItem == "installedThemeDropDownNvramP" ) {
-        //    ActionChangedDropDownNvramP();
-        //}
+        // Check for upper case or lower case i
+        if ((event.keyCode == 73) || (event.keyCode >= 105)) {
 
-        if ( focusedItem == "installedThemeDropDownConfigP" ) {
-            ActionChangedDropDownConfigP();
+            ActionShowHideInstalledThemes();
+
         }
 
-        
-        //alert($("*:focus").attr("id"));
+        // Check for upper case or lower case r
+        if ((event.keyCode == 82) || (event.keyCode >= 114)) {
 
-        // Test setting focus to first element
-        //$("#ThemeBand").first().focus();
-        //$("#ThemeBand").accordion("activate", 1 );
-        
-        //var index = $("#ThemeBand").accordion('option','active');
-        //var index = $("#ThemeBand").accordion('option','active');
-        //var index = $('.accordion').accordion('option','active');
-        //alert("Current active accordion index=" + index);
+            $('#partitionSelect').change();
 
-        //var firstThemeEntry = $("#ThemeBand").first();
-       // var posfirstThemeEntry = firstThemeEntry.position(); // in relation to bottom of header. 0 = Alienware. 52 = BGM, christmas = 390, mac = 858
-
-        //alert(posfirstThemeEntry);
+        }
+    
+    
+    
+    
+    
+    
     }
 
 });
@@ -699,13 +728,10 @@ function displayUnversionedThemes(themeList)
 function SetCurrentThemeEntry(textToChange,themeName)
 {
     if (textToChange == "Nvram") {
-        $('#ctEntryNvram').text(themeName);
+        //$('#ctEntryNvram').text(themeName);
         SetDropDownNvram(themeName);
-    //} else if (textToChange == "NvramP") {
-    //    $('#ctEntryNvramP').text(themeName);
-    //    SetDropDownNvramP(themeName);
     } else if (textToChange == "ConfigP") {
-        $('#ctEntryConfig').text(themeName);
+        //$('#ctEntryConfig').text(themeName);
         SetDropDownConfigP(themeName);
     }
 }
@@ -728,6 +754,8 @@ function SetDropDownNvram(themeName)
             $("#installedThemeDropDownNvram").val("-");
         }
     }
+    
+    checkEntryAndInsertRemoveOptionIfBlank($("#installedThemeDropDownNvram"));
 }
 
 /*
@@ -769,6 +797,9 @@ function SetDropDownConfigP(themeName)
             $("#installedThemeDropDownConfigP").val("-");
         }
     }
+    
+    checkEntryAndInsertRemoveOptionIfBlank($("#installedThemeDropDownConfigP"));
+    
 }
 
 //-------------------------------------------------------------------------------------
@@ -1148,13 +1179,7 @@ $(function()
     $("#installedThemeDropDownNvram").change(function() {
         ActionChangedDropDownNvram();
     });
-    
-    //-----------------------------------------------------
-    // On changing the 'NVRAM.plist' dropdown menu.
-    //$("#installedThemeDropDownNvramP").change(function() {
-    //    ActionChangedDropDownNvramP();
-    //});
-    
+
     //-----------------------------------------------------
     // On changing the 'Config.plist' dropdown menu.
     $("#installedThemeDropDownConfigP").change(function() {
@@ -1286,21 +1311,15 @@ function ActionChangedDropDownNvram()
 	if(chosenOption != "-") {
 		// Send message to bash script to notify change.
 		macgap.app.launch("CTM_changeThemeN@" + chosenOption);
+		// Remove the Remove option from the menu
+		$("#installedThemeDropDownNvram option[value='!Remove!']").remove();
+		// If chosing to remove the entry then select the top (blank) option from the menu
+		if(chosenOption == "!Remove!") {
+		    $("#installedThemeDropDownNvram option:first").attr('selected','selected');
+		}
 	}
 
 }
-
-/*
-//-------------------------------------------------------------------------------------
-function ActionChangedDropDownNvramP()
-{
-	var chosenOption=$("#installedThemeDropDownNvramP").val();
-	if(chosenOption != "-") {
-		// Send message to bash script to notify change.
-		macgap.app.launch("CTM_changeThemeP@" + chosenOption);
-	}
-
-}*/
 
 //-------------------------------------------------------------------------------------
 function ActionChangedDropDownConfigP()
@@ -1309,6 +1328,12 @@ function ActionChangedDropDownConfigP()
 	if(chosenOption != "-") {
 		// Send message to bash script to notify change.
 		macgap.app.launch("CTM_changeThemeC@" + chosenOption);
+		// Remove the Remove option from the menu
+		$("#installedThemeDropDownConfigP option[value='!Remove!']").remove();
+		// If chosing to remove the entry then select the top (blank) option from the menu
+		if(chosenOption == "!Remove!") {
+		    $("#installedThemeDropDownConfigP option:first").attr('selected','selected');
+		}
 	}
 }
 
@@ -2116,9 +2141,9 @@ function UpdateAndRefreshInstalledThemeDropDown(themeList)
 function populateDropDownMenu(menu,themeList)
 {
     // Note: Bash script sends '-' when no theme is set.
-    //       This then sets the menu to 'Select Action'
-    $(menu).append("<option value=\"-\" disabled=\"disabled\">Select Action</option>");
-    $(menu).append("<option value=\"!Remove!\">Remove Current Entry</option>");
+    //       This then sets the menu to '-'
+    $(menu).append("<option value=\"-\" disabled=\"disabled\"> </option>");
+    //$(menu).append("<option value=\"!Remove!\">Remove Current Entry</option>");
     $(menu).append("<option value=\"-1\" disabled=\"disabled\">--------------------</option>");
     $(menu).append("<option value=\"0\" disabled=\"disabled\">Installed Themes</option>");
     for (var t = 0; t < themeList.length; t++) {
@@ -2129,6 +2154,22 @@ function populateDropDownMenu(menu,themeList)
     $(menu).append("<option value=\"0\" disabled=\"disabled\">Other Choices</option>");
     $(menu).append("<option value=\"random\">random</option>");
     $(menu).append("<option value=\"embedded\">embedded</option>");
+}
+
+//-------------------------------------------------------------------------------------
+function checkEntryAndInsertRemoveOptionIfBlank(menu)
+{
+    var isThemeSet=$(menu).val();
+    var menuId=$(menu).attr('id');
+
+	if(isThemeSet != null && isThemeSet != " ") {
+
+        // If remove option is not already in list then add the 'Remove Current Entry' option from the menu
+        if ( $("#" + menuId + " option[value='!Remove!']").length == 0 ) {
+            $("<option value=\"!Remove!\">Remove Current Entry</option>").insertAfter($("#" + menuId + " option:first"));
+        }
+
+	}
 }
 
 //-------------------------------------------------------------------------------------
