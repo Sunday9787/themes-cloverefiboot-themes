@@ -248,35 +248,30 @@ document.addEventListener('keydown', function(event) {
         }
 
     } else {
-    
+
         // Command key was also pressed
 
         // Check for upper case or lower case e
-        if ((event.keyCode == 69) || (event.keyCode >= 101)) {
+        if ((event.keyCode == 69) || (event.keyCode == 101)) {
 
             ActionShowHideExpandedPreviews();
 
         }
 
         // Check for upper case or lower case i
-        if ((event.keyCode == 73) || (event.keyCode >= 105)) {
+        if ((event.keyCode == 73) || (event.keyCode == 105)) {
 
             ActionShowHideInstalledThemes();
 
         }
 
         // Check for upper case or lower case r
-        if ((event.keyCode == 82) || (event.keyCode >= 114)) {
+        if ((event.keyCode == 82) || (event.keyCode == 114)) {
 
             $('#partitionSelect').change();
 
         }
-    
-    
-    
-    
-    
-    
+
     }
 
 });

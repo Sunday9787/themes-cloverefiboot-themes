@@ -817,7 +817,7 @@ SetControlOptionHtmlSections()
     
     # Build next boot band
     ctNextBootTheme=$(printf "            <div class=\"ctPredictionTitleHeader\">PREDICTION:<\/div>\r")
-    ctNextBootTheme="$ctNextBootTheme"$(printf "            <div class=\"ctPredictionTitleResult\" id=\"ctTitleNvram\">for next boot from device $TARGET_THEME_DIR_DEVICE<\/div>\r")
+    ctNextBootTheme="$ctNextBootTheme"$(printf "            <div class=\"ctPredictionTitleResult\" id=\"ctTitleNvram\">Theme to be used for next boot from device $TARGET_THEME_DIR_DEVICE<\/div>\r")
     ctNextBootTheme="$ctNextBootTheme"$(printf "            <div class=\"ctOptionEntryHeader\">Entry:<\/div>\r")
     ctNextBootTheme="$ctNextBootTheme"$(printf "            <div id=\"themePredictionTheme\">\r")
     ctNextBootTheme="$ctNextBootTheme"$(printf "                    <span class=\"predictionText\" id=\"predictionTheme\"><\/span>\r")
@@ -2386,6 +2386,31 @@ IsThemeInstalled()
 }
 
 # ---------------------------------------------------------------------------------------
+ReadConfigPList()
+{
+    [[ DEBUG -eq 1 ]] && WriteLinesToLog
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadConfigPList()"
+
+    # Set default vars
+    gConfigTextOnly=1                # Set to 0 if config plist file has TextOnly set to true
+    gConfigFastBoot=1                    # Set to 0 if config plist file has Fast Boot set to true
+
+    # check for TextOnly and Fast boot options set by user
+    if [ "$gConfigPlistFullPath" != "" ] && [ -f "$gConfigPlistFullPath" ]; then
+        local checkTextOnly=$( grep -A1 "<key>TextOnly</key>" "$gConfigPlistFullPath" )
+        if [[ "$checkTextOnly" == *true* ]]; then
+            gConfigTextOnly=0
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Text Only boot option is enabled"
+        fi
+        local checkFast=$( grep -A1 "<key>Fast</key>" "$gConfigPlistFullPath" )
+        if [[ "$checkFast" == *true* ]]; then
+            gConfigFastBoot=0
+            [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}Fast boot option is enabled"
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------------------
 PredictNextTheme()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
@@ -2442,7 +2467,17 @@ PredictNextTheme()
         local checkTheme=$( IsThemeInstalled "newyear" )
         [[ checkTheme -eq 0 ]] && themeToSend="newyear"
     fi
-
+    
+    # Check for Fast boot or Text Only boot options enabled in config.plist
+    ReadConfigPList
+    if [ $gConfigTextOnly -eq 0 ]; then
+        themeToSend="None (Text Only is enabled)"
+    fi
+    
+    if [ $gConfigFastBoot -eq 0 ]; then
+        themeToSend="None (Fast boot is enabled)"
+    fi
+    
     WriteToLog "Prediction: Next boot from this device will load theme: $themeToSend"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: SetPrediction@${themeToSend}@"
     SendToUI "SetPrediction@${themeToSend}@"
@@ -3224,6 +3259,8 @@ gBootType=""                                                       # Will become
 gNvramSave=1                                                       # Set to 0 if writing to NVRAM is saved for next boot
 gBootDeviceIdentifier=""                                           # Will become identifier of boot device
 gBootDeviceMountPoint=""                                           # Will become mountpoint of boot device
+gConfigTextOnly=1                                                  # Set to 0 if config plist contains textOnly
+gConfigFastBoot=1                                                  # Set to 0 if config plist contains textOnly
 
 CURRENT_THEME_ENTRY_NVRAM=""
 CURRENT_THEME_ENTRY_NVRAM_PLIST=""

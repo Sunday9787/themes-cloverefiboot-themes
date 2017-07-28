@@ -97,7 +97,7 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
 
-- Identify fast boot and textonly boot modes from bootlog.<br>
+- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
 - Simplify control options band for changing themes.<br>
 - Extend keyboard support to identify Command key.<br>
 - Return key now closes dialog boxes.<br>

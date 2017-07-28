@@ -137,31 +137,7 @@ SetBootlogTextColourClasses()
         themeExistCssClass="infoBodyGreen"
     fi
 }
-
-# ---------------------------------------------------------------------------------------
-ReadConfigPList()
-{
-    [[ DEBUG -eq 1 ]] && WriteLinesToLog
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}ReadConfigPList()"
-
-    # Set default vars
-    cfTextOnlyOption=1                # Set to 0 if config plist file has TextOnly set to true
-    cfFastOption=1                    # Set to 0 if config plist file has Fast Boot set to true
-
-    # check for TextOnly and Fast boot options set by user
-    if [ "$blConfigPlistFilePath" != "" ] && [ -f "$blConfigPlistFilePath" ]; then
-        local checkTextOnly=$( grep -A1 "<key>TextOnly</key>" "$blConfigPlistFilePath" )
-        if [[ "$checkTextOnly" == *true* ]]; then
-            cfTextOnlyOption=0
-        fi
-        local checkFast=$( grep -A1 "<key>Fast</key>" "$blConfigPlistFilePath" )
-        if [[ "$checkFast" == *true* ]]; then
-            cfFastOption=0
-        fi
-    fi
- 
-}
-    
+  
 # ---------------------------------------------------------------------------------------
 ReadBootLog()
 {
@@ -637,9 +613,6 @@ PrintVarsToLog()
     WriteToLog "${debugIndentTwo}blNvramReadFromPrint=$blNvramReadFromPrint"
     WriteToLog "${debugIndentTwo}blThemeUsedPathPrint=$blThemeUsedPathPrint"
     WriteToLog "${debugIndentTwo}blThemeAskedForPathPrint=$blThemeAskedForPathPrint"
-    WriteLinesToLog
-    WriteToLog "${debugIndentTwo}Config: Fast Boot? (1=No, 0=Yes): $cfFastOption"
-    WriteToLog "${debugIndentTwo}Config: Text Only? (1=No, 0=Yes): $cfTextOnlyOption"
     WriteLinesToLog
 }
 

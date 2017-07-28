@@ -936,23 +936,29 @@ a:hover {
 }
 
 .ctOptionTitleResult {
-    width: 500px;
+    width: 430px;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: bold;
-    color: #FFF;    
+    color: #FFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;  
 }
 
 .ctOptionTitleResultNotAvailable {
-    width: 500px;
+    width: 430px;
     float: left;
     margin: 4px 0px 0px 2px;
     font-family: 'Roboto', sans-serif;
     font-size: 10px;
     font-weight: bold;
-    color: #FF0000;    
+    color: #FF0000;   
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
 }
 
 .ctOptionEntryHeader {
