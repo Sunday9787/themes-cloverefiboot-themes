@@ -6,7 +6,7 @@
         <description>Most recent changes with links to updates.</description>
         <language>en</language>
         <item>
-            <title>Version 0.76.5</title>
+            <title>Version 0.76.6</title>
             <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -94,10 +94,21 @@ a:hover {
         <p class="textTitleHeading">Latest version changelog</p>
         
         <!--<div class="band1">-->
-          <p class="textTitleSubLatestHeading">0.76.5</p>
+          <p class="textTitleSubLatestHeading">0.76.6</p>
           <p class="textSectionLatestBody">
 
-- Reduced height of bands when no thumbnail is shown.<br>
+- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
+- Simplify control options band for changing themes.<br>
+- Extend keyboard support to identify Command key.<br>
+- Return key now closes dialog boxes.<br>
+
+          </p>
+        <!--</div>-->
+
+        <p class="textTitleHeadingSml">Changelog history</p>
+        
+          <p class="textTitleSubHeading">v0.76.5</p>
+          <p class="textSectionBody">- Reduced height of bands when no thumbnail is shown.<br>
 - Left and right arrow now changes view sizes from no thumbnail to expanded previews.<br>
 - AlphaNumeric keypress will scroll UI to first Theme beginning with that character.<br>
 - Removed out of date md5 check for determining original 80.save_nvram_plist.local.<br>
@@ -110,19 +121,16 @@ a:hover {
 - Fixed multiple tick issue for ReadPrefs on Init screen.<br>
 - Extend detection of repository.<br>
 - Shorten length of time older index.gits are fetched.<br>
-- Improve layout of set theme section.
+- Improve layout of set theme section.</p>
 
-          </p>
-        <!--</div>-->
-
-        <p class="textTitleHeadingSml">Changelog history</p>
-        
+        <div class="band1">   
           <p class="textTitleSubHeading">v0.76.4</p>
           <p class="textSectionBody">- Amend check for network connection.<br>
 - Update detection for Clover revision.<br>
 - Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
 - Increase speed of showing/hiding bootlog region.<br>
 - Increase speed of showing/hiding accordion.</p>
+        </div>
 
         <div class="band2">   
           <p class="textTitleSubHeading">v0.76.3</p>
@@ -455,7 +463,7 @@ a:hover {
 </html>
             ]]>
             </description>
-            <pubDate>Sat Jul 22 15:24:01 BST 2017</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="765"                       sparkle:shortVersionString="r0.76.5"                       length="1760568"                       sparkle:dsaSignature="MCwCFBbiUDc4G3KEzQIMEp+1h+JWijMLAhRSc2SL0M3WIL3nbVtlx7wwpGDl5A=="                       type="application/octet-stream" />
+            <pubDate>Fri Jul 28 17:13:56 BST 2017</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="766"                       sparkle:shortVersionString="r0.76.6"                       length="1761756"                       sparkle:dsaSignature="MC0CFQCWLG2JbPo56IUaLL2Qu3gjZ2xDuQIUC4p6QiMGVvT2I7Usu09f39yWdP8="                       type="application/octet-stream" />
 
         </item>
     </channel>
