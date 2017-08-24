@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Just a simple dark theme with golden icons effect and solid background, supports up to 1080p display resolution. Version: 1.1</string>
+	<string>Just a simple dark theme with golden icons effect with solid background, supports up to 1080p display resolution. Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -22,7 +22,7 @@
 			<key>Scale</key>
 			<integer>5</integer>
 			<key>Show</key>
-			<true/>
+			<false/>
 			<key>Swap</key>
 			<true/>
 		</dict>
@@ -41,7 +41,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
