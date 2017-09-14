@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus (based on chris1111)</string>
 	<key>Description</key>
-	<string>Clover dark theme with 3D UI and logo animation supports up to 1080p display resolution. Version: 2.4</string>
+	<string>Clover dark theme with 3D UI and logo animation supports up to 1080p display resolution. Version: 2.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -20,12 +20,11 @@
 				<key>Path</key>
 				<string>GT_Logo</string>
 			</dict>
-			<integer>10</integer>
-			<string>font.png</string>
-			<string>Load</string>
 		</array>
 		<key>Background</key>
 		<dict>
+			<key>Dark</key>
+			<true/>
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
@@ -43,21 +42,53 @@
 			<true/>
 		</dict>
 		<key>Banner</key>
-		<string>Logo.png</string>
+		<string>logo.png</string>
+		<key>BootCampStyle</key>
+		<false/>
+		<key>Components</key>
+		<dict>
+			<key>Banner</key>
+			<true/>
+			<key>Functions</key>
+			<true/>
+			<key>Help</key>
+			<true/>
+			<key>Label</key>
+			<true/>
+			<key>MenuTitle</key>
+			<true/>
+			<key>MenuTitleImage</key>
+			<true/>
+			<key>Revision</key>
+			<true/>
+		</dict>
 		<key>Font</key>
-		<dict/>
+		<dict>
+			<key>CharWidth</key>
+			<integer>9</integer>
+			<key>Path</key>
+			<string>Font_DroidSans_16pt_White.png</string>
+			<key>Proportional</key>
+			<false/>
+			<key>Type</key>
+			<string>Load</string>
+		</dict>
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
 			<string>selection_big.png</string>
+			<key>ChangeNonSelectedGrey</key>
+			<false/>
 			<key>Color</key>
-			<string>0xFFFFFF7F</string>
+			<string>0x0E3791FF</string>
+			<key>OnTop</key>
+			<false/>
 			<key>Small</key>
 			<string>selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.4</string>
+	<string>2.5</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
