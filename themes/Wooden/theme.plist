@@ -5,13 +5,13 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Colorful Clover theme with simple UI based on Material Design, supports up to 1080p display resolution. Version: 1.6</string>
+	<string>Clover theme with woody icons effect and chocolate color harmony, supports up to 1080p display resolution. Version: 1.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
 		<dict>
 			<key>Dark</key>
-			<false/>
+			<true/>
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
@@ -54,7 +54,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_DroidSans_16pt_White.png</string>
+			<string>Font_Telegrama_16pt_Chocolate.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -67,7 +67,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x005192FF</string>
+			<string>0xFFCC9DFF</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.6</string>
+	<string>1.0</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
