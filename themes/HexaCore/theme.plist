@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A dark theme with colorful icons and Clover beat logo animation. Version: 1.0</string>
+	<string>A dark theme with colorful icons and Clover beat logo animation. Version: 1.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -88,7 +88,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
