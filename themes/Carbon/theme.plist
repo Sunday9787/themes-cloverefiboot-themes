@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A dark metallic theme supports up to 1080p display resolution (was Gothic-Metal). Version: 1.4</string>
+	<string>A dark metallic theme supports up to 1080p display resolution (was Gothic-Metal). Version: 1.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -24,7 +24,7 @@
 			<key>Scale</key>
 			<integer>5</integer>
 			<key>Show</key>
-			<true/>
+			<false/>
 			<key>Swap</key>
 			<true/>
 		</dict>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.4</string>
+	<string>1.5</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
