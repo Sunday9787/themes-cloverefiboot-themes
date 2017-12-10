@@ -5,16 +5,16 @@
 	<key>Author</key>
 	<string>Badruzeus (based on chris1111)</string>
 	<key>Description</key>
-	<string>Clover dark theme with 3D UI and logo animation supports up to 1080p display resolution. Version: 2.5</string>
+	<string>Clover dark theme with 3D UI and logo animation supports up to 1080p display resolution. Version: 2.6</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
 		<array>
 			<dict>
 				<key>FrameTime</key>
-				<integer>76</integer>
+				<integer>175</integer>
 				<key>Frames</key>
-				<integer>84</integer>
+				<integer>7</integer>
 				<key>ID</key>
 				<integer>1</integer>
 				<key>Path</key>
@@ -88,7 +88,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.5</string>
+	<string>2.6</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
