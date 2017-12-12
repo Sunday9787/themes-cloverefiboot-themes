@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Just a simple Clover theme with clean and light color harmony. Version: 1.0</string>
+	<string>Just a simple Clover theme with clean and light color harmony. Version: 1.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -67,7 +67,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<true/>
 			<key>Color</key>
-			<string>0xF6F6F6FF</string>
+			<string>0xCCCCCCFF</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
