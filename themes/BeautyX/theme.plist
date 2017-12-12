@@ -5,22 +5,9 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Colorful version of BeautyDark theme with simple logo animation and black solid background. Version: 1.0.</string>
+	<string>Colorful version of BeautyDark theme with simple logo animation and black solid background. Version: 1.1.</string>
 	<key>Theme</key>
 	<dict>
-		<key>Anime</key>
-		<array>
-			<dict>
-				<key>FrameTime</key>
-				<integer>175</integer>
-				<key>Frames</key>
-				<integer>7</integer>
-				<key>ID</key>
-				<integer>1</integer>
-				<key>Path</key>
-				<string>XLogo</string>
-			</dict>
-		</array>
 		<key>Background</key>
 		<dict>
 			<key>Dark</key>
@@ -88,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
