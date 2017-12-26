@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Christmas theme for Clover bootloader. Version: 1.0</string>
+	<string>Christmas theme for Clover bootloader. Version: 1.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -15,7 +15,7 @@
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
-			<string>Tile</string>
+			<string>Scale</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
@@ -99,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
