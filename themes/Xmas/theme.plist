@@ -5,9 +5,22 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Christmas theme for Clover bootloader. Version: 1.1</string>
+	<string>Christmas theme for Clover bootloader with simple banner animation. Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
+		<key>Anime</key>
+		<array>
+			<dict>
+				<key>FrameTime</key>
+				<integer>98</integer>
+				<key>Frames</key>
+				<integer>14</integer>
+				<key>ID</key>
+				<integer>1</integer>
+				<key>Path</key>
+				<string>XLogo</string>
+			</dict>
+		</array>
 		<key>Background</key>
 		<dict>
 			<key>Dark</key>
@@ -54,7 +67,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_Telegrama_16pt_White.png</string>
+			<string>Font_PTMono_16pt_White.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -99,7 +112,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2017</string>
 </dict>
