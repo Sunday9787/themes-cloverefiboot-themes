@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with leather icons effect, supports up to 1080p display resolution. Version: 1.2</string>
+	<string>Clover theme with leather icons effect. Version: 1.3</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -15,7 +15,7 @@
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
-			<string>Tile</string>
+			<string>Scale</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
@@ -75,8 +75,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 	<key>Year</key>
-	<string>2017</string>
+	<string>2018</string>
 </dict>
 </plist>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme meets awesome Ubuntu's Unity UI with it's icon lens effect, supports up to 1080p display resolution. Version: 1.3</string>
+	<string>Clover theme meets awesome Ubuntu's Unity UI with it's icon lens effect. Version: 1.4</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -15,7 +15,7 @@
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
-			<string>Tile</string>
+			<string>Scale</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
@@ -51,6 +51,8 @@
 		</dict>
 		<key>Font</key>
 		<dict>
+			<key>CharWidth</key>
+			<integer>9</integer>
 			<key>Path</key>
 			<string>Font_UbuntuMono_16pt_White.png</string>
 			<key>Proportional</key>
@@ -73,8 +75,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.3</string>
+	<string>1.4</string>
 	<key>Year</key>
-	<string>2017</string>
+	<string>2018</string>
 </dict>
 </plist>
