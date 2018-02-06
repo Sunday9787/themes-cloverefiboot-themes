@@ -5,22 +5,9 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A dark theme with colorful icons and Clover beat logo animation. Version: 1.5</string>
+	<string>A dark theme with colorful hexagonal icons. Version: 1.6</string>
 	<key>Theme</key>
 	<dict>
-		<key>Anime</key>
-		<array>
-			<dict>
-				<key>FrameTime</key>
-				<integer>175</integer>
-				<key>Frames</key>
-				<integer>7</integer>
-				<key>ID</key>
-				<integer>1</integer>
-				<key>Path</key>
-				<string>HexAnime</string>
-			</dict>
-		</array>
 		<key>Background</key>
 		<dict>
 			<key>Dark</key>
@@ -37,7 +24,7 @@
 			<key>Scale</key>
 			<integer>5</integer>
 			<key>Show</key>
-			<false/>
+			<true/>
 			<key>Swap</key>
 			<true/>
 		</dict>
@@ -88,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.5</string>
+	<string>1.6</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
