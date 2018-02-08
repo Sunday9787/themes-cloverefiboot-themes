@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A clean Clover dark theme with colorful circle icons. Version: 1.2</string>
+	<string>A clean Clover dark theme with colorful circle icons. Version: 1.3</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -22,7 +22,7 @@
 			<key>Inline</key>
 			<false/>
 			<key>Scale</key>
-			<integer>5</integer>
+			<integer>16</integer>
 			<key>Show</key>
 			<false/>
 			<key>Swap</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
