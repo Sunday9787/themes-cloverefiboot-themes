@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Another version of One Clover theme with square shaped icons. Version: 1.1</string>
+	<string>Another version of One Clover theme with square shaped icons. Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -22,7 +22,7 @@
 			<key>Inline</key>
 			<false/>
 			<key>Scale</key>
-			<integer>5</integer>
+			<integer>16</integer>
 			<key>Show</key>
 			<false/>
 			<key>Swap</key>
@@ -65,7 +65,7 @@
 			<key>Big</key>
 			<string>selection_big.png</string>
 			<key>ChangeNonSelectedGrey</key>
-			<true/>
+			<false/>
 			<key>Color</key>
 			<string>0x005192FF</string>
 			<key>OnTop</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
