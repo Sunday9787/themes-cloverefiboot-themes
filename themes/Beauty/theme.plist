@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>An elegant clean looks theme with colorful icons and bright solid background. Version: 1.6</string>
+	<string>An elegant clean looks theme with colorful icons and bright solid background. Version: 1.7</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.6</string>
+	<string>1.7</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
