@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>An elegant clean looks theme with colorful icons and bright solid background. Version: 1.7</string>
+	<string>An elegant clean looks theme with colorful icons and bright solid background. Version: 1.8</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -54,7 +54,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_Cousine_16pt_Mint.png</string>
+			<string>Font_OfficeCodePro_16pt_Green.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.7</string>
+	<string>1.8</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

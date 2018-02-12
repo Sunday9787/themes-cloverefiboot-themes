@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme dedicated to InsanelyMac lovers arround the world, supports up to 1080p display resolution. Version: 1.4</string>
+	<string>Clover theme dedicated to InsanelyMac lovers arround the world, supports up to 1080p display resolution. Version: 1.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,7 +52,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_DroidSans_16pt_White.png</string>
+			<string>Font_KawkabMono_16pt_White.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -72,7 +72,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x000080FF</string>
+			<string>0x400080FF</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
@@ -80,7 +80,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.4</string>
+	<string>1.5</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
