@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with 256px colorful icons and lens flare selection effect. Version: 1.6</string>
+	<string>Another version of Luxury theme with silver icons. Version: 1.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -15,14 +15,14 @@
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
-			<string>Scale</string>
+			<string>Tile</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
 			<key>Inline</key>
 			<false/>
 			<key>Scale</key>
-			<integer>16</integer>
+			<integer>5</integer>
 			<key>Show</key>
 			<true/>
 			<key>Swap</key>
@@ -34,6 +34,8 @@
 		<false/>
 		<key>Components</key>
 		<dict>
+			<key>Banner</key>
+			<true/>
 			<key>Functions</key>
 			<true/>
 			<key>Help</key>
@@ -52,48 +54,28 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_KawkabMono_16pt_White.png</string>
+			<string>Font_Telegrama_16pt_White.png</string>
+			<key>Proportional</key>
+			<false/>
 			<key>Type</key>
 			<string>Load</string>
-		</dict>
-		<key>Layout</key>
-		<dict>
-			<key>BannerOffset</key>
-			<integer>50</integer>
-			<key>ButtonOffset</key>
-			<integer>64</integer>
-			<key>SelectionBigWidth</key>
-			<integer>288</integer>
-			<key>TextOffset</key>
-			<integer>-100</integer>
-			<key>TileXSpace</key>
-			<integer>128</integer>
-			<key>TileYSpace</key>
-			<integer>128</integer>
-		</dict>
-		<key>Origination</key>
-		<dict>
-			<key>DesignHeight</key>
-			<integer>1080</integer>
-			<key>DesignWidth</key>
-			<integer>1920</integer>
 		</dict>
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
-			<string>Selection_big.png</string>
+			<string>selection_big.png</string>
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x400080FF</string>
+			<string>0x333333FF</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
-			<string>Selection_small.png</string>
+			<string>selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.6</string>
+	<string>1.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
