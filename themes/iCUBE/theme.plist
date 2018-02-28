@@ -51,7 +51,7 @@
 			<key>Big</key>
 			<string>selection_big.png</string>
 			<key>Color</key>
-			<string>0xFFFFFF7F</string>
+			<string>0x00252eFF</string>
 			<key>Small</key>
 			<string>selection_small.png</string>
 		</dict>
