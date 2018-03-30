@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme meets awesome Ubuntu's Unity UI with it's icon lens effect. Version: 1.8</string>
+	<string>Clover theme meets awesome Ubuntu's Unity UI with it's icon lens effect. Version: 1.9</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -75,7 +75,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.8</string>
+	<string>1.9</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
