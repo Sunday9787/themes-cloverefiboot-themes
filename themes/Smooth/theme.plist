@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A simple light Clover theme with pressed button selection effect. Version: 1.1</string>
+	<string>A simple light Clover theme with pressed button selection effect. Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,13 +52,37 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>10</integer>
+			<integer>11</integer>
 			<key>Path</key>
-			<string>Font_CourierPrime_16pt_Green.png</string>
+			<string>Font_CPMono_16pt_GrayFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
 			<string>Load</string>
+		</dict>
+		<key>Layout</key>
+		<dict>
+			<key>BannerOffset</key>
+			<integer>40</integer>
+			<key>ButtonOffset</key>
+			<integer>32</integer>
+			<key>SelectionBigWidth</key>
+			<integer>180</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
+			<key>TileXSpace</key>
+			<integer>40</integer>
+			<key>TileYSpace</key>
+			<integer>36</integer>
+			<key>Vertical</key>
+			<false/>
+		</dict>
+		<key>Origination</key>
+		<dict>
+			<key>DesignHeight</key>
+			<integer>1080</integer>
+			<key>DesignWidth</key>
+			<integer>1920</integer>
 		</dict>
 		<key>Selection</key>
 		<dict>
@@ -67,7 +91,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0xABDEE4FF</string>
+			<string>0xDAE1E8FF</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
@@ -75,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
