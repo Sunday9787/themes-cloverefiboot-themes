@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.0</string>
+	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,9 +52,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>9</integer>
+			<integer>11</integer>
 			<key>Path</key>
-			<string>Font_RobotoMono_16pt_White.png</string>
+			<string>Font_CPMono_16pt_White.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.0</string>
+	<string>2.1</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
