@@ -97,16 +97,22 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
 
-- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
-- Simplify control options band for changing themes.<br>
-- Extend keyboard support to identify Command key.<br>
-- Return key now closes dialog boxes.<br>
+- Change check for theme repository.<br>
+- Add extra debug for installed git.<br>
+- Update Sparkle framework.<br>
 
           </p>
         <!--</div>-->
 
-        <p class="textTitleHeadingSml">Changelog history</p>
-        
+          <p class="textTitleHeadingSml">Changelog history</p>
+          <p class="textTitleSubHeading">v0.76.6</p>
+          <p class="textSectionBody">
+- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
+- Simplify control options band for changing themes.<br>
+- Extend keyboard support to identify Command key.<br>
+- Return key now closes dialog boxes.</p>
+
+        <div class="band2">
           <p class="textTitleSubHeading">v0.76.5</p>
           <p class="textSectionBody">- Reduced height of bands when no thumbnail is shown.<br>
 - Left and right arrow now changes view sizes from no thumbnail to expanded previews.<br>
