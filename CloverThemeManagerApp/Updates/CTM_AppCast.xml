@@ -6,7 +6,7 @@
         <description>Most recent changes with links to updates.</description>
         <language>en</language>
         <item>
-            <title>Version 0.76.6</title>
+            <title>Version 0.76.7</title>
             <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -94,19 +94,25 @@ a:hover {
         <p class="textTitleHeading">Latest version changelog</p>
         
         <!--<div class="band1">-->
-          <p class="textTitleSubLatestHeading">0.76.6</p>
+          <p class="textTitleSubLatestHeading">0.76.7</p>
           <p class="textSectionLatestBody">
 
-- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
-- Simplify control options band for changing themes.<br>
-- Extend keyboard support to identify Command key.<br>
-- Return key now closes dialog boxes.<br>
+- Change check for theme repository.<br>
+- Add extra debug for installed git.<br>
+- Update Sparkle framework.<br>
 
           </p>
         <!--</div>-->
 
-        <p class="textTitleHeadingSml">Changelog history</p>
-        
+          <p class="textTitleHeadingSml">Changelog history</p>
+          <p class="textTitleSubHeading">v0.76.6</p>
+          <p class="textSectionBody">
+- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
+- Simplify control options band for changing themes.<br>
+- Extend keyboard support to identify Command key.<br>
+- Return key now closes dialog boxes.</p>
+
+        <div class="band2">
           <p class="textTitleSubHeading">v0.76.5</p>
           <p class="textSectionBody">- Reduced height of bands when no thumbnail is shown.<br>
 - Left and right arrow now changes view sizes from no thumbnail to expanded previews.<br>
@@ -463,7 +469,7 @@ a:hover {
 </html>
             ]]>
             </description>
-            <pubDate>Fri Jul 28 17:13:56 BST 2017</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="766"                       sparkle:shortVersionString="r0.76.6"                       length="1761756"                       sparkle:dsaSignature="MC0CFQCWLG2JbPo56IUaLL2Qu3gjZ2xDuQIUC4p6QiMGVvT2I7Usu09f39yWdP8="                       type="application/octet-stream" />
+            <pubDate>Thu Jun  7 07:00:08 BST 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="767"                       sparkle:shortVersionString="r0.76.7"                       length="2062566"                       sparkle:dsaSignature="MC0CFEHLStJmeDO+Vt3rnHynJRYjJGCaAhUAv2GIrWs81LLNOcMrmQ15Bh7gdg8="                       type="application/octet-stream" />
 
         </item>
     </channel>
