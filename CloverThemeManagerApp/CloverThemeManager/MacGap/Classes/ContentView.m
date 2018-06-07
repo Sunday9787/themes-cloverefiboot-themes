@@ -40,11 +40,11 @@
     
 	self.delegate = [[WebViewDelegate alloc] initWithMenu:[NSApp mainMenu]];
     
-	[self.webView setFrameLoadDelegate:self.delegate];
-	[self.webView setUIDelegate:self.delegate];
-	[self.webView setResourceLoadDelegate:self.delegate];
-	[self.webView setDownloadDelegate:self.delegate];
-	[self.webView setPolicyDelegate:self.delegate];
+    [self.webView setFrameLoadDelegate:(id<WebFrameLoadDelegate>)self.delegate];
+    [self.webView setUIDelegate:(id<WebUIDelegate>)self.delegate];
+    [self.webView setResourceLoadDelegate:(id<WebResourceLoadDelegate>)self.delegate];
+    [self.webView setDownloadDelegate:(id<WebDownloadDelegate>)self.delegate];
+    [self.webView setPolicyDelegate:(id<WebPolicyDelegate>)self.delegate];
     [self.webView setDrawsBackground:NO];
     [self.webView setShouldCloseWithWindow:NO];
     

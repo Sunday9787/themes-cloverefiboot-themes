@@ -96,7 +96,7 @@ void WriteStringtoFile(const char *str, FILE *outfile)
         for (NSString *item in splitFile) {
        
             // If item is not the one to remove && item is not empty, then write to file
-            if (![messageToRemove isEqualToString:item] && (![item length] == 0) ) {
+            if (![messageToRemove isEqualToString:item] && [item length] != 0 ) {
                 const char *itemToWrite = [item UTF8String];
                 WriteStringtoFile(itemToWrite,newMesageFile);
             }
