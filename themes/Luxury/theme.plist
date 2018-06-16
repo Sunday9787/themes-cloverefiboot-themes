@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Just a simple dark theme with golden icons effect and solid background. Version: 2.2</string>
+	<string>Just a simple dark theme with golden icons effect and solid background. Version: 2.3</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,13 +52,37 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>9</integer>
+			<integer>11</integer>
 			<key>Path</key>
-			<string>Font_UbuntuMono_16pt_Gold.png</string>
+			<string>Font_CPMono_16pt_YellowFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
 			<string>Load</string>
+		</dict>
+		<key>Layout</key>
+		<dict>
+			<key>BannerOffset</key>
+			<integer>48</integer>
+			<key>ButtonOffset</key>
+			<integer>36</integer>
+			<key>SelectionBigWidth</key>
+			<integer>180</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
+			<key>TileXSpace</key>
+			<integer>40</integer>
+			<key>TileYSpace</key>
+			<integer>36</integer>
+			<key>Vertical</key>
+			<false/>
+		</dict>
+		<key>Origination</key>
+		<dict>
+			<key>DesignHeight</key>
+			<integer>1080</integer>
+			<key>DesignWidth</key>
+			<integer>1920</integer>
 		</dict>
 		<key>Selection</key>
 		<dict>
@@ -75,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.2</string>
+	<string>2.3</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
