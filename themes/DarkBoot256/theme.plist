@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>DarkBoot Clover theme with 256px icons size. Version: 1.1</string>
+	<string>DarkBoot Clover theme with 256px icons size. Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -114,7 +114,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Another version of SmoothDark Clover theme with elliptical icons. Version: 1.2</string>
+	<string>Another version of SmoothDark Clover theme with elliptical icons. Version: 1.3</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -60,10 +60,17 @@
 			<key>Type</key>
 			<string>Load</string>
 		</dict>
+		<key>Origination</key>
+		<dict>
+			<key>DesignHeight</key>
+			<integer>1080</integer>
+			<key>DesignWidth</key>
+			<integer>1920</integer>
+		</dict>
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
-			<string>selection_big.png</string>
+			<string>Selection_big.png</string>
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
@@ -71,11 +78,11 @@
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
-			<string>selection_small.png</string>
+			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

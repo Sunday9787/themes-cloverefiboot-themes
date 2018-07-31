@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover dark theme with simple logo animation (was BeautyDark2.0). Version: 1.1</string>
+	<string>Clover dark theme with simple logo animation (was BeautyDark2.0). Version: 1.2</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -100,7 +100,7 @@
 		<key>Selection</key>
 		<dict>
 			<key>Big</key>
-			<string>selection_big.png</string>
+			<string>Selection_big.png</string>
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
@@ -108,11 +108,11 @@
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
-			<string>selection_small.png</string>
+			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
