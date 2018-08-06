@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>Author</key>
-	<string>Badruzeus (based on chris1111)</string>
+	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover dark theme with 3D icons and glowing logo animation. Version: 3.6</string>
+	<string>Clover dark theme with 3D icons and glowing logo animation. Version: 3.7</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -112,7 +112,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>3.6</string>
+	<string>3.7</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
