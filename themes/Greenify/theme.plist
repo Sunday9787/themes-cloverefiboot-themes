@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A fresh Clover theme with green color harmony (inspired from rEFInd-Next theme by @sdbinwiiexe). Version: 1.2</string>
+	<string>A fresh Clover theme with green color harmony (inspired from rEFInd-Next theme by @sdbinwiiexe). Version: 1.3</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -99,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

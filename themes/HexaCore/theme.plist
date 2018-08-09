@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A dark theme with colorful hexagonal icons. Version: 2.3</string>
+	<string>A dark theme with colorful hexagonal icons. Version: 2.4</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -99,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.3</string>
+	<string>2.4</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Buttons Clover theme with colorful icons and dark background. Version: 1.8</string>
+	<string>Buttons Clover theme with colorful icons and dark background. Version: 1.9</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -99,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.8</string>
+	<string>1.9</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

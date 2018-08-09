@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Light version of HexaCore theme with 256px icons size. Version: 1.8</string>
+	<string>Light version of HexaCore theme with 256px icons size. Version: 1.9</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,9 +52,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>10</integer>
+			<integer>11</integer>
 			<key>Path</key>
-			<string>Font_Telegrama_16pt_Green.png</string>
+			<string>Font_CPMono_16pt_Green.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -97,7 +97,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.8</string>
+	<string>1.9</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
