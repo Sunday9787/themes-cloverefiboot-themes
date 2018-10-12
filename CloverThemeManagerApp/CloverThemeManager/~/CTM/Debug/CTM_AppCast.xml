@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>CloverThemeManager Changelog</title>
+        <link>http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CTM_AppCast.xml?format=raw</link>
+        <description>Most recent changes with links to updates.</description>
+        <language>en</language>
+        <item>
+            <title>Version 0.76.8</title>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
+    <style>
+
+html, body {
+    background: #2d313a !important;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+p {
+    text-align: left;
+    font-family: 'Roboto Condensed', sans-serif;
+    margin-left: 60px;
+    margin-right: 40px;
+}
+.textTitleHeading {
+    color: #d1f4fb;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 2px;
+    margin-top: 46px;
+}
+.textTitleHeadingSml{
+    color: #d1f4fb;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1px;
+    margin-top: 120px;
+    margin-bottom: 30px;
+}
+.textTitleSubLatestHeading {
+    color: #d1f4fb;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 120%;
+}
+.textTitleSubHeading {
+    color: #d1f4fb;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 120%;
+}
+.textSectionLatestBody {
+    color: #98e5ea;
+    font-size: 14px;
+    line-height: 140%;
+    font-weight: 300;
+}
+.textSectionBody {
+    color: #98e5ea;
+    font-size: 12px;
+    line-height: 140%;
+    font-weight: 300;
+}
+.band1 {
+   border-top: 2px solid #3e434b;
+    padding: 20px 0px 20px 0px;
+}
+.band2 {
+    background: #292D36 none repeat scroll 0 0;
+    border-top: 2px solid #3e434c;
+    padding: 20px 0px 20px 0px;
+}
+a:link, a:visited {
+    color: #BBB;
+    text-decoration: none;
+}
+a:hover {
+    color: #FFF;
+}
+
+    </style>
+
+</head>
+<body>
+<a name="Top"></a>
+<div id="Container">
+
+        <div id="SpacerTop">&nbsp;</div>
+
+        <p class="textTitleHeading">Latest version changelog</p>
+        
+        <!--<div class="band1">-->
+          <p class="textTitleSubLatestHeading">0.76.8</p>
+          <p class="textSectionLatestBody">
+
+- Change check for theme repository.<br>
+- Add extra debug for installed git.<br>
+- Update Sparkle framework.<br>
+
+          </p>
+        <!--</div>-->
+
+          <p class="textTitleHeadingSml">Changelog history</p>
+          <p class="textTitleSubHeading">v0.76.6</p>
+          <p class="textSectionBody">
+- Identify fast boot and textonly boot modes from bootlog and config.plist<br>
+- Simplify control options band for changing themes.<br>
+- Extend keyboard support to identify Command key.<br>
+- Return key now closes dialog boxes.</p>
+
+        <div class="band2">
+          <p class="textTitleSubHeading">v0.76.5</p>
+          <p class="textSectionBody">- Reduced height of bands when no thumbnail is shown.<br>
+- Left and right arrow now changes view sizes from no thumbnail to expanded previews.<br>
+- AlphaNumeric keypress will scroll UI to first Theme beginning with that character.<br>
+- Removed out of date md5 check for determining original 80.save_nvram_plist.local.<br>
+- TAB to select different interface controls.<br>
+- Fix bug showing choice of embedded theme in bootlog section.<br>
+- Added Update All button.<br>
+- Fixed issue where a locally installed theme that had since been deleted from repo would be flagged with an available update.<br>
+- Add tooltips to UI.<br>
+- Added button to rescan selected partition.<br>
+- Fixed multiple tick issue for ReadPrefs on Init screen.<br>
+- Extend detection of repository.<br>
+- Shorten length of time older index.gits are fetched.<br>
+- Improve layout of set theme section.</p>
+
+        <div class="band1">   
+          <p class="textTitleSubHeading">v0.76.4</p>
+          <p class="textSectionBody">- Amend check for network connection.<br>
+- Update detection for Clover revision.<br>
+- Change text of ShowHideToggleButton button from Hide UnInstalled to Show Installed.<br>
+- Increase speed of showing/hiding bootlog region.<br>
+- Increase speed of showing/hiding accordion.</p>
+        </div>
+
+        <div class="band2">   
+          <p class="textTitleSubHeading">v0.76.3</p>
+          <p class="textSectionBody">- Integrated <a href="https://sparkle-project.org" target="_blank">Sparkle</a> framework for handling updates (Credit Micky1979).<br>
+- Removed previous update code.<br>
+- updateID no longer used.<br>
+- Message box link colour changed to lighter blue.<br>
+- bootlog trim action changed to better handle large data.<br>
+- Workaround issue where additional update buttons could appear for themes with spaces in their name when toggling show all view.</p>
+        </div>
+
+        <div class="band1">   
+          <p class="textTitleSubHeading">v0.76.2</p>
+          <p class="textSectionBody">- Added a new user selectable feature to clean items downloaded to the App Support dir which may cause issue with loading the app if things have changed server-side, or the user is upgrading from an older version. (Credit to Micky1979 for his objective-c skills).<br>
+- The main app now cleans the temporary dir rather than the bash script.<br>
+- Fixed positioning issue with theme update check progress bar when bootlog is visible.</p>
+        </div>
+
+        <div class="band2">
+          <p class="textTitleSubHeading">v0.76.1 (updateID 16)</p>
+          <p class="textSectionBody">- Click theme bands rather than image thumbnail to reveal large theme screenshot.<br>
+- Fix bug where uninstalling a theme with an update still showed the update available.<br>
+- Double check temp directory is removed at close of app.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.76.1 (updateID 15)</p>
+          <p class="textSectionBody">- Fix two incorrect calls to the wrong git binary. <br>
+- Change detection of default gateway dependent on use of either discoveryd or mDNSResponder.<br>
+- Improve feedback on first page when loading the app.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.76.1 (updateID 14)</p>
+          <p class="textSectionBody">- Fix issue where some actions would fail when running app from a path with spaces.<br>
+- Fix issue detecting MBR boot device (thanks droples).</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.76.1</p>
+          <p class="textSectionBody">- App can now be run from a read-only volume.<br>
+- Script updates can only be performed when app is not on a read-only volume.<br>
+- Insert line breaks in to injected html for easier reading.<br>
+- Text on loading page, and bootlog info is now non-selectable.<br>
+- Debug log mode is now set to off (enable if you experience problems).<br>
+- Theme entries in nvram and config.plist are only checked when boot device is selected.<br>
+- Removed unused growl framework to reduce app footprint.
+- Updated credits.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.76.0 (updateID 13)</p>
+          <p class="textSectionBody">- Check for theme updates after using rescan option (Thanks droples).<br>
+- Add 'Connecting to repository' status on loading page.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.76.0 (updateID 12)</p>
+          <p class="textSectionBody">- Test for non existent path after user cancelling rescan option (Thanks droples).<br>
+- Fix shadows on update bands when UI is set to hide uninstalled themes.<br>
+- Fix subsequent updates being removed after the first update when UI is set to hide uninstalled themes.<br>
+- Only add an update button to the DOM if not already added.<br>
+- Restore previous working directory after updating a theme.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.76.0 (update 11) </p>
+          <p class="textSectionBody">- Fix updating cloverthememanager.js.</p>
+        </div>
+
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.76.0 (updateID 10)</p>
+          <p class="textSectionBody">- Fixed problem introduced with recent developments with the UI's handling of theme updates.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.76.0 (update 9) </p>
+          <p class="textSectionBody">- Change network detection.<br>
+- Fix cancelling 'Mount ESP' operation.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.76.0</p>
+          <p class="textSectionBody">- Detect boot device on launch.<br>
+- Read bootlog to learn what Clover finds on the users system for themes.<br>
+- Add a collapsable area at the top of the UI for bootlog information. <br>
+- Add theme control options to the bottom of the UI.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.9 beta5</p>
+          <p class="textSectionBody">- Resolve full path to EFI/Clover directory when Clover is installed on current volume.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.9 beta4</p>
+          <p class="textSectionBody">- Match case before checking for MBR boot sector signature.<br>
+- Fix notification code injection for OS X versions newer than Lion.<br>
+- Remove rogue character in script.sh.<br>
+- Change network discovery for OS X Lion as netstat -r takes a while to complete.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.9 beta3</p>
+          <p class="textSectionBody">- Take active partition marker in to account when reading fdisk result.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.9 beta2</p>
+          <p class="textSectionBody">- check UI theme control options exists before trying to hide/show them.<br>
+- correct log message for identified MBR devices.<br>
+- added more debugging statements to function FindMbrDevice().<br>
+- adjust text size and positioning of theme control options to accommodate longer path.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.9 beta1</p>
+          <p class="textSectionBody">- At launch, Clovers bootlog is read and an attempt is made to determine the boot device and mount it.<br>
+- If a Clover bootlog is found then the relevant theme information is extracted and displayed in a collapsible area at the head of the main UI with the summary of what happened shown in the bootlog title bar.<br>
+- When the boot device is selected, different options are presented for setting the next theme to use for boot, depending on the boot type (Legacy or UEFI).</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.6 (update 8)</p>
+          <p class="textSectionBody">- Notifications are now not sent when running under 10.7<br>
+- snabbt js library is no longer used. Bounce effect re-worked to work in 10.7 upwards.<br>
+- Fix update for OS X 10.7.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.6 (update 7)</p>
+          <p class="textSectionBody">- Updated jQuery to v2.1.3.<br>
+- App update now prevents theme updates from running until user decides what to do.<br>
+- Added notifications.<br>
+- Update about window.<br>
+- Add bounce effect to message box.<br>
+- Enhance update routine to check for main app framework version change.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.5</p>
+          <p class="textSectionBody">- add_themes help page is now loaded in default web browser rather than the Clover Theme Manager window.<br>
+- add_themes help file tweaked.<br>
+- Text for untracked themes dialog box updated with new description.<br>
+- Untracked theme indicator changed from a cross to a question mark.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.4</p>
+          <p class="textSectionBody">- Fix issue Low Space warning message being accidentally fired.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.3</p>
+          <p class="textSectionBody">- Fix a couple of issues when returning from help page (Thanks droples).<br>
+- Free space is no longer checked for when no partition is selected.<br>
+- Order of some items sent to UI reverted to retain previous settings.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.2</p>
+          <p class="textSectionBody">- Remember user choice for enabled/disabled snow.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.1</p>
+          <p class="textSectionBody">- Enabled 'Open Log' menu item from CloverThemeManager menu.<br>
+- Revise check for out-of-date index.git (due to re-built repo).<br>
+- Activate SecurityAgent when running osascript on OS X 10.9 and newer in attempt to give dialog box the focus. The dialog box is correctly given the focus on OS X 10.7 but not later versions. Activating SecurityAgent in Yosemite seems to work on subsequent opening, just not the initial opening). Not sure how to do this in 10.9.<br>
+- Switch to using JrC's partutil program for gathering disk and partition information.<br>
+- Add option to disable/enable snow effect (will remove snow after winter).<br>
+- Style nvram dropdown menu.<br>
+- Add hover to message box close button.<br>
+- Adjust vertical position of theme title when thumbnails are hidden.<br>
+- Various code cleanups and bug fixes</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.75.0 (update 6)  </p>
+          <p class="textSectionBody">- Theme update improvements.<br>
+- Themes installed from the repo now have the last commit hash for that theme stored in a file named .hash in the theme directory. This hash is then used for checking against the hash in the repo for updates.<br>
+- Changed to using unique partition GUID rather than volume UUID.<br>
+- Installed themes are only recorded in prefs if partition has a unique GUID.<br>
+- Fix bug where help file was deleted.<br>
+- Fix bug where volume dropdown menu wasn't re-populated when returning from help page.<br>
+- Tested on 10.7, 10.8, 10.9 and 10.10 </p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.75.0 (update 4)</p>
+          <p class="textSectionBody">- Added some Christmas fun by the way of the BSD licensed snowstorm</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.??.?? - 9th December 2014</p>
+          <p class="textSectionBody">- Revise disk reading routine and put in to separate script to allow multithreading.<br>
+- Revise ESP routines.<br>
+- Improve feedback on initialisation page.<br>
+- Volume drop down menu now populated by javascript.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.??.?? - 10th December 2014</p>
+          <p class="textSectionBody">- App update procedure is now separate from index.git.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.??.??</p>
+          <p class="textSectionBody">- Add version numbers to other scripts and show on initialisation page.<br>
+- Check for app updates later in the launch process, just before showing the UI.<br>
+- UI now correctly enables when selecting 'No' to app updates dialog.<br>
+- Full path to EFI/Clover/Themes now shown for ESP in volume dropdown menu.<br>
+- Don't remove volume dropdown menu title if selected volume no longer exists.<br>
+- Clover.Theme nvram var is now checked against installed themes for ESP (thanks droplets).<br>
+- Free space text is now shown for ESP after mounting.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.74.2</p>
+          <p class="textSectionBody">- Enable mounting and working with EFI System Partition(s).</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.74</p>
+          <p class="textSectionBody">- Implement remote updating of the app/public directory (the inner scripts) at users choice.<br>
+- Add check for any themes in your theme directory that do not match themes in the repo.<br>
+- Improved git detection.
+- Changed app name in menu.
+- Apply font style to theme list</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.73</p>
+          <p class="textSectionBody">- Add showing/hiding previews for update theme bands.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.72</p>
+          <p class="textSectionBody">- UI theme dir dropdown list now used values of array ID.<br>
+- Record and use mount points from diskutil info -plist.<br>
+- Handle spaces in mount points.<br>
+- Assign zero'd volume UUID for MBR partitioned devices.<br>
+- Send update list to UI even if no path selected to enable interface.<br>
+- Add debug info to log for $PATH and result of which command.<br>
+- Fix bug where incorrect theme would be removed from prefs.<br>
+- Various code clean ups.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.71</p>
+          <p class="textSectionBody">- Don't housekeep prefs and theme.gits for Volumes that are no longer mounted - For example, an unmounted ESP.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.70</p>
+          <p class="textSectionBody">- Check for local installation of git and display installation instructions if not found.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.69</p>
+          <p class="textSectionBody">- Fix bug when reading empty pref entries for last selected volume and path.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.61</p>
+          <p class="textSectionBody">- Add a secondary overlay, rather than use the same one as used for the message boxes, to prevent user interaction when checking for updated theme list and updates from the repo.<br>
+- Relayout some of the UI elements.<br>
+- Implement accepting user password to allow changes that require root privileges.<br>
+- The app can now set Clover. Theme nvram variable.<br>
+- Fix bug where multiple updates weren't detected on a secondary scan.<br>
+- Implemented slimmer view option to see more themes at once.<br>
+- Can perform [Read: basic]  install from the command line. </p>
+        </div>
+        
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.60</p>
+          <p class="textSectionBody">- Fix javascript bug where update buttons did not have eventlisteners.<br>
+- Fix a couple of css errors.<br>
+- Improve javascript message log reading.<br>
+- Changed method for checking svn status.<br>
+- Add 'U' indicator beside theme control button for themes not under version control.<br>
+- Add available free space for selected path to UI.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.59</p>
+          <p class="textSectionBody">- Check for local installation of git and display installation instructions if not found.</p>
+        </div>
+        
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.58</p>
+          <p class="textSectionBody">- Fix symbolic link to images directory.<br>
+- Hide open path button, if no paths are available.<br>
+- Update mechanism is now functioning well (apart from known bug mentioned below).<br>
+- Make UI theme band colours stronger. Update band is now blue.<br>
+- First run now checks out images and theme.plists concurrently.<br>
+- Code clean up and many refinements/improvements.</p>
+        </div>
+
+        <div class="band2">        
+          <p class="textTitleSubHeading">v0.57</p>
+          <p class="textSectionBody">- Revised checkout of theme.plists (thanks SoThOr). First run checks out all theme.plists and takes maybe a minute, but subsequent launches are far faster as previous data is used unless anything has changed.<br>
+- Take note: All /&lt;mountpoint&gt;/EFI/Clover/themes paths are now set under version control.<br>
+- Updates now work (for versioned theme directories only).<br>
+- Updated html image links to use relative file paths.</p>
+        </div>
+
+        <div class="band1">        
+          <p class="textTitleSubHeading">v0.56</p>
+          <p class="textSectionBody">- Themes are now listed alphabetically.<br>
+- Added count of installed themes.<br>
+- Installed themes are now highlighted by a different coloured band as opposed to a tick image.<br>
+- Theme bands now filled with webkit grad rather than png image.</p>
+        </div>
+        
+        <div class="band2">        
+          <p class="textTitleSubHeading">Earlier versions</p>
+          <p class="textSectionBody">- History lost when projectosx went down.</p>
+        </div>
+        
+    </div>
+    
+    <!-- <div id="SpacerBottom">&nbsp;</div> -->
+
+     
+</div> <!-- End Container -->
+    
+</body>
+</html>
+            ]]>
+            </description>
+            <pubDate>Fri Oct 12 15:38:36 BST 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="768"                       sparkle:shortVersionString="r0.76.8"                       length="2141122"                       sparkle:dsaSignature="MCwCFCj3PGBvH1q0huJNjPYH4xazHJrNAhR20DPkO2/VlCOUe7RTsQGxYy6oMA=="                       type="application/octet-stream" />
+
+        </item>
+    </channel>
+</rss>
