@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.5
+# v0.76.6
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -369,7 +369,12 @@ ReadBootLog()
         if [[ "$lineRead" == *"Choosing theme"* ]]; then
             blThemeNameChosen=$( echo "${lineRead##*Choosing theme }" | sed 's/ *$//' )
         fi
-        
+
+        # 4:769  0:002  Chosen theme black_green
+        if [[ "$lineRead" == *"Chosen theme"* ]]; then
+            blThemeNameChosen=$( echo "${lineRead##*Chosen theme }" | sed 's/ *$//' )
+        fi
+
         # 1:848  0:000  no themes available, using embedded
         if [[ "$lineRead" == *"no themes available, using embedded"* ]]; then
             blUsingEmbedded=0
@@ -677,7 +682,7 @@ PopulateNvramFunctionalityBand()
     
     if [ "$message" != "" ]; then
     
-        # Create html mesasage
+        # Create html message
         local htmlToInsert=""
         htmlToInsert="$htmlToInsert"$(printf "    <div id=\"NvramFunctionalityBand\" class=\"${fillColour}\">\r")
         htmlToInsert="$htmlToInsert"$(printf "        <div id=\"nvramTextArea\">\r")
@@ -918,14 +923,14 @@ if [ -f "$bootLogFile" ]; then
 
         # Write some vars to file for script.sh to use.
         if [ "$blNvramReadFrom" != "" ]; then
-            echo "nvram@$blNvramReadFrom" >> "$bootlogScriptOutfile"
+            echo "nvram‡$blNvramReadFrom" >> "$bootlogScriptOutfile"
         elif [ $blNvramBootArgs -eq 0 ]; then
-            echo "nvram@Native NVRAM" >> "$bootlogScriptOutfile"
+            echo "nvram‡Native NVRAM" >> "$bootlogScriptOutfile"
         fi
-        [[ "$blNvramThemeEntry" != "" ]] && echo "nvramThemeEntry@$blNvramThemeEntry" >> "$bootlogScriptOutfile"
-        [[ "$blConfigPlistFilePath" != "" ]] && echo "config@$blConfigPlistFilePath" >> "$bootlogScriptOutfile"
-        [[ "$blBootType" != "" ]] && echo "bootType@$blBootType" >> "$bootlogScriptOutfile"
-        echo "nvramSave@$gNvramWorking" >> "$bootlogScriptOutfile"
+        [[ "$blNvramThemeEntry" != "" ]] && echo "nvramThemeEntry‡$blNvramThemeEntry" >> "$bootlogScriptOutfile"
+        [[ "$blConfigPlistFilePath" != "" ]] && echo "config‡$blConfigPlistFilePath" >> "$bootlogScriptOutfile"
+        [[ "$blBootType" != "" ]] && echo "bootType‡$blBootType" >> "$bootlogScriptOutfile"
+        echo "nvramSave‡$gNvramWorking" >> "$bootlogScriptOutfile"
     
     else
         checkLog=$( grep "Starting rEFIt" "$bootLogFile" )

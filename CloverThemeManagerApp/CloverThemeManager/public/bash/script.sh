@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.77.9"
+VERS="0.78.0"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -492,9 +492,9 @@ RunThemeAction()
                                 if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                     if [ $(CheckOsVersion) -ge 13 ]; then
                                         successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                                                       /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                                       /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡Move\" & \"‡$targetThemeDir\" & \"‡$UNPACKDIR\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                     else
-                                        successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Move\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                        successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡Move\" & \"‡$targetThemeDir\" & \"‡$UNPACKDIR\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                     fi  
                                 else
                                     chckDir=0
@@ -527,9 +527,9 @@ RunThemeAction()
                             if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                 if [ $(CheckOsVersion) -ge 13 ]; then
                                     successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                                                   /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                                   /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡UnInstall\" & \"‡${TARGET_THEME_DIR}\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                 else
-                                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@UnInstall\" & \"@${TARGET_THEME_DIR}\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                    successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡UnInstall\" & \"‡${TARGET_THEME_DIR}\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                 fi 
                             else
                                 cd "${TARGET_THEME_DIR}"
@@ -595,9 +595,9 @@ RunThemeAction()
                                     if [ $isPathWriteable -eq 1 ]; then # Not Writeable
                                        if [ $(CheckOsVersion) -ge 13 ]; then
                                             successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                                                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡Update\" & \"‡$targetThemeDir\" & \"‡$UNPACKDIR\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                         else
-                                            successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@Update\" & \"@$targetThemeDir\" & \"@$UNPACKDIR\" & \"@$themeTitleToActOn\" with administrator privileges" )
+                                            successFlag=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡Update\" & \"‡$targetThemeDir\" & \"‡$UNPACKDIR\" & \"‡$themeTitleToActOn\" with administrator privileges" )
                                         fi
                                     else
                                         if [ -d "$targetThemeDir" ]; then
@@ -638,7 +638,7 @@ RunThemeAction()
             
             if [ "$passedAction" == "Install" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for newly installed theme."
-                SendToUI "Success@${passedAction}@$themeTitleToActOn"
+                SendToUI "Success‡${passedAction}‡$themeTitleToActOn"
                 # Save new theme details for adding to prefs file
                 gNewInstalledThemeName="$themeTitleToActOn"
                 gNewInstalledThemePath="$TARGET_THEME_DIR"
@@ -648,7 +648,7 @@ RunThemeAction()
 
             if [ "$passedAction" == "UnInstall" ] && [ "$TARGET_THEME_PARTITIONGUID" != "$zeroUUID" ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Saving settings for UnInstalled theme."
-                SendToUI "Success@${passedAction}@$themeTitleToActOn"
+                SendToUI "Success‡${passedAction}‡$themeTitleToActOn"
                 # Save new theme details for adding to prefs file
                 gUnInstalledThemeName="$themeTitleToActOn"
                 gUnInstalledThemePath="$TARGET_THEME_DIR"
@@ -669,7 +669,7 @@ RunThemeAction()
         if [ $COMMANDLINE -eq 0 ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}$themeTitleToActOn : ${passedAction} : Fail"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Fail@${passedAction}@$themeTitleToActOn"
-            SendToUI "Fail@${passedAction}@$themeTitleToActOn"
+            SendToUI "Fail‡${passedAction}‡$themeTitleToActOn"
         fi
         return 1
     fi
@@ -1319,7 +1319,7 @@ GetFreeSpaceOfTargetDeviceAndSendToUI()
     
     WriteToLog "Freespace on target: $freeSpace"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: FreeSpace:$freeSpace"
-    SendToUI "FreeSpace@${freeSpace}@"
+    SendToUI "FreeSpace‡${freeSpace}‡"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -1346,7 +1346,7 @@ ReadThemeDirList()
             themeDirPaths+=( $( cut -d@ -f6 <<<"${line}" ))
         done < "$themeDirInfo"
         IFS="$oIFS"
-            
+
         # Check array contents match and send message to UI via log
         local total=${#duIdentifier[@]}
         if [ ${#duVolumeName[@]} -ne $total ] || [ ${#duVolumeMountPoint[@]} -ne $total ] || \
@@ -1388,7 +1388,7 @@ SetTargetAndMountpoint()
                 gBootDeviceMountPoint="${TARGET_THEME_DIR%/EFI*}"
                 # Send result to UI
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Mounted@${gBootDeviceIdentifier}@${gBootDeviceMountPoint}"
-                SendToUI "BootDevice@Mounted@${gBootDeviceIdentifier}@${gBootDeviceMountPoint}"
+                SendToUI "BootDevice‡Mounted‡${gBootDeviceIdentifier}‡${gBootDeviceMountPoint}"
                 break
             fi
         done
@@ -1396,7 +1396,7 @@ SetTargetAndMountpoint()
         # Send message to UI if identifier is set to 'Failed'. Otherwise a blank identifier could mean bootlog did not exist.
         if [ "$gBootDeviceIdentifier" == "Failed" ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: BootDevice@Failed@@"
-            SendToUI "BootDevice@Failed@@"
+            SendToUI "BootDevice‡Failed‡‡"
         fi
     fi
 }
@@ -1446,12 +1446,12 @@ ReadBootLogAndSetPaths()
         
     # The bootlog script writes some paths (or text 'Native NVRAM') to file. Read them in.
     if [ -f "$bootlogScriptOutfile" ]; then
-        gNvramPlistFullPath=$( grep "nvram@" "$bootlogScriptOutfile" ) && gNvramPlistFullPath="${gNvramPlistFullPath##*@}"
-        gNvramPlistThemeEntry=$( grep "nvramThemeEntry@" "$bootlogScriptOutfile" ) && gNvramPlistThemeEntry="${gNvramPlistThemeEntry##*@}"
-        gConfigPlistFullPath=$( grep "config@" "$bootlogScriptOutfile" ) && gConfigPlistFullPath="${gConfigPlistFullPath##*@}"
-        gBootType=$( grep "bootType@" "$bootlogScriptOutfile" ) && gBootType="${gBootType##*@}"
-        gNvramSave=$( grep "nvramSave@" "$bootlogScriptOutfile" ) && gNvramSave="${gNvramSave##*@}"
-            
+        gNvramPlistFullPath=$( grep "nvram‡" "$bootlogScriptOutfile" ) && gNvramPlistFullPath="${gNvramPlistFullPath##*‡}"
+        gNvramPlistThemeEntry=$( grep "nvramThemeEntry‡" "$bootlogScriptOutfile" ) && gNvramPlistThemeEntry="${gNvramPlistThemeEntry##*‡}"
+        gConfigPlistFullPath=$( grep "config‡" "$bootlogScriptOutfile" ) && gConfigPlistFullPath="${gConfigPlistFullPath##*‡}"
+        gBootType=$( grep "bootType‡" "$bootlogScriptOutfile" ) && gBootType="${gBootType##*‡}"
+        gNvramSave=$( grep "nvramSave‡" "$bootlogScriptOutfile" ) && gNvramSave="${gNvramSave##*‡}"
+
         # Honour the users choice to have the bootlog closed or expanded
         if [ "$gBootlogState" == "Close" ]; then
             gBootlogState="ShowClosed"
@@ -1534,7 +1534,7 @@ GetSelfDevicePath()
                 local bootDevicePartSizeDec=$(echo "ibase=16; ${bootDevicePartSize#*x}" | bc)
                 
                 # Save boot device details to file
-                echo "${bootDevicePartition}@${bootDevicePartType}@${bootDevicePartSignature}@${bootDevicePartStartDec}@${bootDevicePartSizeDec}" > "$bootDeviceInfo"
+                echo "${bootDevicePartition}‡${bootDevicePartType}‡${bootDevicePartSignature}‡${bootDevicePartStartDec}‡${bootDevicePartSizeDec}" > "$bootDeviceInfo"
                 
                 # Instruct UI to tell user that it needs password for identifying MBR device
                 WriteToLog "CTM_BootDeviceMBR"
@@ -1559,7 +1559,7 @@ CreateAndSendVolumeDropDownMenu()
 {
     [[ DEBUG -eq 1 ]] && WriteLinesToLog
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}CreateAndSendVolumeDropDownMenu()"
-    
+
     # Send new dropdown list for UI
     for (( p=0; p<${#themeDirPaths[@]}; p++ ))
     do
@@ -1586,11 +1586,11 @@ CreateAndSendVolumeDropDownMenu()
         # Remove leading comma from string
         newPathList="${newPathList#?}"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: NewVolumeDropDown@${newPathList}@"
-        SendToUI "NewVolumeDropDown@${newPathList}@"
+        SendToUI "NewVolumeDropDown‡${newPathList}‡"
         return 0
     else
         # Still send UI DropDown message, even though there are no entries.
-        SendToUI "NewVolumeDropDown@@"
+        SendToUI "NewVolumeDropDown‡‡"
         return 1
     fi
 }
@@ -1606,28 +1606,28 @@ MountESPAndSearchThemesPath()
     
     if [ $(CheckOsVersion) -ge 13 ]; then
         espMountedCount=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@ManageESP\" with administrator privileges" )
+                           /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡ManageESP\" with administrator privileges" )
     else
-        espMountedCount=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@ManageESP\" with administrator privileges" )
+        espMountedCount=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡ManageESP\" with administrator privileges" )
     fi
 
     if [ $espMountedCount -gt 0 ]; then
         WriteToLog "Checked and found $espMountedCount ESP with /EFI/Clover/Themes dir."
         "$findThemeDirs"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@${espMountedCount}"
-        SendToUI "MessageESP@Mounted@${espMountedCount}"
+        SendToUI "MessageESP‡Mounted‡${espMountedCount}"
         echo "$identifier"
     elif [ -z $espMountedCount ]; then
         WriteToLog "User cancelled password dialog"
         # Send UI message so the message box shows close box button.
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Cancelled@0"
-        SendToUI "MessageESP@Cancelled@0"
+        SendToUI "MessageESP‡Cancelled‡0"
         echo "Failed"
     else
         WriteToLog "Checked and found no unmounted ESP(s) with /EFI/Clover/Themes dir."
         # Send UI message that no ESP's were mounted. This changes message box content and shows close box button.
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI message: MessageESP@Mounted@0"
-        SendToUI "MessageESP@Mounted@0"
+        SendToUI "MessageESP‡Mounted‡0"
         echo "Failed"
     fi
     
@@ -1643,9 +1643,9 @@ DetectMBRDevice()
     
     local device=""
     if [ $(CheckOsVersion) -ge 13 ]; then
-        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡FindMBrBootDevice\" with administrator privileges" )
     else
-        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"@FindMBrBootDevice\" with administrator privileges" )
+        device=$( /usr/bin/osascript -e "do shell script \"$uiSudoChanges \" & \"‡FindMBrBootDevice\" with administrator privileges" )
     fi
     
     if [ "$device" != "" ]; then
@@ -1854,7 +1854,7 @@ SendTargetToUiRunChecks()
         retVal=$? # returns 1 if invalid / 0 if valid
         if [ $retVal -eq 0 ]; then
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$entry"
-            SendToUI "Target@$entry"
+            SendToUI "Target‡$entry"
             GetListOfInstalledThemesAndSendToUI
             GetFreeSpaceOfTargetDeviceAndSendToUI 
             
@@ -1874,38 +1874,38 @@ SendUIInitData()
     
     # Send UI setting for BootlogView and adjust footer height
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: BootlogView@${gBootlogState}@"
-    SendToUI "BootlogView@${gBootlogState}@"
+    SendToUI "BootlogView‡${gBootlogState}‡"
     
     SendTargetToUiRunChecks
 
     if [ "$TARGET_THEME_DIR" == "" ] || [ "$TARGET_THEME_DIR" == "-" ] ; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
-        SendToUI "NoPathSelected@@"
+        SendToUI "NoPathSelected‡‡"
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@-@"
-        SendToUI "Target@-@"
+        SendToUI "Target‡-‡"
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
-        SendToUI "InstalledThemes@-@"
+        SendToUI "InstalledThemes‡-‡"
     fi
 
     # Send thumbnail size
     if [ $gThumbSizeX -gt 0 ] && [ $gThumbSizeY -gt 0 ]; then
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
-        SendToUI "ThumbnailSize@${gThumbSizeX}@${gThumbSizeY}"
+        SendToUI "ThumbnailSize‡${gThumbSizeX}‡${gThumbSizeY}"
     fi
     
     # Send UI view choice for UnInstalled themes
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UnInstalledView@${gUISettingViewUnInstalled}@"
-    SendToUI "UnInstalledView@${gUISettingViewUnInstalled}@"
+    SendToUI "UnInstalledView‡${gUISettingViewUnInstalled}‡"
     
     # Send UI view choice for Thumbnails
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ThumbnailView@${gUISettingViewThumbnails}@"
-    SendToUI "ThumbnailView@${gUISettingViewThumbnails}@"
+    SendToUI "ThumbnailView‡${gUISettingViewThumbnails}‡"
     
     # Send UI view choice for Previews
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: PreviewView@${gUISettingViewPreviews}@"
-    SendToUI "PreviewView@${gUISettingViewPreviews}@"
+    SendToUI "PreviewView‡${gUISettingViewPreviews}‡"
 
     # Add message in to log for initialise.js to detect.
     WriteToLog "CTM_InitInterface"
@@ -1965,9 +1965,9 @@ RespondToUserDeviceSelection()
     local messageFromUi="$1"
 
     # parse message
-    # remove everything up until, and including, the first @
-    local messageFromUi="${messageFromUi#*@}"
-    local pathOption="${messageFromUi##*@}"
+    # remove everything up until, and including, the first ‡
+    local messageFromUi="${messageFromUi#*‡}"
+    local pathOption="${messageFromUi##*‡}"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}RespondToUserDeviceSelection() messageFromUi=$messageFromUi | pathOption=$pathOption"
     # Check user did actually change from default
     if [ ! "$pathOption" == "-" ]; then
@@ -2020,11 +2020,11 @@ RespondToUserDeviceSelection()
         UpdatePrefsKey "LastSelectedPartitionGUID" "$TARGET_THEME_PARTITIONGUID"
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@-@"
-        SendToUI "InstalledThemes@-@"
+        SendToUI "InstalledThemes‡-‡"
     fi
     
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
-    SendToUI "EnableInterface@@"
+    SendToUI "EnableInterface‡‡"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2038,12 +2038,12 @@ ShowHideUIControlOptions()
         # Hide theme control options
         WriteToLog "$TARGET_THEME_DIR_DEVICE is not boot device. Hiding control options."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Hide@"
-        SendToUI "ShowHideControlOptions@Hide@"
+        SendToUI "ShowHideControlOptions‡Hide‡"
     else
         # Show theme control options
         WriteToLog "$TARGET_THEME_DIR_DEVICE is boot device. Show control options."
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ShowHideControlOptions@Show@"
-        SendToUI "ShowHideControlOptions@Show@"
+        SendToUI "ShowHideControlOptions‡Show‡"
     fi
 }
 
@@ -2055,10 +2055,10 @@ RespondToUserThemeAction()
 
     local messageFromUi="$1"
 
-    # remove everything up until, and including, the first @
-    messageFromUi="${messageFromUi#*@}"
-    chosenTheme="${messageFromUi%%@*}"
-    desiredAction="${messageFromUi##*@}"
+    # remove everything up until, and including, the first ‡
+    messageFromUi="${messageFromUi#*‡}"
+    chosenTheme="${messageFromUi%%‡*}"
+    desiredAction="${messageFromUi##*‡}"
 
     # further strip theme name and action
     chosenTheme="${chosenTheme##*button_}"
@@ -2077,7 +2077,7 @@ RespondToUserThemeAction()
             local checkSuccess=$?
             if [ "$desiredAction" == "Update" ] && [ $checkSuccess -eq 0 ]; then
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Success@${desiredAction}@$chosenTheme"
-                SendToUI "Success@${desiredAction}@$chosenTheme"
+                SendToUI "Success‡${desiredAction}‡$chosenTheme"
             fi
             return $checkSuccess
         else
@@ -2121,7 +2121,7 @@ CheckThemePathIsStillValid()
             
     if [ $stillMounted -eq 0 ] && [ "$TARGET_THEME_DIR" != "-" ]; then
         WriteToLog "Theme directory $TARGET_THEME_DIR on $TARGET_THEME_PARTITIONGUID does not exist! Setting to -"
-        
+
         local entry=$( FindArrayIdFromTarget )
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}entry=$entry"
         local pathToPrint="$TARGET_THEME_DIR"
@@ -2134,19 +2134,19 @@ CheckThemePathIsStillValid()
             fi
         fi
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
-        SendToUI "NotExist@${TARGET_THEME_PARTITIONGUID}@${pathToPrint}@$entry"
+        SendToUI "NotExist‡${TARGET_THEME_PARTITIONGUID}‡${pathToPrint}‡$entry"
 
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}NoPathSelected"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NoPathSelected@@"
-        SendToUI "NoPathSelected@@"
+        SendToUI "NoPathSelected‡‡"
         
         # Re-build theme directory list
         "$findThemeDirs"
         ReadThemeDirList
         CreateAndSendVolumeDropDownMenu
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@-"
-        SendToUI "Target@-@"
-        RespondToUserDeviceSelection "@-"
+        SendToUI "Target‡-‡"
+        RespondToUserDeviceSelection "‡-"
 
         return 1
     else
@@ -2198,7 +2198,7 @@ GetListOfInstalledThemesAndSendToUI()
     
     WriteToLog "Installed Themes:${installedThemeStr}"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: InstalledThemes@${installedThemeStr}@"
-    SendToUI "InstalledThemes@${installedThemeStr}@"
+    SendToUI "InstalledThemes‡${installedThemeStr}‡"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2297,7 +2297,7 @@ CheckAndRecordUnManagedThemesAndSendToUI()
         unversionedThemeStr="${unversionedThemeStr#?}"
     
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI list of themes not installed by this app: UnversionedThemes@${unversionedThemeStr}@"
-        SendToUI "UnversionedThemes@${unversionedThemeStr}@"
+        SendToUI "UnversionedThemes‡${unversionedThemeStr}‡"
     fi
 }
 
@@ -2434,7 +2434,7 @@ PredictNextTheme()
     
     WriteToLog "Prediction: Next boot from this device will load theme: $themeToSend"
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: SetPrediction@${themeToSend}@"
-    SendToUI "SetPrediction@${themeToSend}@"
+    SendToUI "SetPrediction‡${themeToSend}‡"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -2444,8 +2444,8 @@ RespondToDropDownMenuChange()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToDropDownMenuChange()"
     
     local messageFromUi="$1"
-    local wantToChange="${messageFromUi%@*}"
-    local themeToSet="${messageFromUi#*@}"
+    local wantToChange="${messageFromUi%‡*}"
+    local themeToSet="${messageFromUi#*‡}"
     local lastChar=$( echo -n "$wantToChange" | tail -c -1 )
 
     if [ "$lastChar" == "N" ]; then
@@ -2482,7 +2482,7 @@ RespondToUpdateAll()
     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndent}RespondToUpdateAll()"
 
     local messageFromUi="$1"
-    local updateThemeList="${messageFromUi#*@}"
+    local updateThemeList="${messageFromUi#*‡}"
     local updateFail=0
 
     WriteToLog "User chose to update all themes"
@@ -2500,7 +2500,7 @@ RespondToUpdateAll()
             RunThemeAction "Update" "${arr[$u]}"
             updateFail=$? # returns 1 if process failed / 0 if success
             if [ $updateFail -eq 0 ]; then
-                SendToUI "UpdateAll@Theme@${arr[$u]}"
+                SendToUI "UpdateAll‡Theme‡${arr[$u]}"
             fi
         else
             updateFail=1
@@ -2509,7 +2509,7 @@ RespondToUpdateAll()
 
     if [ $updateFail -eq 0 ]; then
         # Operation was successful
-        SendToUI "UpdateAll@Complete@-"
+        SendToUI "UpdateAll‡Complete‡-"
         GetListOfInstalledThemesAndSendToUI
         GetFreeSpaceOfTargetDeviceAndSendToUI
         CheckAndRecordUnManagedThemesAndSendToUI
@@ -2532,7 +2532,7 @@ ReadAndSendCurrentNvramTheme()
     if [ ! -z "$readNvramVar" ]; then
         WriteToLog "Clover.Theme NVRAM variable is set to $themeName"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@${themeName}@"
-        SendToUI "Nvram@${themeName}@"
+        SendToUI "Nvram‡${themeName}‡"
         # Add message in to log for initialise.js to detect.
         [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_NvramFound"
         CURRENT_THEME_ENTRY_NVRAM="$themeName"
@@ -2542,7 +2542,7 @@ ReadAndSendCurrentNvramTheme()
         # which currently defaults to menu option ' '
         WriteToLog "Clover.Theme NVRAM variable is not set"
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Nvram@-@"
-        SendToUI "Nvram@-@"
+        SendToUI "Nvram‡-‡"
         # Add message in to log for initialise.js to detect.
         [[ $gInitialising -eq 0 ]] && WriteToLog "CTM_NvramNotFound"
         PredictNextTheme
@@ -2564,7 +2564,7 @@ ReadAndSendCurrentNvramPlistTheme()
             WriteToLog "$gNvramPlistFullPath contains theme entry $themeName"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@${themeName}@"
             #SendToUI "NvramP@${themeName}@"
-            SendToUI "Nvram@${themeName}@"
+            SendToUI "Nvram‡${themeName}‡"
             CURRENT_THEME_ENTRY_NVRAM_PLIST="$themeName"
             PredictNextTheme
         else
@@ -2573,7 +2573,7 @@ ReadAndSendCurrentNvramPlistTheme()
             WriteToLog "$gNvramPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@-@"
             #SendToUI "NvramP@-@"
-            SendToUI "Nvram@-@"
+            SendToUI "Nvram‡-‡"
             PredictNextTheme
         fi
     else
@@ -2584,7 +2584,7 @@ ReadAndSendCurrentNvramPlistTheme()
             WriteToLog "$gNvramPlistFullPath contained the following theme at boot time: $gNvramPlistThemeEntry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: NvramP@${gNvramPlistThemeEntry}@"
             #SendToUI "NvramP@${gNvramPlistThemeEntry}@"
-            SendToUI "Nvram@${gNvramPlistThemeEntry}@"
+            SendToUI "Nvram‡${gNvramPlistThemeEntry}‡"
             CURRENT_THEME_ENTRY_NVRAM_PLIST="$gNvramPlistThemeEntry"
             PredictNextTheme
         fi
@@ -2605,7 +2605,7 @@ ReadAndSendCurrentConfigPlistTheme()
         if [ "$themeName" != "" ]; then
             WriteToLog "$gConfigPlistFullPath contains theme entry $themeName"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@${themeName}@"
-            SendToUI "ConfigP@${themeName}@"
+            SendToUI "ConfigP‡${themeName}‡"
             CURRENT_THEME_ENTRY_CONFIG_PLIST="$themeName"
             PredictNextTheme
         else
@@ -2613,7 +2613,7 @@ ReadAndSendCurrentConfigPlistTheme()
             # which currently defaults to menu option ' '
             WriteToLog "$gConfigPlistFullPath does not contain a theme entry"
             [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: ConfigP@-@"
-            SendToUI "ConfigP@-@"
+            SendToUI "ConfigP‡-‡"
             PredictNextTheme
         fi
     else
@@ -2633,9 +2633,9 @@ SetNvramTheme()
     if [ $(CheckOsVersion) -ge 13 ]; then
         # com.apple.security.agentStub on Mavericks?
         successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMVar\" & \"‡${chosenTheme}\" with administrator privileges" )
     else
-        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMVar\" & \"@${chosenTheme}\" with administrator privileges" )
+        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMVar\" & \"‡${chosenTheme}\" with administrator privileges" )
     fi
     
     # Was operation a success?
@@ -2660,9 +2660,9 @@ DeleteNvramThemeVar()
     if [ $(CheckOsVersion) -ge 13 ]; then
         # com.apple.security.agentStub on Mavericks?
         successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteNVRAMVar\" with administrator privileges" )
+                       /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteNVRAMVar\" with administrator privileges" )
     else
-        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteNVRAMVar\" with administrator privileges" )
+        successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteNVRAMVar\" with administrator privileges" )
     fi
     
     # Was operation a success?
@@ -2690,9 +2690,9 @@ SetNvramFile()
         if [ $(CheckOsVersion) -ge 13 ]; then
             # com.apple.security.agentStub on Mavericks?
             successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMFile\" & \"‡${chosenTheme}\" & \"‡${gNvramPlistFullPath}\" with administrator privileges" )
         else
-            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMFile\" & \"‡${chosenTheme}\" & \"‡${gNvramPlistFullPath}\" with administrator privileges" )
         fi
     fi
         
@@ -2719,9 +2719,9 @@ DeleteNvramPlistThemeEntry()
         if [ $(CheckOsVersion) -ge 13 ]; then
             # com.apple.security.agentStub on Mavericks?
             successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteThemePlistEntry\" & \"‡${gNvramPlistFullPath}\" with administrator privileges" )
         else
-            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gNvramPlistFullPath}\" with administrator privileges" )
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteThemePlistEntry\" & \"‡${gNvramPlistFullPath}\" with administrator privileges" )
         fi
     fi
         
@@ -2750,9 +2750,9 @@ SetConfigFile()
         if [ $(CheckOsVersion) -ge 13 ]; then
             # com.apple.security.agentStub on Mavericks?
             successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMFile\" & \"‡${chosenTheme}\" & \"‡${gConfigPlistFullPath}\" with administrator privileges" )
         else
-            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@SetNVRAMFile\" & \"@${chosenTheme}\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡SetNVRAMFile\" & \"‡${chosenTheme}\" & \"‡${gConfigPlistFullPath}\" with administrator privileges" )
         fi
     fi
         
@@ -2779,9 +2779,9 @@ DeleteConfigPlistThemeEntry()
         if [ $(CheckOsVersion) -ge 13 ]; then
             # com.apple.security.agentStub on Mavericks?
             successFlag=$( /usr/bin/osascript -e 'tell application "SecurityAgent" to activate'; \
-                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+                           /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteThemePlistEntry\" & \"‡${gConfigPlistFullPath}\" with administrator privileges" )
         else
-            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"@DeleteThemePlistEntry\" & \"@${gConfigPlistFullPath}\" with administrator privileges" )
+            successFlag=$( /usr/bin/osascript -e  "do shell script \"$uiSudoChanges \" & \"‡DeleteThemePlistEntry\" & \"‡${gConfigPlistFullPath}\" with administrator privileges" )
         fi
     fi
         
@@ -2847,7 +2847,7 @@ CheckForThemeUpdates()
         WriteToLog "Checking $TARGET_THEME_DIR for any theme updates."
         
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: CheckingThemeUpdates@@"
-        SendToUI "CheckingThemeUpdates@@"
+        SendToUI "CheckingThemeUpdates‡‡"
 
         for ((t=0; t<${#installedThemesOnCurrentVolume[@]}; t++))
         do
@@ -2907,8 +2907,8 @@ CheckForThemeUpdates()
             WriteToLog "No theme updates found."
         fi
         
-        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes@${updateAvailThemeStr}@"
-        SendToUI "UpdateAvailThemes@${updateAvailThemeStr}@"
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateAvailThemes‡${updateAvailThemeStr}‡"
+        SendToUI "UpdateAvailThemes‡${updateAvailThemeStr}‡"
     fi
 }
 
@@ -3460,7 +3460,7 @@ if [ "$gitCmd" != "" ]; then
         CheckForThemeUpdates &
 
         [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: EnableInterface@@"
-        SendToUI "EnableInterface@@"
+        SendToUI "EnableInterface‡‡"
 
         # The messaging system is event driven and quite simple.
         # Run a loop for as long as the parent process ID still exists
@@ -3508,7 +3508,7 @@ if [ "$gitCmd" != "" ]; then
                     mountpoint="$gBootDeviceMountPoint"
                 fi
                 [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: UpdateThemePaths@${nvramPath}@${configPath}@${mountpoint}"
-                SendToUI "UpdateThemePaths@${nvramPath}@${configPath}@${mountpoint}"
+                SendToUI "UpdateThemePaths‡${nvramPath}‡${configPath}‡${mountpoint}"
                 ShowHideUIControlOptions
 
             # Has the user clicked the OpenPath button?
@@ -3530,8 +3530,8 @@ if [ "$gitCmd" != "" ]; then
                     ReadThemeDirList
                     CreateAndSendVolumeDropDownMenu
                     [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}Sending UI: Target@$espID"
-                    SendToUI "Target@$espID"
-                    RespondToUserDeviceSelection "@$espID"
+                    SendToUI "Target‡$espID"
+                    RespondToUserDeviceSelection "‡$espID"
                 fi
 
             # Has the user pressed a theme button to install, uninstall or update?
@@ -3561,8 +3561,8 @@ if [ "$gitCmd" != "" ]; then
             elif [[ "$logLine" == *CTM_thumbSize* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
                 # parse message
-                # remove everything up until, and including, the first @
-                thumbSize="${logLine#*@}"
+                # remove everything up until, and including, the first ‡
+                thumbSize="${logLine#*‡}"
                 UpdatePrefsKey "Thumbnail" "$thumbSize"
                 WriteToLog "User changed thumbnail size to $thumbSize"
 
@@ -3608,8 +3608,8 @@ if [ "$gitCmd" != "" ]; then
             # Has user chosen to show/hide bootlog info?
             elif [[ "$logLine" == *CTM_bootlog* ]]; then
                 ClearTopOfMessageLog "$logJsToBash"
-                # remove everything up until, and including, the first @
-                gBootlogState="${logLine#*@}"
+                # remove everything up until, and including, the first ‡
+                gBootlogState="${logLine#*‡}"
                 UpdatePrefsKey "ShowHideBootlog" "$gBootlogState"
 
             # Clear and Relaunch messages?

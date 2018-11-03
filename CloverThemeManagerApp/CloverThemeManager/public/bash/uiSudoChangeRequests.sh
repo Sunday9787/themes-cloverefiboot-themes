@@ -23,7 +23,7 @@ SendToUI() {
 
 # ---------------------------------------------------------------------------------------
 WriteToLog() {
-    printf "@${1}@\n" >> "$logFile"
+    printf "‡${1}‡\n" >> "$logFile"
 }
 
 # ---------------------------------------------------------------------------------------
@@ -269,7 +269,7 @@ FindMbrDevice()
     fileToRead="${TEMPDIR}/bootDeviceInfo.txt"
     bootdeviceLine=$( cat "$fileToRead" )
     declare -a bootDeviceInfo
-    oIFS="$IFS"; IFS=$'@'
+    oIFS="$IFS"; IFS=$'‡'
     bootDeviceInfo=($bootdeviceLine)
     
     IFS=$'\r\n'
@@ -328,17 +328,25 @@ source "${SELF_PATH%/*}"/shared.sh
 declare -a unmountedEsp
 
 # Passing strings with spaces fails as that's used as a delimiter.
-# Instead, I pass each argument delimited by character @
+# Instead, I pass each argument delimited by character ‡
 
 # Parse arguments
 declare -a "arguments"
 passedArguments="$@"
-numFields=$( grep -o "@" <<< "$passedArguments" | wc -l )
+numFields=$( grep -o "‡" <<< "$passedArguments" | wc -l )
 (( numFields++ ))
-for (( f=2; f<=$numFields; f++ ))
+
+arguments[1]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[1]}' )
+arguments[2]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[2]}' )
+arguments[3]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[3]}' )
+arguments[4]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[4]}' )
+arguments[5]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[5]}' )
+arguments[6]=$( echo "$passedArguments" | awk '{split($0,a,"‡"); print a[6]}' )
+
+# print results (debug)
+for (( u=0; u<${#arguments[@]}; u++ ))
 do
-    arguments[$f]=$( echo "$passedArguments" | cut -d '@' -f$f )
-    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}arguments[$f]=${arguments[$f]}"
+    [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}arguments[$u]=${arguments[$u]}"
 done
 
 whichFunction="${arguments[2]}"
