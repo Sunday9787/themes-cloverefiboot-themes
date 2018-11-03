@@ -6,7 +6,7 @@
         <description>Most recent changes with links to updates.</description>
         <language>en</language>
         <item>
-            <title>Version 0.76.7</title>
+            <title>Version 0.76.9</title>
             <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -94,23 +94,40 @@ a:hover {
         <p class="textTitleHeading">Latest version changelog</p>
         
         <!--<div class="band1">-->
-          <p class="textTitleSubLatestHeading">0.76.7</p>
+          <p class="textTitleSubLatestHeading">0.76.9</p>
           <p class="textSectionLatestBody">
 
-- Change check for theme repository.<br>
-- Add extra debug for installed git.<br>
-- Update Sparkle framework.<br>
+- Add detection for changed bootlog message for Chosen theme.<br>
+- Change delimiter used for messaging.<br>
 
           </p>
         <!--</div>-->
 
           <p class="textTitleHeadingSml">Changelog history</p>
+ 
+          <p class="textTitleSubHeading">v0.76.8</p>
+          <p class="textSectionBody">- Use https protocol.<br>
+- Fix checking remote repo for theme updates.<br>
+- Update Sparkle framework to v1.20.0<br>
+- App temporary work around for convertPointToBase Warning.<br>
+- Keep previews expanded after installing/uninstalling a theme.<br>
+
+        <div class="band2">
+          <p class="textTitleSubHeading">v0.76.7</p>
+          <p class="textSectionBody">
+- Change check for theme repository.<br>
+- Add extra debug for installed git.<br>
+- Update Sparkle framework.</p>
+        </div>
+
+        <div class="band1">
           <p class="textTitleSubHeading">v0.76.6</p>
           <p class="textSectionBody">
 - Identify fast boot and textonly boot modes from bootlog and config.plist<br>
 - Simplify control options band for changing themes.<br>
 - Extend keyboard support to identify Command key.<br>
 - Return key now closes dialog boxes.</p>
+        </div>
 
         <div class="band2">
           <p class="textTitleSubHeading">v0.76.5</p>
@@ -469,7 +486,7 @@ a:hover {
 </html>
             ]]>
             </description>
-            <pubDate>Thu Jun  7 07:00:08 BST 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="767"                       sparkle:shortVersionString="r0.76.7"                       length="2062566"                       sparkle:dsaSignature="MC0CFEHLStJmeDO+Vt3rnHynJRYjJGCaAhUAv2GIrWs81LLNOcMrmQ15Bh7gdg8="                       type="application/octet-stream" />
+            <pubDate>Sat Nov  3 19:01:24 GMT 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="769"                       sparkle:shortVersionString="r0.76.9"                       length="2141418"                       sparkle:dsaSignature="MCwCFCW/pwVymAyXQr69qE3ZXNzpiAs3AhRkxCmeGY0bZXTIZwAEbhkWefhKVA=="                       type="application/octet-stream" />
 
         </item>
     </channel>

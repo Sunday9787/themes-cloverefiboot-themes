@@ -97,20 +97,37 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
 
-- Change check for theme repository.<br>
-- Add extra debug for installed git.<br>
-- Update Sparkle framework.<br>
+- Add detection for changed bootlog message for Chosen theme.<br>
+- Change delimiter used for messaging.<br>
 
           </p>
         <!--</div>-->
 
           <p class="textTitleHeadingSml">Changelog history</p>
+ 
+          <p class="textTitleSubHeading">v0.76.8</p>
+          <p class="textSectionBody">- Use https protocol.<br>
+- Fix checking remote repo for theme updates.<br>
+- Update Sparkle framework to v1.20.0<br>
+- App temporary work around for convertPointToBase Warning.<br>
+- Keep previews expanded after installing/uninstalling a theme.<br>
+
+        <div class="band2">
+          <p class="textTitleSubHeading">v0.76.7</p>
+          <p class="textSectionBody">
+- Change check for theme repository.<br>
+- Add extra debug for installed git.<br>
+- Update Sparkle framework.</p>
+        </div>
+
+        <div class="band1">
           <p class="textTitleSubHeading">v0.76.6</p>
           <p class="textSectionBody">
 - Identify fast boot and textonly boot modes from bootlog and config.plist<br>
 - Simplify control options band for changing themes.<br>
 - Extend keyboard support to identify Command key.<br>
 - Return key now closes dialog boxes.</p>
+        </div>
 
         <div class="band2">
           <p class="textTitleSubHeading">v0.76.5</p>
