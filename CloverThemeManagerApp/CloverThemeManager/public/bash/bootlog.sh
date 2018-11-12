@@ -16,7 +16,7 @@
 # Extracts bootlog from ioreg and then parses it for theme info.
 # Html is then constructed and injected in to the main template.
 
-# v0.76.6
+# v0.76.7
     
 # ---------------------------------------------------------------------------------------
 SetHtmlBootlogSectionTemplates()
@@ -147,7 +147,7 @@ ReadBootLog()
     # Set default vars
     blCloverRevision=""               # Clover revision
     blBootType=""                     # Either legacy or UEFI
-    blBootDeviceType="-"              # Example: USB, SATA, VenHW
+    blBootDeviceType="-"              # Example: USB, SATA, VenHW, NVMe
     blBootDevicePartition=""          # Example: 1
     blBootDevicePartType=""           # Example: MBR, GPT
     blBootDevicePartSignature=""      # Example: GUID (for GPT), 0x00000000 (for MBR)
@@ -206,10 +206,18 @@ ReadBootLog()
             IFS=$'\\'
             devicePathArr=($devicePath)
             IFS="$oIFS"
-            blBootDeviceType="${devicePathArr[2]%(*}"
-            # Split HD in to parts
-            #devicePathHD="${devicePathArr[$hd]}"
-            devicePathHD="${devicePathArr[3]%)*}"
+
+            # Identify sections
+            idx=${#devicePathArr[@]}
+            while [[ "${devicePathArr[$idx]}" != "HD("* ]]
+            do
+                ((idx--))
+            done
+
+            blBootDeviceType="${devicePathArr[$((idx-1))]%(*}"
+            devicePathHD="${devicePathArr[$idx]%)*}"
+
+            # Split HD in to parts   
             devicePathHD="${devicePathHD#*(}"
             # Should be something like these examples:
             #1,MBR,0x2A482A48,0x2,0x4EFC1B80

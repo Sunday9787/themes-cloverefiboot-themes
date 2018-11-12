@@ -22,7 +22,7 @@
 # Thanks to apianti, dmazar & JrCs for their git know-how. 
 # Thanks to alexq, asusfreak, chris1111, droplets, eMatoS, kyndder & oswaldini for testing.
 
-VERS="0.78.0"
+VERS="0.78.1"
 
 # =======================================================================================
 # Helper Functions/Routines
@@ -1489,8 +1489,8 @@ GetSelfDevicePath()
             devicePathArr=($devicePath)
             IFS="$oIFS"
                     
-            local deviceType="-"
-            deviceType="${devicePathArr[2]%(*}"
+            #local deviceType="-"
+            #deviceType="${devicePathArr[2]%(*}"
 
             if [ $DEBUG -eq 1 ]; then
                 for ((i=0; i<${#devicePathArr[@]}; i++))
@@ -1499,8 +1499,14 @@ GetSelfDevicePath()
                 done
             fi
 
+            idx=${#devicePathArr[@]}
+            while [[ "${devicePathArr[$idx]}" != "HD("* ]]
+            do
+                ((idx--))
+            done
+
             # Split HD in to parts
-            devicePathHD="${devicePathArr[3]%)*}"
+            devicePathHD="${devicePathArr[$idx]%)*}"
             devicePathHD="${devicePathHD#*(}"
             # Should be something like these examples:
             #1,MBR,0x2A482A48,0x2,0x4EFC1B80
