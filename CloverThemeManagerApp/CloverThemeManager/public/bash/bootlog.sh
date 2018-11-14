@@ -491,6 +491,14 @@ PostProcess()
     # If Fast Boot was used then there will be no NVRAM messages in bootlog linked to themes
     # So if all other checks remain blank and UEFI boot was used without the emulation driver...
     if [ "$blNvramReadFrom" == "" ] && [ "$gNvramWorkingType" == "" ] && [ "$blBootType" == "UEFI" ] && [ $blEmuVariable -eq 1 ] && [ $blFastOption -eq 0 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}NVRAM checks are blank but UEFI boot without EmuVariable and FastBoot detected. Setting as working"
+        blNvramReadFrom="Native NVRAM"
+        gNvramWorkingType="Native"
+
+    # Added in response to SavageAUS' example where NVRAM was working with UEFI boot but just not being used for themes.
+    # So as above but without fast boot.
+    elif [ "$blNvramReadFrom" == "" ] && [ "$gNvramWorkingType" == "" ] && [ "$blBootType" == "UEFI" ] && [ $blEmuVariable -eq 1 ]; then
+        [[ DEBUG -eq 1 ]] && WriteToLog "${debugIndentTwo}NVRAM checks are blank but UEFI boot without EmuVariable. Setting as working"
         blNvramReadFrom="Native NVRAM"
         gNvramWorkingType="Native"
     fi
@@ -897,7 +905,6 @@ if [ -f "$bootLogFile" ]; then
     checkLog=$( grep "Starting Clover" "$bootLogFile" )
     if [ "$checkLog" != "" ]; then
         ReadBootLog
-        ReadConfigPList
         PostProcess
         CheckNvramIsWorking
         if [ "$gRunInfo" == "Init" ]; then
