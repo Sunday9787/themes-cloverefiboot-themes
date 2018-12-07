@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with classic InsanelyMac looks and feel, supports up to 1080p display resolution. Version: 1.9</string>
+	<string>Clover theme with classic InsanelyMac looks and feel, supports up to 1080p display resolution. Version: 2.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -28,12 +28,14 @@
 			<key>Swap</key>
 			<true/>
 		</dict>
+		<key>Banner</key>
+		<string>logo.png</string>
 		<key>BootCampStyle</key>
 		<false/>
 		<key>Components</key>
 		<dict>
 			<key>Banner</key>
-			<false/>
+			<true/>
 			<key>Functions</key>
 			<true/>
 			<key>Help</key>
@@ -58,6 +60,21 @@
 			<key>Type</key>
 			<string>Load</string>
 		</dict>
+		<key>Layout</key>
+		<dict>
+			<key>ButtonOffset</key>
+			<integer>40</integer>
+			<key>SelectionBigWidth</key>
+			<integer>180</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
+			<key>TileXSpace</key>
+			<integer>40</integer>
+			<key>TileYSpace</key>
+			<integer>40</integer>
+			<key>Vertical</key>
+			<false/>
+		</dict>
 		<key>Origination</key>
 		<dict>
 			<key>DesignHeight</key>
@@ -72,15 +89,15 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x400080FF</string>
+			<string>0xFFFFFF24</string>
 			<key>OnTop</key>
-			<true/>
+			<false/>
 			<key>Small</key>
 			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.9</string>
+	<string>2.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

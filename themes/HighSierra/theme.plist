@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with macOS HighSierra look and feel. Version: 1.9</string>
+	<string>Clover theme with macOS HighSierra look and feel. Version: 2.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -54,11 +54,33 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_DroidSans_16pt_White.png</string>
+			<string>Font_KawkabMono_16pt_White.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
 			<string>Load</string>
+		</dict>
+		<key>Layout</key>
+		<dict>
+			<key>ButtonOffset</key>
+			<integer>40</integer>
+			<key>SelectionBigWidth</key>
+			<integer>180</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
+			<key>TileXSpace</key>
+			<integer>40</integer>
+			<key>TileYSpace</key>
+			<integer>40</integer>
+			<key>Vertical</key>
+			<false/>
+		</dict>
+		<key>Origination</key>
+		<dict>
+			<key>DesignHeight</key>
+			<integer>1080</integer>
+			<key>DesignWidth</key>
+			<integer>1920</integer>
 		</dict>
 		<key>Selection</key>
 		<dict>
@@ -67,7 +89,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x005192FF</string>
+			<string>0xFFFFFF20</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -75,7 +97,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.9</string>
+	<string>2.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

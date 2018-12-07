@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with Ubuntu's Unity look and feel. Version: 2.4</string>
+	<string>Clover theme with Ubuntu's Unity look and feel. Version: 2.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -75,10 +75,8 @@
 		</dict>
 		<key>Layout</key>
 		<dict>
-			<key>BannerOffset</key>
-			<integer>48</integer>
 			<key>ButtonOffset</key>
-			<integer>36</integer>
+			<integer>40</integer>
 			<key>SelectionBigWidth</key>
 			<integer>180</integer>
 			<key>SelectionSmallWidth</key>
@@ -104,7 +102,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x00000065</string>
+			<string>0xFFFFFF20</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -112,7 +110,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.4</string>
+	<string>2.5</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
