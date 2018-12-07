@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.5</string>
+	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.6</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -63,9 +63,9 @@
 		<key>Layout</key>
 		<dict>
 			<key>BannerOffset</key>
-			<integer>50</integer>
+			<integer>48</integer>
 			<key>ButtonOffset</key>
-			<integer>36</integer>
+			<integer>40</integer>
 			<key>SelectionBigWidth</key>
 			<integer>180</integer>
 			<key>SelectionSmallWidth</key>
@@ -91,7 +91,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x004837FF</string>
+			<string>0x00800080</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
@@ -99,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.5</string>
+	<string>2.6</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -63,7 +63,7 @@
 		<key>Layout</key>
 		<dict>
 			<key>BannerOffset</key>
-			<integer>48</integer>
+			<integer>32</integer>
 			<key>ButtonOffset</key>
 			<integer>64</integer>
 			<key>SelectionBigWidth</key>
@@ -93,7 +93,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x1B1E3DFF</string>
+			<string>0x1A263DFF</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>

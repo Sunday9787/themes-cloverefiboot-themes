@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with woody icons effect and chocolate color harmony. Version: 1.9</string>
+	<string>Clover theme with woody icons effect and chocolate color harmony. Version: 2.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -74,7 +74,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0xFFCC9DFF</string>
+			<string>0xFFFFFF50</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.9</string>
+	<string>2.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
