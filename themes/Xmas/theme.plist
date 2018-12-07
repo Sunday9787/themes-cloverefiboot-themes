@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Christmas theme for Clover bootloader with simple banner animation. Version: 2.3</string>
+	<string>Christmas theme for Clover bootloader with simple banner animation. Version: 2.4</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -26,7 +26,7 @@
 			<key>Dark</key>
 			<true/>
 			<key>Path</key>
-			<string>background.png</string>
+			<string>background_red.png</string>
 			<key>Type</key>
 			<string>Scale</string>
 		</dict>
@@ -76,7 +76,7 @@
 		<key>Layout</key>
 		<dict>
 			<key>BannerOffset</key>
-			<integer>50</integer>
+			<integer>32</integer>
 			<key>ButtonOffset</key>
 			<integer>64</integer>
 			<key>SelectionBigWidth</key>
@@ -102,7 +102,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x400080FF</string>
+			<string>0xFFFFFF24</string>
 			<key>OnTop</key>
 			<false/>
 			<key>Small</key>
@@ -110,7 +110,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.3</string>
+	<string>2.4</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with ocean color harmony (was Hackintosh_ID). Version: 1.0</string>
+	<string>Clover theme with ocean color harmony (was Hackintosh_ID). Version: 1.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -24,7 +24,7 @@
 			<key>Scale</key>
 			<integer>16</integer>
 			<key>Show</key>
-			<true/>
+			<false/>
 			<key>Swap</key>
 			<true/>
 		</dict>
@@ -63,7 +63,7 @@
 		<key>Layout</key>
 		<dict>
 			<key>BannerOffset</key>
-			<integer>64</integer>
+			<integer>40</integer>
 			<key>ButtonOffset</key>
 			<integer>64</integer>
 			<key>SelectionBigWidth</key>
@@ -89,7 +89,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x183C77FF</string>
+			<string>0x183C7792</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
@@ -97,7 +97,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with leather icons effect. Version: 1.9</string>
+	<string>Clover theme with leather icons effect. Version: 2.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -15,7 +15,7 @@
 			<key>Path</key>
 			<string>background.png</string>
 			<key>Type</key>
-			<string>Scale</string>
+			<string>Tile</string>
 		</dict>
 		<key>Badges</key>
 		<dict>
@@ -52,13 +52,35 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>9</integer>
+			<integer>11</integer>
 			<key>Path</key>
-			<string>Font_UbuntuMono_16pt_Gold.png</string>
+			<string>Font_CPMono_16pt_YellowFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
 			<string>Load</string>
+		</dict>
+		<key>Layout</key>
+		<dict>
+			<key>ButtonOffset</key>
+			<integer>40</integer>
+			<key>SelectionBigWidth</key>
+			<integer>180</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
+			<key>TileXSpace</key>
+			<integer>40</integer>
+			<key>TileYSpace</key>
+			<integer>40</integer>
+			<key>Vertical</key>
+			<false/>
+		</dict>
+		<key>Origination</key>
+		<dict>
+			<key>DesignHeight</key>
+			<integer>1080</integer>
+			<key>DesignWidth</key>
+			<integer>1920</integer>
 		</dict>
 		<key>Selection</key>
 		<dict>
@@ -67,15 +89,15 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0x54260AFF</string>
+			<string>0x7B251475</string>
 			<key>OnTop</key>
-			<false/>
+			<true/>
 			<key>Small</key>
 			<string>Selection_small.png</string>
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.9</string>
+	<string>2.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
