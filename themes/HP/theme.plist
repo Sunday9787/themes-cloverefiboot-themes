@@ -40,9 +40,9 @@
 				<key>Path</key>
 				<string>Logo</string>
 				<key>Frames</key>
-				<integer>26</integer>
+				<integer>14</integer>
 				<key>FrameTime</key>
-				<integer>120</integer>
+				<integer>150</integer>
 			</dict>
 			<key>CharWidth</key>
 			<integer>10</integer>
