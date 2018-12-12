@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Another version of DarkBoot Clover theme with colorful icons. Version: 1.4</string>
+	<string>Another version of DarkBoot Clover theme with colorful icons. Version: 1.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -65,9 +65,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>11</integer>
+			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_CPMono_16pt_Orange.png</string>
+			<string>Font_DroidSans_16pt_OrangeFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -110,7 +110,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.4</string>
+	<string>1.5</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
