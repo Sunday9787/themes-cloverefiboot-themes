@@ -97,17 +97,23 @@ a:hover {
           <p class="textTitleSubLatestHeading"><!--INSERT_BUILD_SHORT--></p>
           <p class="textSectionLatestBody">
 
-- Adapt reading pci root device path to detect NVMe.<br>
-- Allow UEFI boot without emuvariable to signify working nvram.<br>
+- Add initial support for vector themes.<br>
 
           </p>
         <!--</div>-->
 
           <p class="textTitleHeadingSml">Changelog history</p>
  
+          <p class="textTitleSubHeading">v0.77.0</p>
+          <p class="textSectionBody">- Adapt reading pci root device path to detect NVMe.<br>
+- Allow UEFI boot without emuvariable to signify working nvram.<br>
+
+        <div class="band2">
           <p class="textTitleSubHeading">v0.76.9</p>
-          <p class="textSectionBody">- Add detection for changed bootlog message for Chosen theme.<br>
-- Change delimiter used for messaging.<br>
+          <p class="textSectionBody">
+- Add detection for changed bootlog message for Chosen theme.<br>
+- Change delimiter used for messaging.</p>
+        </div>
 
         <div class="band1">
           <p class="textTitleSubHeading">v0.76.8</p>

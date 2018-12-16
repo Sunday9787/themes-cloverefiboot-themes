@@ -6,7 +6,7 @@
         <description>Most recent changes with links to updates.</description>
         <language>en</language>
         <item>
-            <title>Version 0.77.0</title>
+            <title>Version 0.77.1</title>
             <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -94,20 +94,26 @@ a:hover {
         <p class="textTitleHeading">Latest version changelog</p>
         
         <!--<div class="band1">-->
-          <p class="textTitleSubLatestHeading">0.77.0</p>
+          <p class="textTitleSubLatestHeading">0.77.1</p>
           <p class="textSectionLatestBody">
 
-- Adapt reading pci root device path to detect NVMe.<br>
-- Allow UEFI boot without emuvariable to signify working nvram.<br>
+- Add initial support for vector themes.<br>
 
           </p>
         <!--</div>-->
 
           <p class="textTitleHeadingSml">Changelog history</p>
  
+          <p class="textTitleSubHeading">v0.77.0</p>
+          <p class="textSectionBody">- Adapt reading pci root device path to detect NVMe.<br>
+- Allow UEFI boot without emuvariable to signify working nvram.<br>
+
+        <div class="band2">
           <p class="textTitleSubHeading">v0.76.9</p>
-          <p class="textSectionBody">- Add detection for changed bootlog message for Chosen theme.<br>
-- Change delimiter used for messaging.<br>
+          <p class="textSectionBody">
+- Add detection for changed bootlog message for Chosen theme.<br>
+- Change delimiter used for messaging.</p>
+        </div>
 
         <div class="band1">
           <p class="textTitleSubHeading">v0.76.8</p>
@@ -493,7 +499,7 @@ a:hover {
 </html>
             ]]>
             </description>
-            <pubDate>Wed Nov 14 19:59:03 GMT 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="770"                       sparkle:shortVersionString="r0.77.0"                       length="2141325"                       sparkle:dsaSignature="MC4CFQCL4m2Zn+3NVIU6GG3f5F+5S2MDZgIVALY+yr72dRi5rGL2GzHcVDFJ8MVr"                       type="application/octet-stream" />
+            <pubDate>Sun Dec 16 16:08:04 GMT 2018</pubDate>            <enclosure url="http://sourceforge.net/p/cloverefiboot/themes/ci/master/tree/CloverThemeManagerApp/Updates/CloverThemeManager.zip?format=raw"                       sparkle:version="771"                       sparkle:shortVersionString="r0.77.1"                       length="2141585"                       sparkle:dsaSignature="MCwCFD2rmPE2Dp0T3wu8Pq3d4Ybb6VqDAhRN+V9vqLf4iFjwm224/itazhTaWA=="                       type="application/octet-stream" />
 
         </item>
     </channel>
