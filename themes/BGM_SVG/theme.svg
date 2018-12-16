@@ -24,7 +24,7 @@
   SelectionOnTop="1"
   AnimeFrames=""
   FrameTime=""
-  Version="0.86.1"
+  Version="0.86.2"
   Year="2018"
   Author="Blackosx"
   Description="Vector version of BGM (Based on Clovy theme file structure)"
@@ -4782,8 +4782,58 @@
 </g>
   <g id="Controls" transform="translate(330.000000, 88.000000)" class="DisplayInline">
     <g id="MenuScroll" transform="translate(540.000000, 0.000000)">
-      <rect id="Bar" y="0" class="MenuScrollBar" width="12" height="359"/>
-      <path id="Handler" class="MenuScrollBarHandler" d="M5.5,2L5.5,2C7.985,2,10,4.015,10,6.5v59c0,2.485-2.015,4.5-4.5,4.5l0,0C3.015,70,1,67.985,1,65.5v-59C1,4.015,3.015,2,5.5,2z"/>
+		  <g id="scrollbar-background">
+		  <rect visibility="hidden" id="BoundingRect_SB" x="83" y="3" class="st3" width="12" height="5"/>
+			  <linearGradient id="ScrollBackFill" gradientUnits="userSpaceOnUse" x1="0" y1="0.5" x2="12" y2="0.5">
+			    <stop  offset="0" style="stop-color:#021B07"/>
+			    <stop  offset="0.1913" style="stop-color:#08140B"/>
+			    <stop  offset="0.3099" style="stop-color:#0D0D0D"/>
+			    <stop  offset="0.6973" style="stop-color:#0D0D0D"/>
+			    <stop  offset="0.7678" style="stop-color:#0C170D"/>
+			    <stop  offset="0.8732" style="stop-color:#07400C"/>
+			    <stop  offset="1" style="stop-color:#054E0C"/>
+			  </linearGradient>
+			  <rect style="fill:url(#ScrollBackFill);" width="12" height="5"/>
+		  </g>
+		  <g id="scrollbar-holder">
+		  <rect visibility="hidden" id="BoundingRect_SH" x="83" y="10" class="st3" width="12" height="5"/>
+			  <linearGradient id="ScrollHolderFill" gradientUnits="userSpaceOnUse" x1="0" y1="0.5" x2="12" y2="0.5">
+          <stop  offset="2.403846e-03" style="stop-color:#2ABC16"/>
+          <stop  offset="0.3427" style="stop-color:#2A7816"/>
+          <stop  offset="0.71" style="stop-color:#2A7816"/>
+          <stop  offset="0.7866" style="stop-color:#2A7916"/>
+          <stop  offset="0.8595" style="stop-color:#2A8C16"/>
+          <stop  offset="0.9881" style="stop-color:#2A8C16"/>
+			  </linearGradient>
+			  <rect style="fill:url(#ScrollHolderFill);" width="12" height="5"/>
+		  </g>
+    </g>
+    <g id="MenuScroll_night" transform="translate(540.000000, 0.000000)">
+		  <g id="scrollbar-background_night">
+		  <rect visibility="hidden" id="BoundingRect_SBN" x="83" y="3" class="st3" width="12" height="5"/>
+			  <linearGradient id="ScrollBackFillNight" gradientUnits="userSpaceOnUse" x1="0" y1="0.5" x2="12" y2="0.5">
+          <stop  offset="0" style="stop-color:#0A0D13"/>
+          <stop  offset="0.1913" style="stop-color:#0A0D12"/>
+          <stop  offset="0.3099" style="stop-color:#090D12"/>
+          <stop  offset="0.6973" style="stop-color:#0D131B"/>
+          <stop  offset="0.7678" style="stop-color:#131B27"/>
+          <stop  offset="0.8732" style="stop-color:#17212F"/>
+          <stop  offset="1" style="stop-color:#1B2738"/>
+			  </linearGradient>
+			  <rect style="fill:url(#ScrollBackFillNight);" width="12" height="5"/>
+		  </g>
+		  <g id="scrollbar-holder_night">
+		  <rect visibility="hidden" id="BoundingRect_SHN" x="83" y="10" class="st3" width="12" height="5"/>
+			  <linearGradient id="ScrollHolderFillNight" gradientUnits="userSpaceOnUse" x1="0" y1="0.5" x2="12" y2="0.5">
+          <stop  offset="2.403846e-03" style="stop-color:#45638E"/>
+          <stop  offset="0.3427" style="stop-color:#2B3D58"/>
+          <stop  offset="0.71" style="stop-color:#2B3D58"/>
+          <stop  offset="0.7866" style="stop-color:#2F4361"/>
+          <stop  offset="0.8595" style="stop-color:#354C6D"/>
+          <stop  offset="0.9881" style="stop-color:#354C6D"/>
+			  </linearGradient>
+			  <rect style="fill:url(#ScrollHolderFillNight);" width="12" height="5"/>
+		  </g>
     </g>
     <g id="checkbox" transform="translate(0.000000, 97.000000)">
       <rect visibility="hidden" id="BoundingRect_1_" y="0" class="NoFill" width="16" height="16"/>
