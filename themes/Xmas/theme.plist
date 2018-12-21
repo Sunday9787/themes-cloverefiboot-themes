@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Christmas theme for Clover bootloader with simple banner animation. Version: 2.5</string>
+	<string>Christmas theme for Clover bootloader with simple banner animation. Version: 2.6</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -26,7 +26,7 @@
 			<key>Dark</key>
 			<true/>
 			<key>Path</key>
-			<string>background_red.png</string>
+			<string>background.png</string>
 			<key>Type</key>
 			<string>Scale</string>
 		</dict>
@@ -67,7 +67,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_DroidSans_16pt_WhiteFx.png</string>
+			<string>Font_DroidSans_16pt_RedWhiteFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -81,6 +81,8 @@
 			<integer>64</integer>
 			<key>SelectionBigWidth</key>
 			<integer>288</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
 			<key>TextOffset</key>
 			<integer>-100</integer>
 			<key>TileXSpace</key>
@@ -110,7 +112,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.5</string>
+	<string>2.6</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
