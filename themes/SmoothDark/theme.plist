@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Another version of SmoothDark Clover theme with elliptical icons. Version: 1.5</string>
+	<string>Another version of SmoothDark Clover theme with elliptical icons. Version: 1.6</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -54,7 +54,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_CourierPrime_16pt_Blue.png</string>
+			<string>Font_DroidSans_16pt_BlueFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.5</string>
+	<string>1.6</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Another version of BeautyDark theme with colorful icons. Version: 2.3</string>
+	<string>Another version of BeautyDark theme with colorful icons. Version: 2.4</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -97,7 +97,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.3</string>
+	<string>2.4</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

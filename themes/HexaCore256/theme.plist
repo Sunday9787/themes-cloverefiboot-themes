@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Light version of HexaCore theme with 256px icons size. Version: 1.9</string>
+	<string>Light version of HexaCore theme with 256px icons size. Version: 2.0</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -24,7 +24,7 @@
 			<key>Scale</key>
 			<integer>16</integer>
 			<key>Show</key>
-			<true/>
+			<false/>
 			<key>Swap</key>
 			<true/>
 		</dict>
@@ -52,9 +52,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>11</integer>
+			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_CPMono_16pt_Green.png</string>
+			<string>Font_FantasqueSans_16pt_TealFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -68,6 +68,8 @@
 			<integer>64</integer>
 			<key>SelectionBigWidth</key>
 			<integer>288</integer>
+			<key>SelectionSmallWidth</key>
+			<integer>72</integer>
 			<key>TextOffset</key>
 			<integer>-100</integer>
 			<key>TileXSpace</key>
@@ -89,7 +91,7 @@
 			<key>ChangeNonSelectedGrey</key>
 			<false/>
 			<key>Color</key>
-			<string>0xABE4DAFF</string>
+			<string>0x1ABC9C30</string>
 			<key>OnTop</key>
 			<true/>
 			<key>Small</key>
@@ -97,7 +99,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.9</string>
+	<string>2.0</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

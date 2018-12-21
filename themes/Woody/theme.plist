@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with woody icons effect and chocolate color harmony. Version: 2.0</string>
+	<string>Clover theme with woody icons effect and chocolate color harmony. Version: 2.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -54,7 +54,7 @@
 			<key>CharWidth</key>
 			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_Telegrama_16pt_Chocolate.png</string>
+			<string>Font_FantasqueSans_16pt_ChocoFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.0</string>
+	<string>2.1</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>

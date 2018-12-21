@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Retina Clover theme with 256px icons size. Version: 1.4</string>
+	<string>Retina Clover theme with 256px icons size. Version: 1.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -52,9 +52,9 @@
 		<key>Font</key>
 		<dict>
 			<key>CharWidth</key>
-			<integer>11</integer>
+			<integer>10</integer>
 			<key>Path</key>
-			<string>Font_CPMono_16pt_White.png</string>
+			<string>Font_DroidSans_16pt_WhiteFx.png</string>
 			<key>Proportional</key>
 			<false/>
 			<key>Type</key>
@@ -69,7 +69,7 @@
 			<key>SelectionBigWidth</key>
 			<integer>288</integer>
 			<key>SelectionSmallWidth</key>
-			<integer>80</integer>
+			<integer>72</integer>
 			<key>TextOffset</key>
 			<integer>-100</integer>
 			<key>TileXSpace</key>
@@ -101,7 +101,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.4</string>
+	<string>1.5</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
