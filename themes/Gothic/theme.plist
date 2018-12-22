@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover dark theme with 3D icons and glowing logo animation. Version: 4.0</string>
+	<string>Clover dark theme with 3D icons and glowing logo animation. Version: 4.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -108,7 +108,7 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>4.0</string>
+	<string>4.1</string>
 	<key>Year</key>
 	<string>2018</string>
 </dict>
