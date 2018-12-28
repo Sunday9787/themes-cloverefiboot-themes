@@ -116,7 +116,7 @@
 			<key>TextOffset</key>
 			<integer>-120</integer>
 			<key>TileXSpace</key>
-			<integer>96</integer>
+			<integer>0</integer>
 			<key>TileYSpace</key>
 			<integer>64</integer>
 		</dict>
