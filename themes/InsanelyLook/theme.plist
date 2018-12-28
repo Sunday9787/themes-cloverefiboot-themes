@@ -69,7 +69,7 @@
 			<key>SelectionSmallWidth</key>
 			<integer>72</integer>
 			<key>TileXSpace</key>
-			<integer>40</integer>
+			<integer>0</integer>
 			<key>Vertical</key>
 			<false/>
 		</dict>
