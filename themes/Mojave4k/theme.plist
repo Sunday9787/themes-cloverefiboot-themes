@@ -73,7 +73,7 @@
 			<key>TextOffset</key>
 			<integer>-192</integer>
 			<key>TileXSpace</key>
-			<integer>256</integer>
+			<integer>0</integer>
 			<key>TileYSpace</key>
 			<integer>256</integer>
 			<key>Vertical</key>
