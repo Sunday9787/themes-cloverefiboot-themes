@@ -28,7 +28,7 @@
 			<key>TextOffset</key>
 			<integer>-3</integer>
 			<key>TileXSpace</key>
-			<integer>20</integer>
+			<integer>0</integer>
 			<key>TileYSpace</key>
 			<integer>20</integer>
 			<key>Vertical</key>
