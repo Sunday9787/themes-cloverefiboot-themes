@@ -57,7 +57,7 @@
 		    <key>SelectionBigWidth</key>
 			<integer>288</integer>
 			<key>TileXSpace</key>
-			<integer>128</integer>
+			<integer>0</integer>
 			<key>TileYSpace</key>
 			<integer>128</integer>
 			<key>BannerOffset</key>
