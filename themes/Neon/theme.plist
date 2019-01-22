@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A simple dark Clover theme with glowing icons effect. Version: 1.8</string>
+	<string>A simple dark Clover theme with glowing icons effect. Version: 1.9</string>
 	<key>Theme</key>
 	<dict>
 		<key>Anime</key>
@@ -108,8 +108,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.8</string>
+	<string>1.9</string>
 	<key>Year</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>

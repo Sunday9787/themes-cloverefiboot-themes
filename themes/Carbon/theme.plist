@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.7</string>
+	<string>Clover theme with metallic icons, supports up to 1080p display resolution (was Gothic-Metal). Version: 2.8</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -97,8 +97,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.7</string>
+	<string>2.8</string>
 	<key>Year</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>

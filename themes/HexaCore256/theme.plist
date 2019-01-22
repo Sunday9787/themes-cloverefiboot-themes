@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>Light version of HexaCore theme with 256px icons size. Version: 2.0</string>
+	<string>Light version of HexaCore theme with 256px icons size. Version: 2.1</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -99,8 +99,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>2.0</string>
+	<string>2.1</string>
 	<key>Year</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>

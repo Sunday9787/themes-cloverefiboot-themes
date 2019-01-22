@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A colorful Clover theme with flat material icons and long shadow effect. Version: 3.4</string>
+	<string>A colorful Clover theme with flat material icons and long shadow effect. Version: 3.5</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -95,8 +95,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>3.4</string>
+	<string>3.5</string>
 	<key>Year</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>

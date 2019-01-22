@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Badruzeus</string>
 	<key>Description</key>
-	<string>A simple light Clover theme with pressed button selection effect. Version: 1.7</string>
+	<string>A simple light Clover theme with pressed button selection effect. Version: 1.8</string>
 	<key>Theme</key>
 	<dict>
 		<key>Background</key>
@@ -95,8 +95,8 @@
 		</dict>
 	</dict>
 	<key>Version</key>
-	<string>1.7</string>
+	<string>1.8</string>
 	<key>Year</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>
